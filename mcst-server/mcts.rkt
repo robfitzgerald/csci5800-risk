@@ -40,7 +40,8 @@
   (displayln "USING STUB PROCEDURE backup IN mcts.rkt")
   (for ([v1 v])
     (set! v1 (update-average-reward v1 ∆))
-    (update-node v1)))
+    (update-node v1)
+    (set! ∆ (- ∆)))
 
 ; get-node -> node?
 ;    s: state?

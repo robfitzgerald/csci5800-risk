@@ -5,10 +5,16 @@
 (provide
  node
  (contract-out
+  (node?
+   (any/c . -> . boolean?))
   (new-node
    (node? . -> . state?))
   (update-average-reward
-   (node? number? . -> . node?))))
+   (node? number? . -> . node?))
+  (get-node
+   (state? . -> . node?))
+  (update-node
+   (node? . -> . any))))
 
 ; A node
 ;    children: The child nodes of the tree
@@ -65,3 +71,20 @@
 ;    the new value and n (the number of previous terms averaged)
 (define (calculate-average a new-value n)
   (+ a (/ (- new-value a) (+ n 1))))
+
+; update-node -> any
+;    v: node?
+;
+;    Updates the node on the knowledge server
+(define (update-node v)
+  (displayln "USING STUB PROCEDURE update-node IN mcts.rkt"))
+
+; get-node -> node?
+;    s: state?
+;
+;    Either generates a new node if the node hasn't
+;    already been seen or returns the node it if
+;    does exist
+(define (get-node s)
+  (displayln "USING STUB PROCEDURE get-node IN mcts.rkt")
+  (new-node s))

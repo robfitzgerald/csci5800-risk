@@ -1,0 +1,42 @@
+{
+  "name": "mcts-game-server",
+  "version": "1.0.0",
+  "description": "nodejs server and modules which execute gameplay and AI for Monte Carlo Tree Search-based games",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robfitzgerald/csci5800-risk.git"
+  },
+  "contributors": [
+    {
+      "name": "Max Lees",
+      "email": "max.lees@gmail.com"
+    },
+    {
+      "name": "Jason Minor",
+      "email": "minor.jason@gmail.com"
+    },
+    {
+      "name": "Rob Fitzgerald",
+      "email": "robfitzgerald@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/robfitzgerald/csci5800-risk/issues"
+  },
+  "homepage": "https://github.com/robfitzgerald/csci5800-risk#readme",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "lodash": "^4.6.1",
+    "request": "^2.69.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}

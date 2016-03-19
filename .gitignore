@@ -1,6 +1,2 @@
-
-# Racket
-*~
-compiled/
-*.bak
-
+.DS_Store
+node_modules

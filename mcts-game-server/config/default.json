@@ -3,9 +3,12 @@
 		"computationalBudget": 1000
 	},
 	"neo4j": {
-		"baseUrl": "localhost:27017/somedatabasewhatever"
+		"baseUrl": "localhost:7474"
 	},
 	"node": {
 
+	},
+	"clips": {
+		"baseUrl": ""
 	}
 }

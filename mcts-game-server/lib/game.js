@@ -1,7 +1,7 @@
 'use strict';
 {
 	/**
-	 * performs an action on a board
+	 * performs an action on a board.
 	 * @param  {Object} board   game board object
 	 * @param  {String} action  chosen action
 	 * @param  {Object} variant gameVariant with variant.play(board, action) method

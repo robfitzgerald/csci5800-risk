@@ -5,7 +5,7 @@
 
 	let mcts = require('./mcts.middleware')
 	, game = require('./game.middleware')
-	, helper = require('../lib/helper')
+	, helper = require('./helper.middleware')
 
 	route.post('/:variant/play/ai', mcts, game, helper.gameResponse)
 	route.post('/:variant/play/human', helper.skipMCTS, game, helper.gameResponse)

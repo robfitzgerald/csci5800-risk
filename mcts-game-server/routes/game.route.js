@@ -3,8 +3,8 @@
 	let express = require('express')
 		, route = express.Router();
 
-	let mcts = require('../lib/mcts')
-	, game = require('../lib/game')
+	let mcts = require('./mcts.middleware')
+	, game = require('./game.middleware')
 	, helper = require('../lib/helper')
 
 	route.post('/:variant/play/ai', mcts, game, helper.gameResponse)

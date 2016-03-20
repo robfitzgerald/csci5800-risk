@@ -2,7 +2,7 @@
 {
 	var _ = require('lodash');
 	
-	var boards = require('./boards');
+	var boards = require('../lib/boards');
 
 	module.exports = function(req, res, next) {
 		var variantName = _.get(req.params, 'variant')

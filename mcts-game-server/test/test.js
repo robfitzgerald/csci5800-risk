@@ -2,9 +2,9 @@
 
 'use strict';
 {
-	var boards = require('./boards');
-	var mcts = require('./mcts');
-	var game = require('./game');
+	var boards = require('../lib/boards');
+	var mcts = require('../routes/mcts.middleware');
+	var game = require('../routes/game.middleware');
 	var req = {
 		body: {
 			action: 'poodle',
@@ -24,10 +24,10 @@
 		console.log(res)
 	});
 
-	game(req, res, function() {
-		console.log('game req, res:')
-		console.log(req)
-		console.log(res)
-	})
+	// game(req, res, function() {
+	// 	console.log('game req, res:')
+	// 	console.log(req)
+	// 	console.log(res)
+	// })
 
 }

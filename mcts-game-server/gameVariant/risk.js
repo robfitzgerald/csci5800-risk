@@ -30,10 +30,10 @@
 		console.log('risk.play() called with board, action:')
 		console.log(board)
 		console.log(action)
-		return 'some result'
+		return 'result of risk.play()'
 	}
 
 	function generate (players) {
-		return 'a board on ' + players + ' players'
+		return 'a board on ' + players + ' players would be generated'
 	}
 }

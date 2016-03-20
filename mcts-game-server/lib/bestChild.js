@@ -5,4 +5,5 @@
 		
 		// return the action edge connecting that parent and child
 	}
+	var knowledgeBase = require('./knowledgeBase')
 }

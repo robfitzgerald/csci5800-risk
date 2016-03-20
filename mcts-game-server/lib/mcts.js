@@ -1,12 +1,15 @@
 'use strict';
 {
-	var _ = require('lodash');
+	var _ = require('lodash')
+		, config = require('config')
 
 	var boards = require('./boards')
 		// , treePolicy = require('./treePolicy')
 		// , defaultPolicy = require('./defaultPolicy')
 		// , backup = require('./backup')
 		// , bestChild = require('./bestChild');
+	
+	var computationalBudget = config.get('mcts.computationalBudget');
 
 	/**
 	 * monte carlo tree search
@@ -21,28 +24,32 @@
 	 	var variantName = _.get(req.params, 'variant')
 	 	, hasVariant = boards.hasVariant(variantName);
 	 	if (!hasVariant) {
-	 		res.locals.error = '[MCTS] Error: ' + variantName + ' is not a valid game variant';
+	 		res.locals.error = '[mcts] Error: ' + variantName + ' is not a valid game variant';
 	 		res.status(400);
 	 		next();
 	 	} else {
-			// MCTS where
-			// member functions on variant exist to perform operations on a board
-			// such as variant.countries, variant.current, or whatever
-			// and the various steps in mcts are included as modules:
-			// treePolicy, defaultPolicy, backup, bestChild
-			// 
-			// @TODO: make it so!
+			var variant = boards[variantName];
+				,	stopTime = Date.now() + computationalBudget
+				, mctsIterations = 0;
+			while (Date.now() < stopTime) {
 
-			// loop
-			var i = 0;
-			while (i < 1000) {
-				// mcts here
-				++i;
+				// MCTS here.
+				// member functions on variant exist to perform operations on a board
+				// such as variant.countries, variant.current, or whatever
+				// and the various steps in mcts are included as modules:
+				// treePolicy, defaultPolicy, backup, bestChild
+				// 
+				// @TODO: make it so!
+
+				++mctsIterations;
 			}
 			
+			console.log('[mcts] ran ' + mctsIterations + ' times.')
+
 			// in the end, we want to pass the board along with the action to try.
 			// we can't modify req.body, so, we set the board and the chosen
 			// action on res.locals for game.js to find.
+			// the next middleware function is the game function.
 			res.locals.board = req.body;
 			res.locals.action = 'our chosen action'
 			

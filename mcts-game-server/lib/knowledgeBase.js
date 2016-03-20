@@ -10,12 +10,12 @@
 	}
 	var request = require('request');
 
-	function update() {}
+	function update(variant, board, value) {}
 
-	function parentOf() {}
+	function parentOf(variant, board) {}
 
-	function childOf() {}
+	function childOf(variant, board) {}
 
-	function relatedAction() {}
+	function relatedAction(variant, parent, child) {}
 	
 }

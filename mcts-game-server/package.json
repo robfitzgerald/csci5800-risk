@@ -2,9 +2,9 @@
   "name": "mcts-game-server",
   "version": "1.0.0",
   "description": "nodejs server and modules which execute gameplay and AI for Monte Carlo Tree Search-based games",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node app.js",
     "test": "mocha test/*.js"
   },
   "repository": {

@@ -13,7 +13,7 @@
 		//  and return a resulting action. the choice of actions will need to be then played out 
 		//  and a resulting board state returned to the client.
 	
-	app.use('/game', require('./routes/game.route.js'));
+	app.use('/play', require('./routes/play.route.js'));
 
 	  // web client endpoint for AI vs AI games - so it can run MCTS until the game is done and 
 	  //  return some signal that the game is done to the client. this should be able to run n 

@@ -9,7 +9,7 @@
 		var variantName = _.get(req.params, 'variant')
 			, hasVariant = boards.hasVariant(variantName);
 		if (!hasVariant) {
-			res.locals.error('[game] Error: ' + variant + ' is not a valid game variant');
+			res.locals.error('[game.middleware] Error: ' + variant + ' is not a valid game variant');
 			res.status(400);
 			next();
 		} else {

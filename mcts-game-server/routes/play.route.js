@@ -7,8 +7,8 @@
 	, game = require('./game.middleware')
 	, helper = require('./helper.middleware')
 
-	route.post('/:variant/play/ai', mcts, game, helper.gameResponse)
-	route.post('/:variant/play/human', helper.skipMCTS, game, helper.gameResponse)
+	route.post('/:variant/ai', mcts, game, helper.gameResponse)
+	route.post('/:variant/human', helper.skipMCTS, game, helper.gameResponse)
 
 	module.exports = route;
 }

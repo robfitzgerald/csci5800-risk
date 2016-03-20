@@ -3,7 +3,6 @@
 	var treePolicy = require('./treePolicy')
 		, defaultPolicy = require('./defaultPolicy')
 		, backup = require('./backup')
-		, bestChild = require('./bestChild')
 
 	/**
 	 * Monte Carlo Tree Search
@@ -15,7 +14,12 @@
 	module.exports = function(state, action, variant) {
 
 		// perform mcts loop
-
-		// maybe return something like a flag or some shit
+		// this is a mock up from the Browne et.al. paper
+		var v0, vt, delta, 
+			s = function() {};
+		vt = treePolicy(v0);
+		var delta = defaultPolicy(s(vt));
+		backup(vt, delta)
+		// maybe return something like a flag or some shit		
 	}
 }

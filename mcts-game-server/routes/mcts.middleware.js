@@ -5,6 +5,7 @@
 
 	var boards = require('../lib/boards')
 		, mcts = require('../lib/mcts')
+		, bestChild = require('../lib/bestChild')
 	
 	var computationalBudget = config.get('mcts.computationalBudget');
 
@@ -49,8 +50,7 @@
 				// 
 				// @TODO: make it so!
 
-				mcts(board, action, variant)
-
+				mcts(board, action, variant);
 				++mctsIterations;
 			}
 			
@@ -61,7 +61,7 @@
 			// action on res.locals for game.js to find.
 			// the next middleware function is the game function.
 			res.locals.board = req.body;
-			res.locals.action = 'our chosen action'
+			res.locals.action = bestChild();
 			
 			// done.
 		next();

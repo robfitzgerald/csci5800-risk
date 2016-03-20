@@ -1,9 +1,9 @@
 {
 	"mcts": {
-		"computationalBudget": 40
+		"computationalBudget": 1000
 	},
 	"neo4j": {
-
+		"baseUrl": "localhost:27017/somedatabasewhatever"
 	},
 	"node": {
 

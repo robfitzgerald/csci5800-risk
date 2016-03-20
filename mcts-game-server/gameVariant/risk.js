@@ -1,9 +1,10 @@
 'use strict';
 {
 	module.exports = {
-		serialize: serialize,
-		deserialize: deserialize,
-		play: play
+		serialize,
+		deserialize,
+		play,
+		generate
 	}
 
 	function serialize (board) {
@@ -16,10 +17,14 @@
 		console.log(board)
 	}
 
-	function play (board, move) {
-		console.log('risk.play() called with board, move:')
+	function play (board, action) {
+		console.log('risk.play() called with board, action:')
 		console.log(board)
-		console.log(move)
+		console.log(action)
 		return 'some result'
+	}
+
+	function generate (players) {
+		return 'a board on ' + players + ' players'
 	}
 }

@@ -22,9 +22,8 @@
 	 	var variantName = _.get(req.params, 'variant')
 	 	, hasVariant = boards.hasVariant(variantName);
 	 	if (!hasVariant) {
-	 		res.locals.error = '[mcts] Error: ' + variantName + ' is not a valid game variant';
 	 		res.status(400);
-	 		next();
+	 		next('[mcts.middleware] Error: ' + variantName + ' is not a valid game variant');
 	 	} else {
 	 		var variant, board, action, stopTime, mctsIterations;
 	 		try {

@@ -9,9 +9,8 @@
 		var variantName = _.get(req.params, 'variant')
 			, hasVariant = boards.hasVariant(variantName);
 		if (!hasVariant) {
-			res.locals.error('[game.middleware] Error: ' + variant + ' is not a valid game variant');
 			res.status(400);
-			next();
+			next('[game.middleware] Error: ' + variant + ' is not a valid game variant');
 		} else {
 			var board, action;
 			try {
@@ -19,9 +18,8 @@
 				action = res.locals.action;
 			} catch (e) {
 				// those things should be there. 400? 500?
-				res.locals.error(e);
-				res.status(400);
-				next();
+				res.status(500);
+				next(e);
 			}
 			// game is where we run the action on the board using the game
 			// variant's 'play' member function.

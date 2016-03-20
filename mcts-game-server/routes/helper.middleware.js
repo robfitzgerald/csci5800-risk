@@ -4,15 +4,16 @@
 
 	module.exports = {
 		skipMCTS,
-		gameResponse
+		gameResponse,
+		trainingResponse,
+		errorResponse
 	}
 
 	function skipMCTS(req, res, next) {
 		var action = _.get(req.body, 'action')
 		if (!action) {
-	 		res.locals.error = '[skipMCTS] Error: action missing from request body';
 	 		res.status(400);
-	 		next();			
+	 		next('[skipMCTS] Error: action missing from request body');			
 		} else {
 			var board = req.body;
 			delete board.action;
@@ -22,18 +23,27 @@
 		}
 	}
 
-	function gameResponse(req, res, next) {
-		if (res.statusCode >= 400) {
-			var errorMessage = _.get(res.locals, 'error');
-			if (errorMessage) {
-				console.log('[gameResponse] error: ' + res.locals.error)				
-				res.json(new Error(res.locals.error));	
-			} else {
-				console.log('[gameResponse] warning!  error caught at response, but no error set on res.locals.error!')
-				res.json(new Error('the server experienced an error. no other information provided.'))
-			}
+	function gameResponse(req, res) {
+		var result = _.get(res.locals, result);
+		if (!result) {
+			res.status(500);
+			next('[gameResponse] missing result on res.locals.result');
 		} else {
 			res.json(res.locals.result);
-		}
+		}	
+	}
+
+	function trainingResponse (req, res) {
+		// we will likely want this to report other information to the client upon completion
+		// so, a different response, which would look for analytics on the
+		// training that occured such as # of games, time spent, number of turns, number of new
+		// nodes created, whatever.
+		res.json('some response');
+	}
+
+	function errorResponse (err, req, res, next) {
+		console.log('[errorResponse] with error:')
+		console.log(err)
+		res.json(err);
 	}
 }

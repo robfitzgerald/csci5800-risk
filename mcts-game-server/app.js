@@ -5,6 +5,8 @@
 		, _ = require('lodash')
 		, bodyParser = require('body-parser')
 
+	let helper = require('./routes/helper.middleware')
+
 	var app = express();
 	app.use(bodyParser.json());
 
@@ -19,18 +21,7 @@
 	  //  return some signal that the game is done to the client. this should be able to run n 
 	  //  games as an argument
 
-		// MCTS module - setup for a single UCT search algorithm that calls these other modules. 
-		//  the result will be an action to take, which then needs to be 'actually played' in the game.
-
-		// neo4j module - setup for an HTTP-based call to our neo4j database with a query module
-
-		// CLIPS module - setup for an HTTP-based call to our CLIPS server
-
-		// serializer module - setup for a board serializer to generate or parse board strings to/from boards
-
-		// game module - takes an action and applies it to a board, and returns a board.
-
-		// configuration - an abstraction to pass config to different modules, such as base urls, endpoints
+	app.use(helper.errorResponse);
 
 	console.log('localhost:3000')
 	app.listen(3000)

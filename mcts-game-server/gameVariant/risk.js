@@ -1,10 +1,19 @@
 'use strict';
 {
 	module.exports = {
+		maxPlayers,
 		serialize,
 		deserialize,
 		play,
 		generate
+	}
+
+	/**
+	 * returns the maximum number of players for this game
+	 * @return {Number} max number of Risk players
+	 */
+	function maxPlayers () {
+		return 6;
 	}
 
 	function serialize (board) {

@@ -9,16 +9,13 @@
 		, game = require('../lib/game')
 
 	// this is a placeholder for some middleware solution that will play n games of some form
-	// probably sould wait to implement until we are more certain about this server
-	// framework
+	// probably should wait to implement until we are more certain about this server framework
 	module.exports = function (req, res, next) {
 		var computationalBudget = _.get(req.params, 'computationalBudget') || config.get('mcts.computationalBudget')
 			, numberOfGames = _.get(req.params, 'numberOfGames')
 			, numberOfPlayers = _.get(req.params, 'numberOfPlayers')
 	 		, variantName = _.get(req.params, 'variant')
 	 		, hasVariant = boards.hasVariant(variantName);
-
-	 	console.log('parseInt(games) ' + parseInt(numberOfGames) + ', parseInt(players) ' + parseInt(numberOfPlayers))
 	 	if (!hasVariant) {
 	 		res.status(400);
 	 		next('[training.middleware] Error: ' + variantName + ' is not a valid game variant');
@@ -31,7 +28,6 @@
 		} else {
 			console.log('[training.middleware] variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget)
 			// some loop running numberOfGames games
-
 			next();
 		}
 	}

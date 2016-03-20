@@ -25,20 +25,19 @@
 	 		res.status(400);
 	 		next('[mcts.middleware] Error: ' + variantName + ' is not a valid game variant');
 	 	} else {
-	 		var variant, board, action, stopTime, mctsIterations;
+	 		var variant, board, stopTime, mctsIterations;
 	 		try {
 				variant = boards[variantName];
 				board = req.body;
-				action = req.body.action;
 				stopTime = Date.now() + computationalBudget;
 				mctsIterations = 0;
-				delete board.action;
 			} catch (e) {
-				res.locals.error = e;
-				// maybe parse e to choose between 400 & 500
+				// something missing, or, server error.
+				// maybe parse e to choose between 400 & 500?
 				res.status(400);
-				next();
+				next(e);
 			}
+			// MCTS loop
 			while (Date.now() < stopTime) {
 
 				// MCTS here.
@@ -59,7 +58,7 @@
 			// we can't modify req.body, so, we set the board and the chosen
 			// action on res.locals for game.js to find.
 			// the next middleware function is the game function.
-			res.locals.board = req.body;
+			res.locals.board = board;
 			res.locals.action = bestChild();
 			
 			// done.

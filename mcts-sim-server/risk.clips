@@ -1,0 +1,67 @@
+(defrule init-adjacency
+   (initial-fact)
+=>
+  ; Alaska
+  (assert (adjacent Alaska NorthwestTerritory))
+  (assert (adjacent Alaska Alberta))
+
+  ; Northwest Territory
+  (assert (adjacent NorthwestTerritory Alaska))
+  (assert (adjacent NorthwestTerritory Alberta))
+  (assert (adjacent NorthwestTerritory Ontario))
+  (assert (adjacent NorthwestTerritory Greenland))
+
+  ; Greenland
+  (assert (adjacent Greenland NorthwestTerritory))
+  (assert (adjacent Greenland Ontario))
+  (assert (adjacent Greenland Quebec))
+  
+  ; Alberta
+  (assert (adjacent Alberta Alaska))
+  (assert (adjacent Alberta NorthwestTerritory))
+  (assert (adjacent Alberta Ontario))
+  (assert (adjacent Alberta WesternUnitedStates))
+  
+  ; Ontario
+  (assert (adjacent Ontario NorthwestTerritory))
+  (assert (adjacent Ontario Greenland))
+  (assert (adjacent Ontario Alberta))
+  (assert (adjacent Ontario Quebec))
+  (assert (adjacent Ontario WesternUnitedStates))
+  (assert (adjacent Ontario EasternUnitedStates))
+  
+  ; Western United States
+  (assert (adjacent WesternUnitedStates Alberta))
+  (assert (adjacent WesternUnitedStates Ontario))
+  (assert (adjacent WesternUnitedStates EasternUnitedStates))
+  (assert (adjacent WesternUnitedStates CentralAmerica))
+  
+  ; Eastern United States
+  (assert (adjacent EasternUnitedStates Ontario))
+  (assert (adjacent EasternUnitedStates Quebec))
+  (assert (adjacent EasternUnitedStates WesternUnitedStates))
+  (assert (adjacent EasternUnitedStates CentralAmerica))
+  
+  ; Central America
+  (assert (adjacent CentralAmerica WesternUnitedStates))
+  (assert (adjacent CentralAmerica EasternUnitedStates))
+  (assert (adjacent CentralAmerica Venezuela))
+  
+  ; Venezuela
+  (assert (adjacent Venezuela CentralAmerica))
+  (assert (adjacent Venezuela Peru))
+  (assert (adjacent Venezuela Brazil))
+  
+  ; Peru
+  (assert (adjacent Peru Venezuela))
+  (assert (adjacent Peru Brazil))
+  (assert (adjacent Peru Argentina))
+  
+  ; Brazil
+  (assert (adjacent Brazil Venezuela))
+  (assert (adjacent Brazil Peru))
+  (assert (adjacent Brazil Argentina))
+  
+  ; Argentina
+  (assert (adjacent Argentina Peru))
+  (assert (adjacent Argentia Brazil)))

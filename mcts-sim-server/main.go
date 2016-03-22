@@ -4,9 +4,9 @@ import "github.com/wmaxlees/clips"
 
 func main () {
     clips.CreateEnvironment()
-    clips.Reset()
 
     clips.Load("risk.clips")
+    clips.Reset()
 
     clips.Run(-1)
 

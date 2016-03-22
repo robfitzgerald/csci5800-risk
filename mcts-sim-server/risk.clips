@@ -1,70 +1,84 @@
-(defrule init-knowledge
-    (initial-fact)
-=>
-    ; Basic Rules
-    ; (assert (players 2))
+(deftemplate adjacent
+    (slot one)
+    (slot two))
+
+(deftemplate controls
+    (slot country)
+    (slot player))
+
+(deffacts risk
+    ; (players 2)
 
     ; Alaska
-    (assert (adjacent Alaska NorthwestTerritory))
-    (assert (adjacent Alaska Alberta))
+    (adjacent (one Alaska) (two NorthwestTerritory))
+    (adjacent (one Alaska) (two Alberta))
 
     ; Northwest Territory
-    (assert (adjacent NorthwestTerritory Alaska))
-    (assert (adjacent NorthwestTerritory Alberta))
-    (assert (adjacent NorthwestTerritory Ontario))
-    (assert (adjacent NorthwestTerritory Greenland))
+    (adjacent (one NorthwestTerritory) (two Alaska))
+    (adjacent (one NorthwestTerritory) (two Alberta))
+    (adjacent (one NorthwestTerritory) (two Ontario))
+    (adjacent (one NorthwestTerritory) (two Greenland))
 
     ; Greenland
-    (assert (adjacent Greenland NorthwestTerritory))
-    (assert (adjacent Greenland Ontario))
-    (assert (adjacent Greenland Quebec))
+    (adjacent (one Greenland) (two NorthwestTerritory))
+    (adjacent (one Greenland) (two Ontario))
+    (adjacent (one Greenland) (two Quebec))
   
     ; Alberta
-    (assert (adjacent Alberta Alaska))
-    (assert (adjacent Alberta NorthwestTerritory))
-    (assert (adjacent Alberta Ontario))
-    (assert (adjacent Alberta WesternUnitedStates))
+    (adjacent (one Alberta) (two Alaska))
+    (adjacent (one Alberta) (two NorthwestTerritory))
+    (adjacent (one Alberta) (two Ontario))
+    (adjacent (one Alberta) (two WesternUnitedStates))
   
     ; Ontario
-    (assert (adjacent Ontario NorthwestTerritory))
-    (assert (adjacent Ontario Greenland))
-    (assert (adjacent Ontario Alberta))
-    (assert (adjacent Ontario Quebec))
-    (assert (adjacent Ontario WesternUnitedStates))
-    (assert (adjacent Ontario EasternUnitedStates))
+    (adjacent (one Ontario) (two NorthwestTerritory))
+    (adjacent (one Ontario) (two Greenland))
+    (adjacent (one Ontario) (two Alberta))
+    (adjacent (one Ontario) (two Quebec))
+    (adjacent (one Ontario) (two WesternUnitedStates))
+    (adjacent (one Ontario) (two EasternUnitedStates))
   
     ; Western United States
-    (assert (adjacent WesternUnitedStates Alberta))
-    (assert (adjacent WesternUnitedStates Ontario))
-    (assert (adjacent WesternUnitedStates EasternUnitedStates))
-    (assert (adjacent WesternUnitedStates CentralAmerica))
+    (adjacent (one WesternUnitedStates) (two Alberta))
+    (adjacent (one WesternUnitedStates) (two Ontario))
+    (adjacent (one WesternUnitedStates) (two EasternUnitedStates))
+    (adjacent (one WesternUnitedStates) (two CentralAmerica))
   
     ; Eastern United States
-    (assert (adjacent EasternUnitedStates Ontario))
-    (assert (adjacent EasternUnitedStates Quebec))
-    (assert (adjacent EasternUnitedStates WesternUnitedStates))
-    (assert (adjacent EasternUnitedStates CentralAmerica))
+    (adjacent (one EasternUnitedStates) (two Ontario))
+    (adjacent (one EasternUnitedStates) (two Quebec))
+    (adjacent (one EasternUnitedStates) (two WesternUnitedStates))
+    (adjacent (one EasternUnitedStates) (two CentralAmerica))
   
     ; Central America
-    (assert (adjacent CentralAmerica WesternUnitedStates))
-    (assert (adjacent CentralAmerica EasternUnitedStates))
-    (assert (adjacent CentralAmerica Venezuela))
+    (adjacent (one CentralAmerica) (two WesternUnitedStates))
+    (adjacent (one CentralAmerica) (two EasternUnitedStates))
+    (adjacent (one CentralAmerica) (two Venezuela))
   
     ; Venezuela
-    (assert (adjacent Venezuela CentralAmerica))
-    (assert (adjacent Venezuela Peru))
-    (assert (adjacent Venezuela Brazil))
+    (adjacent (one Venezuela) (two CentralAmerica))
+    (adjacent (one Venezuela) (two Peru))
+    (adjacent (one Venezuela) (two Brazil))
   
     ; Peru
-    (assert (adjacent Peru Venezuela))
-    (assert (adjacent Peru Brazil))
-    (assert (adjacent Peru Argentina))
+    (adjacent (one Peru) (two Venezuela))
+    (adjacent (one Peru) (two Brazil))
+    (adjacent (one Peru) (two Argentina))
   
     ; Brazil
-    (assert (adjacent Brazil Venezuela))
-    (assert (adjacent Brazil Peru))
-    (assert (adjacent Brazil Argentina))
+    (adjacent (one Brazil) (two Venezuela))
+    (adjacent (one Brazil) (two Peru))
+    (adjacent (one Brazil) (two Argentina))
   
     ; Argentina
-    (assert (adjacent Argentina Peru))
-    (assert (adjacent Argentia Brazil)))
+    (adjacent (one Argentina) (two Peru))
+    (adjacent (one Argentina) (two Brazil)))
+
+
+(defrule game-over
+    (controls (country ?) (player ?player))
+    (not (exists (controls (country ?) (player ?player-2&:(not (= ?player-2 ?player))))))
+    =>
+    (printout "Game Over!~n"))
+;    (succeed)))
+

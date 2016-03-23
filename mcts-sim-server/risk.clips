@@ -7,7 +7,10 @@
     (slot player))
 
 (deffacts risk
-    ; (players 2)
+    ; TEMPORARY: DELETE THESE
+    (players 2)
+    (turn 0)
+    ; -----------------------
 
     ; Alaska
     (adjacent (one Alaska) (two NorthwestTerritory))
@@ -81,4 +84,11 @@
     =>
     (printout "Game Over!~n"))
 ;    (succeed)))
+
+(defrule next-turn
+    (players ?num)
+    ?turn <- (turn ?player)
+    =>
+    (retract ?turn)
+    (assert (turn (mod (+ ?player 1) ?num))))
 

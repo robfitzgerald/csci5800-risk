@@ -17,6 +17,14 @@
     ; TEMPORARY: DELETE THESE
     (players 2)
     (turn 0)
+    (phase (current placement))
+    (free-armies 5)
+    (controls (country Alaska) (player 0))
+    (controls (country NorthwestTerritory) (player 0))
+    (controls (country Alberta) (player 1))
+    (armies (country Alaska) (num 5))
+    (armies (country NorthwestTerritory) (num 5))
+    (armies (country Alberta) (num 10))
     ; -----------------------
 
     ; Alaska
@@ -109,19 +117,25 @@
     ?a)
 
 (defrule game-over
-    (controls (country ?) (player ?player))
-    (not (exists (controls (country ?) (player ?player-2&:(not (= ?player-2 ?player))))))
+    (controls (country ?) (player ?p))
+    (forall (controls (country ?) (player ?player))
+        (test (= ?p ?player)))
     =>
     (printout t "Game Over!" crlf)
-    (if (= ?player 0)
+    (if (= ?p 0)
         then (assert (val 1))
-        else (assert (val 0))))
+        else (assert (val 0))
+    (halt)))
 
 (defrule next-turn
     (players ?num)
-    ?turn <- (turn ?player)
+    ?turn-fact <- (turn ?player)
+    ?phase-fact <- (phase (current attack)) ; -------------------TEMPORARY
     =>
-    (retract ?turn)
+    (retract ?phase-fact)
+    (assert (phase (current placement)))
+    (assert (free-armies 5)) ; -----------------------------TEMPORARY
+    (retract ?turn-fact)
     (assert (turn (mod (+ ?player 1) ?num))))
 
 (defrule place-army
@@ -134,10 +148,10 @@
     (retract ?armies-fact)
     (assert (armies (country ?country) (num (+ ?armies 1))))
     (retract ?free-armies-fact)
-    (if (> 0 (- ?free 1))
-        then (assert (free-armies (- ?free 1)))
+    (if (> (- ?free 1)0) 
+        then
+            (assert (free-armies (- ?free 1)))
         else
-            (retract ?free-armies-fact)
             (retract ?phase-fact)
             (assert (phase (current attack)))))
 

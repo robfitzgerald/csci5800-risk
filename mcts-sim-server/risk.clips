@@ -2,9 +2,16 @@
     (slot one)
     (slot two))
 
+(deftemplate armies
+    (slot country)
+    (slot num))
+
 (deftemplate controls
     (slot country)
     (slot player))
+
+(deftemplate phase
+    (slot current))
 
 (deffacts risk
     ; TEMPORARY: DELETE THESE
@@ -78,12 +85,37 @@
     (adjacent (one Argentina) (two Brazil)))
 
 
+; 
+(deffunction rolls (?a ?d)
+    (bind ?a-rolls (if (< ?a 3)
+                    then 1
+                    else (if (< ?a 4)
+                         then 2 else 3)))
+
+    (bind ?b-rolls (if (< ?d 2)
+                    then 1
+                    else 2))
+
+    (bind ?rolls (min ?d (- ?a 1) 2))
+
+    ?rolls)
+
+(deffunction a-wins (?rolls)
+    (bind ?a 0)
+    (loop-for-count ?rolls
+        (if (> (random 0 1) 0)
+        then (bind ?a (+ ?a 1))))
+
+    ?a)
+
 (defrule game-over
     (controls (country ?) (player ?player))
     (not (exists (controls (country ?) (player ?player-2&:(not (= ?player-2 ?player))))))
     =>
-    (printout "Game Over!~n"))
-;    (succeed)))
+    (printout t "Game Over!" crlf)
+    (if (= ?player 0)
+        then (assert (val 1))
+        else (assert (val 0))))
 
 (defrule next-turn
     (players ?num)
@@ -91,4 +123,51 @@
     =>
     (retract ?turn)
     (assert (turn (mod (+ ?player 1) ?num))))
+
+(defrule place-army
+    (turn ?player)
+    ?phase-fact <- (phase (current placement))
+    (controls (country ?country) (player ?player))
+    ?armies-fact <- (armies (country ?country) (num ?armies))
+    ?free-armies-fact <- (free-armies ?free)
+    =>
+    (retract ?armies-fact)
+    (assert (armies (country ?country) (num (+ ?armies 1))))
+    (retract ?free-armies-fact)
+    (if (> 0 (- ?free 1))
+        then (assert (free-armies (- ?free 1)))
+        else
+            (retract ?free-armies-fact)
+            (retract ?phase-fact)
+            (assert (phase (current attack)))))
+
+(defrule attack-all
+    (turn ?a-player)
+    (phase (current attack))
+    (controls (country ?a-country) (player ?a-player))
+    ?a-army-fact <- (armies (country ?a-country) (num ?a-army&:(> ?a-army 1)))
+    (adjacent (one ?a-country) (two ?d-country))
+    ?d-controls-fact <- (controls (country ?d-country) (player ?d-player&:(not (= ?a-player ?d-player))))
+    ?d-army-fact <- (armies (country ?d-country) (num ?d-army))
+    =>
+    (bind ?roll-count (rolls ?a-army ?d-army))
+    (bind ?a (a-wins ?roll-count))
+    (bind ?d (- ?roll-count ?a))
+
+    (if (>= ?a ?d-army)
+        then
+            (bind ?a-remaining (- ?a-army ?d))
+            (retract ?d-army-fact)
+            (assert (armies (country ?d-country) (num (- ?a-remaining 1))))
+            (retract ?a-army-fact)
+            (assert (armies (country ?a-country) (num 1)))
+            (retract ?d-controls-fact)
+            (assert (controls (country ?d-country) (player ?a-player)))
+        else
+            (retract ?d-army-fact)
+            (assert (armies (country ?d-country) (num (- ?d-army ?a))))
+            (retract ?a-army-fact)
+            (assert (armies (country ?a-country) (num (- ?a-army ?d))))))
+
+
 

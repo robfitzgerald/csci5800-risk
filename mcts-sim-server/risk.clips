@@ -126,7 +126,6 @@
     (forall (controls (country ?) (player ?player))
         (test (= ?p ?player)))
     =>
-    (printout t "Game Over!" crlf)
     (if (= ?p 0)
         then (bind ?*result* 1)
         else (bind ?*result* -1))

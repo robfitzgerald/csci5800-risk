@@ -1,3 +1,8 @@
+; Globals
+(defglobal
+    ?*result* = 0)
+
+; Adjacency template
 (deftemplate adjacent
     (slot one)
     (slot two))
@@ -123,9 +128,9 @@
     =>
     (printout t "Game Over!" crlf)
     (if (= ?p 0)
-        then (assert (val 1))
-        else (assert (val 0))
-    (halt)))
+        then (bind ?*result* 1)
+        else (bind ?*result* -1))
+    (halt))
 
 (defrule next-turn
     (players ?num)

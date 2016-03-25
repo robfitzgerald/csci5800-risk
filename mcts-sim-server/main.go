@@ -1,6 +1,8 @@
 package main
 
 import "github.com/wmaxlees/clips"
+import "fmt"
+// import "github.com/wmaxlees/clips/factparser"
 
 func main () {
     clips.CreateEnvironment()
@@ -13,4 +15,13 @@ func main () {
 
     clips.Run(-1)
 
+    resultPtr := clips.FindGlobal("result")
+    fmt.Printf("%s\n", clips.GetGlobalValueForm(resultPtr, 15))
+
+    //list := clips.GetFactList()
+    //fmt.Printf(list)
+
+    // act := clips.GetNextActivation()
+    // str := clips.GetActivationName(act)
+    // fmt.Printf(str)
 }

@@ -19,19 +19,6 @@
     (slot current))
 
 (deffacts risk
-    ; TEMPORARY: DELETE THESE
-    (players 2)
-    (turn 0)
-    (phase (current placement))
-    (free-armies 5)
-    (controls (country Alaska) (player 0))
-    (controls (country NorthwestTerritory) (player 0))
-    (controls (country Alberta) (player 1))
-    (armies (country Alaska) (num 5))
-    (armies (country NorthwestTerritory) (num 5))
-    (armies (country Alberta) (num 10))
-    ; -----------------------
-
     ; Alaska
     (adjacent (one Alaska) (two NorthwestTerritory))
     (adjacent (one Alaska) (two Alberta))

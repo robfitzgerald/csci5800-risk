@@ -18,6 +18,7 @@ type State struct {
     Players int
     Free int
     Phase string
+    Turn int
     Countries []Country
 }
 
@@ -29,7 +30,7 @@ func main () {
         Produces(restful.MIME_JSON)
 
     ws.Route(ws.POST("sim").To(runSimulation))
-    ws.Route(ws.GET("actions/{state}").To(getActions))
+    ws.Route(ws.POST("actions").To(getActions))
 
     restful.Add(ws)
     http.ListenAndServe(":8080", nil)
@@ -37,29 +38,26 @@ func main () {
 
 
 func getActions(request *restful.Request, response *restful.Response) {
-    state := request.PathParameter("state")
-    fmt.Printf("Actions: %s\n", state)
+    state := new(State)
+    request.ReadEntity(state)
 
-    // assertState(state)
+    fmt.Printf("Actions: %s\n", state)
 
     env := clips.CreateEnvironment()
     clips.Load(env, "risk.clips")
-
     clips.Reset(env)
+    assertState(env, *state)
 
-    // Assert the state
+    str := clips.GetFactList(env)
+    fmt.Printf(str)
+
     // Get the possible actions
-
-
-    clips.Clear(env)
 
     response.WriteAsJson("STUB")
 }
 
 
 func runSimulation(request *restful.Request, response *restful.Response) {
-    // state := request.PathParameter("state")
-
     state := new(State)
     request.ReadEntity(state)
 
@@ -80,7 +78,7 @@ func runSimulation(request *restful.Request, response *restful.Response) {
 
 func assertState(env clips.EnvironmentPointer, state State) {
     assertPlayers(env, state.Players)
-    assertTurn(env, 0)
+    assertTurn(env, state.Turn)
     assertPhase(env, state.Phase)
     assertFreeArmies(env, state.Free)
 

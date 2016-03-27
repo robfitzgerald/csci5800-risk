@@ -3,7 +3,9 @@
 		"computationalBudget": 1000
 	},
 	"neo4j": {
-		"baseUrl": "localhost:7474"
+		"baseUrl": "http://localhost:7474/db/data/transaction/commit",
+		"username": "neo4j",
+		"password": "neo4j"
 	},
 	"node": {
 

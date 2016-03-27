@@ -10,6 +10,8 @@
 	var config = require('config')
 		, auth = new Buffer(config.get('neo4j.username') + ':' + config.get('neo4j.password'))
 		, request = require('request')
+		, _ = require('lodash')
+		, Q = require('q')
 		, neo4j = request.defaults({
 			method: 'POST',
 			url: config.get('neo4j.baseUrl'),
@@ -44,6 +46,7 @@
 			neo4j({json:payload}, function(err, res, body) {
 				console.log(body)
 				isNonTerminal(board) // just in here for testing
+				isFullyExpanded(board)  // testing for here, in just
 				// TODO: deferred.resolve() / deferred.reject() of promise
 			});
 	}
@@ -56,32 +59,43 @@
 	/**
 	 * checks if a given board is a non-terminal node
 	 * @param  {Board}  b  - board state
-	 * @return {Promise}   - promise that resolves to a boolean
+	 * @return {Promise}   - promise that resolves to a boolean or error
 	 */
 	function isNonTerminal(b) {
-		var index = hashBoard(b)
-			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal`
+		var deferred = Q.defer()
+			, index = hashBoard(b)
+			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal AS isNonTerminal`
 			, payload = constructQueryBody(query);
 		neo4j({json:payload}, function(err, response, body) {
-			console.log('isNonTerminal() result:')
-			console.log(JSON.stringify(body))
-			console.log('resolve promise w/ boolean')
+			if (err) {
+				deferred.reject(err);
+			} else {
+				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
+				deferred.resolve(result)
+			}
 		})
+		return deferred.promise;
 	}
 
 	/**
 	 * checks if a given board is fully expanded
 	 * @param  {Board}  b  - board state
-	 * @return {Promise}   - promise that resolves to a boolean
+	 * @return {Promise}   - promise that resolves to a number or error
 	 */
 	function isFullyExpanded(b) {
-		var index = hashBoard(b)
-			, query = `MATCH (b:BOARD{state:${index}}) RETURN b.possibleMoves.length`
+		var deferred = Q.defer()
+			, index = hashBoard(b)
+			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN size(b.possibleMoves) = 0 AS isFullyExpanded`
 			, payload = constructQueryBody(query)
 		neo4j({json:payload}, function(err, response, body) {
-			console.log('resolve promise')
-			// TODO: find out how to check length of array
+			if (err) {
+				deferred.reject(err);
+			} else {
+				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
+				deferred.resolve(result)
+			}
 		})
+		return deferred.promise;
 	}
 
 	function hashBoard(board) {
@@ -105,5 +119,11 @@
 		}
 	}
 
-	createNewRoot(null, ['move1', 'move2'], null);
+	//createNewRoot(null, ['move1', 'move2'], null);
+	var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
+	isNonTerminal(board)
+		.then(function(res) { console.log(res) }) // just in here for testing
+	isFullyExpanded(board)
+		.then(function(res) { console.log(res) }) // just in here for testing
+
 }

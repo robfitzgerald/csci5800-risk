@@ -1,7 +1,7 @@
 {
 	"mcts": {
 		"computationalBudget": 1000,
-		"exploitationParameter": 0.70710678118655
+		"explorationParameter": 0.70710678118655
 	},
 	"neo4j": {
 		"baseUrl": "http://localhost:7474/db/data/transaction/commit",

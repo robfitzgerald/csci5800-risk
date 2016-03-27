@@ -59,20 +59,23 @@
 
 
 	function createChild(p, move, c) {
+		// TODO: we need to know if this node is terminal
 		var deferred = Q.defer()
 			, parentIndex = hashBoard(p)
-			, childIndex = hashBoard(c)
 			, params = {
 				child: c,
 				move: move
 			}
 			, query = `
 					CREATE (c:BOARD {child})
+					WITH c
 					MATCH (p:BOARD {state: '${parentIndex}'})
+					WITH c, p
 					CREATE (p) -[cr:CHILD {move}]-> (c)
 					CREATE (c) -[pr:PARENT {move}]-> (p)
-					RETURN c, cr, pr AS child, childRelationship, parentRelationship`
-			, payload = constructQueryBody(query)
+					RETURN p, c, cr, pr`
+			, payload = constructQueryBody(query, params)
+			console.log(payload)
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
@@ -138,7 +141,7 @@
 	function backup(b, reward) {
 		var deferred = Q.defer()
 		if (typeof reward !== 'number') {
-			deferred.reject('[knowledgeBase.backup] error: reward ' + reward = ' is not a number');
+			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
 		} else {
 			var index = hashBoard(b)
 				, query = `
@@ -190,7 +193,9 @@
 
 	function constructQueryBody(statements, parameters) {
 		if (!Array.isArray(statements) || !Array.isArray(parameters || statements.length != parameters.length)) {
-			if (statements) {
+			if (statements && parameters) {
+				return {statements:[{statement:statements, parameters: parameters}]};
+			} else if (statements) {
 				return {statements:[{statement:statements}]};
 			} else {
 				return {statements: []};
@@ -204,8 +209,20 @@
 		}
 	}
 
-	createNewRoot(null, ['pizza', 'party'], null)
-	 	.then(function(res) { console.log(res) }) // just in here for testing		
+	var testChild = {
+		nonTerminal: true,
+		state: hashBoard('test child board'),
+		possibleMoves: ['some', 'posible', 'moves'],
+		rewards: [],
+		visits: 0,
+		usedInGame: []
+	}
+	,	parentBoard = '--BOARDTEST--p1:human,;p2:ai,';
+	createChild(parentBoard, {moveName: 'coolNameBro'}, testChild)
+		.then(function(res) { console.log(res)})
+		.catch(function(err) { console.log('error!'); console.log(err)})	
+	// createNewRoot(null, ['pizza', 'party'], null)
+	//  	.then(function(res) { console.log(res) }) // just in here for testing
 	//var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
 	// isNonTerminal(board)
 	// 	.then(function(res) { console.log(res) }) // just in here for testing

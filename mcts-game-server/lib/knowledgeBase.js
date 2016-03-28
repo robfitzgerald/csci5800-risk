@@ -20,6 +20,7 @@
 			}
 		})
 		, explorationParameter = config.get('mcts.explorationParameter')
+		, infinity = config.get('mcts.infinity')
 		, helper = require('./knowledgeBase.helper.js')
 
 	/**
@@ -45,7 +46,6 @@
 			}
 			, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
 			, payload = helper.constructQueryBody([statement], [params])
-
 		neo4j({json:payload}, function(err, res, body) {
 			if (err) {
 				deferred.reject(err);
@@ -54,7 +54,6 @@
 				deferred.resolve(result)
 			}
 		});
-
 		return deferred.promise;
 	}
 
@@ -146,20 +145,21 @@
 		} else {
 			var index = helper.serializeBoard(b)
 				, query = `
-						MATCH p =(begin)-[r:PARENT]->(END )
-						WHERE begin.state={state:'${index}'}
-						FOREACH (n IN nodes(p)| 
+						MATCH path =(child:BOARD)-[r:PARENT*]->(boards:BOARD)
+						WHERE child.state={state:'${index}'}
+						FOREACH (board IN nodes(path)| 
 							SET 
-								n.rewards = n.rewards + ${reward}, 
-								n.visits = n.visits + 1, 
-								n.uct = (reduce(Q = 0, reward IN n.rewards | Q + reward) / child.visits + (2 * ${explorationParameter} * ((2 * LOG(p.visits)) /  child.visits) ^ 0.5))`
+								board.rewards = board.rewards + ${reward}, 
+								board.visits = board.visits + 1,
+								board.uct = (toFloat(reduce(Q = 0, reward IN board.rewards | Q + reward)) / board.visits + (2.0 * ${explorationParameter} * ((2.0 * LOG(p.visits)) /  board.visits) ^ 0.5)))
+						RETURN nodes(path)`
 				, payload = helper.constructQueryBody(query)
 			neo4j({json:payload}, function(err, response, body) {
 				if (err) {
 					deferred.reject(err);
 				} else {
-					var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-					deferred.resolve(result)
+					var result = _.get(body, 'results')  // parses neo4j response structure
+					deferred.resolve(body)
 				}
 			})
 			return deferred.promise;
@@ -169,24 +169,25 @@
 	function bestChild(b) {
 		var deferred = Q.defer()
 			, index = helper.serializeBoard(b)
-			, query = `
+			, queries = [];
+			queries.push(`
 					MATCH (p:BOARD {state:'${index}'}) -[r:CHILD]-> (c:BOARD)
 					WITH c, r
-					SET c.uct = reduce(Q = 0, reward IN c.rewards | Q + reward)
-					WITH c, r
-					SET c.uct = toFloat(c.uct) / c.visits
+					SET c.uct = toFloat(reduce(Q = 0, reward IN c.rewards | Q + reward)) / c.visits
 					WITH c, r
 					WHERE c.uct = 0
-					SET c.uct = 999
-					RETURN c, r ORDER BY c.uct DESC LIMIT 1`
-			, payload = helper.constructQueryBody(query)
+					SET c.uct = ${infinity}`);
+			queries.push(`
+					MATCH (p:BOARD {state:'${index}'}) -[r:CHILD]-> (c:BOARD)
+					RETURN c, r ORDER BY c.uct DESC LIMIT 1`)
+		var payload = helper.constructQueryBody(queries, [null,null])
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
 			} else {
 				var result = {};
-				result.bestChild = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-				result.move = _.get(body, 'results[0].data[0].row[1]')
+				result.move = _.get(body, 'results[1].data[0].row[1]')  // parses neo4j response structure
+				result.bestChild = _.get(body, 'results[1].data[0].row[0]')
 				deferred.resolve(result)
 			}
 		})
@@ -195,19 +196,22 @@
 
 	var	parentBoard = 'board';
 
-	//console.log(deserializeBoard('NTU1NTU='))
-	bestChild(parentBoard)
-		.then(function(res) { console.log(res)})
+	backup('55555', 1)
+		.then(function(res){ console.log(res); })
+	// console.log(helper.deserializeBoard('NTU1NTU='))
+	// bestChild(parentBoard)
+	//	.then(function(res) { console.log(res)})
 	// generateTestChildren(7, parentBoard);
 	// createChild(parentBoard, {moveName: 'coolNameBro'}, testChild)
 	// 	.then(function(res) { console.log(res)})
 	// 	.catch(function(err) { console.log('error!'); console.log(err)})	
 	// createNewRoot(null, ['pizza', 'party'], null)
 	//  	.then(function(res) { console.log(res) }) // just in here for testing
-	//var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
+	// var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
 	// isNonTerminal(board)
 	// 	.then(function(res) { console.log(res) }) // just in here for testing
 	// isFullyExpanded(board)
 	// 	.then(function(res) { console.log(res) }) // just in here for testing
-
+	// 	
+	// 	
 }

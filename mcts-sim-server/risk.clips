@@ -137,10 +137,30 @@
         else (bind ?*result* -1))
     (halt))
 
+(defrule fortify-move
+    ?turn-fact <- (turn ?player)
+    (players ?num)
+    ?phase-fact <- (phase (current attack))
+    (controls (country ?country-a) (player ?player))
+    (controls (country ?country-b) (player ?player))
+    (adjacent (one ?country-a) (two ?country-b))
+    ?armies-a-fact <- (armies (country ?country-a) (num ?a&:(> ?a 1)))
+    ?armies-b-fact <- (armies (country ?country-b) (num ?b))
+    =>
+    (retract ?armies-a-fact)
+    (assert (armies (country ?country-a) (num 1)))
+    (retract ?armies-b-fact)
+    (assert (armies (country ?country-b) (num (+ ?b (- ?a 1)))))
+    (retract ?phase-fact)
+    (assert (phase (current placement)))
+    (assert (free-armies 5)) ; -----------------------------TEMPORARY
+    (retract ?turn-fact)
+    (assert (turn (mod (+ ?player 1) ?num))))
+
 (defrule next-turn
     (players ?num)
     ?turn-fact <- (turn ?player)
-    ?phase-fact <- (phase (current attack)) ; -------------------TEMPORARY
+    ?phase-fact <- (phase (current attack))
     =>
     (retract ?phase-fact)
     (assert (phase (current placement)))

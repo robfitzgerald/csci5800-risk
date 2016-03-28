@@ -1,6 +1,6 @@
 ; Globals
 (defglobal
-    ?*result* = 0)
+    ?*result* = -1)
 
 ; Adjacency template
 (deftemplate adjacent
@@ -107,6 +107,30 @@
         then (bind ?a (+ ?a 1))))
 
     ?a)
+
+(deffunction calc-result ()
+    (bind ?inc-0 0)
+    (bind ?inc-1 0)
+    (do-for-all-facts
+        ((?c controls))
+        (eq ?c:player 0)
+        (bind ?inc-1 (+ ?inc-1 1)))
+
+    (do-for-all-facts
+        ((?c controls))
+        (eq ?c:player 0)
+        (bind ?inc-1 (+ ?inc-1 1)))
+
+    (if (> ?inc-0 ?inc-1)
+        then 1
+        else 0))
+
+(defrule out-of-time
+    (steps 0)
+    =>
+    (bind ?*result* (calc-result))
+    (printout t "--- Ran out of time: " ?*result* crlf)
+    (halt))
 
 (defrule start-place
     ?steps-fact <- (steps ?steps&:(> ?steps 0))

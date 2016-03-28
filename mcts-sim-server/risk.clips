@@ -108,6 +108,25 @@
 
     ?a)
 
+(defrule start-place
+    ?turn-fact <- (turn ?player)
+    ?phase-fact <- (phase (current start))
+    ?free-armies-fact <- (free-armies ?free)
+    (controls (country ?country) (player ?player))
+    ?armies-fact <- (armies (country ?country) (num ?armies))
+    (players ?players)
+    =>
+    (retract ?armies-fact)
+    (assert (armies (country ?country) (num (+ ?armies 1))))
+    (retract ?turn-fact)
+    (assert (turn (mod (+ ?player 1) ?players))))
+    (if (= (mod (+ ?player 1) ?players) 0)
+        then (retract ?free-armies-fact)
+             (assert (free-armies (- ?free 1)))
+             (if (= 0 (- ?free 1))
+                 then (retract ?phase-fact)
+                      (assert (phase (current placement))))))
+
 (defrule game-over
     (controls (country ?) (player ?p))
     (forall (controls (country ?) (player ?player))

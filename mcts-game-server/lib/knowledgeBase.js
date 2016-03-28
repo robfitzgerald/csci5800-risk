@@ -20,6 +20,7 @@
 			}
 		})
 		, explorationParameter = config.get('mcts.explorationParameter')
+		, helper = require('./knowledgeBase.helper.js')
 
 	/**
 	 * creates a root node in the knowledge base
@@ -31,7 +32,7 @@
 	function createNewRoot(b, moves, variant) {
 		var deferred = Q.defer()
 			, board = 'board'//variant.serialize(b)  // if b is JSON
-			, index = serializeBoard(board)
+			, index = helper.serializeBoard(board)
 			, params = {
 				boardParams: {
 					nonTerminal: true,
@@ -43,7 +44,7 @@
 				}
 			}
 			, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
-			, payload = constructQueryBody([statement], [params])
+			, payload = helper.constructQueryBody([statement], [params])
 
 		neo4j({json:payload}, function(err, res, body) {
 			if (err) {
@@ -61,7 +62,7 @@
 	function createChild(p, move, c) {
 		// TODO: we need to know if this node is terminal
 		var deferred = Q.defer()
-			, parentIndex = serializeBoard(p)
+			, parentIndex = helper.serializeBoard(p)
 			, params = {
 				child: c,
 				move: move,
@@ -74,7 +75,7 @@
 					CREATE (p) -[cr:CHILD {move}]-> (c)
 					CREATE (c) -[pr:PARENT {move}]-> (p)
 					RETURN p, c, cr, pr`
-			, payload = constructQueryBody(query, params)
+			, payload = helper.constructQueryBody(query, params)
 			console.log(payload)
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
@@ -96,9 +97,9 @@
 	 */
 	function isNonTerminal(b) {
 		var deferred = Q.defer()
-			, index = serializeBoard(b)
+			, index = helper.serializeBoard(b)
 			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal AS isNonTerminal`
-			, payload = constructQueryBody(query);
+			, payload = helper.constructQueryBody(query);
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
@@ -117,9 +118,9 @@
 	 */
 	function isFullyExpanded(b) {
 		var deferred = Q.defer()
-			, index = serializeBoard(b)
+			, index = helper.serializeBoard(b)
 			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN size(b.possibleMoves) = 0 AS isFullyExpanded`
-			, payload = constructQueryBody(query)
+			, payload = helper.constructQueryBody(query)
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
@@ -143,7 +144,7 @@
 		if (typeof reward !== 'number') {
 			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
 		} else {
-			var index = serializeBoard(b)
+			var index = helper.serializeBoard(b)
 				, query = `
 						MATCH p =(begin)-[r:PARENT]->(END )
 						WHERE begin.state={state:'${index}'}
@@ -152,7 +153,7 @@
 								n.rewards = n.rewards + ${reward}, 
 								n.visits = n.visits + 1, 
 								n.uct = (reduce(Q = 0, reward IN n.rewards | Q + reward) / child.visits + (2 * ${explorationParameter} * ((2 * LOG(p.visits)) /  child.visits) ^ 0.5))`
-				, payload = constructQueryBody(query)
+				, payload = helper.constructQueryBody(query)
 			neo4j({json:payload}, function(err, response, body) {
 				if (err) {
 					deferred.reject(err);
@@ -167,7 +168,7 @@
 
 	function bestChild(b) {
 		var deferred = Q.defer()
-			, index = serializeBoard(b)
+			, index = helper.serializeBoard(b)
 			, query = `
 					MATCH (p:BOARD {state:'${index}'}) -[r:CHILD]-> (c:BOARD)
 					WITH c, r
@@ -178,7 +179,7 @@
 					WHERE c.uct = 0
 					SET c.uct = 999
 					RETURN c, r ORDER BY c.uct DESC LIMIT 1`
-			, payload = constructQueryBody(query)
+			, payload = helper.constructQueryBody(query)
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
@@ -192,65 +193,7 @@
 		return deferred.promise;
 	}
 
-	function serializeBoard(board) {
-		var output = new Buffer(board)
-		return output.toString('base64');
-	}
-
-	function deserializeBoard(string) {
-		var output = new Buffer(string, 'base64')
-		return output.toString('utf8')
-	}
-
-	function constructQueryBody(statements, parameters) {
-		if (!Array.isArray(statements) || !Array.isArray(parameters || statements.length != parameters.length)) {
-			if (statements && parameters) {
-				return {statements:[{statement:statements, parameters: parameters}]};
-			} else if (statements) {
-				return {statements:[{statement:statements}]};
-			} else {
-				return {statements: []};
-			}
-		} else {
-			var output = {statements:[]}
-			for (var i = 0; i < statements.length; ++i) {
-				output.statements.push({statement: statements[i], parameters: parameters[i]});
-			}
-			return output;
-		}
-	}
-
 	var	parentBoard = 'board';
-
-	function generateTestChildren(number, parent) {
-		for (var i = 0; i < number; ++i) {
-			generateChild(i, parent);
-		}
-	}
-
-	function generateChild(i, parent) {
-		var testChild = {
-			nonTerminal: true,
-			state: serializeBoard('' + i + i + i + i + i),
-			possibleMoves: ['some', 'posible', 'moves'],
-			rewards: [(i % 2)],
-			visits: 1,
-			usedInGame: [],	
-		}
-		for (var j = 0; j < i; ++j) {
-			testChild.rewards.push((j % 2))
-			testChild.visits++;
-		}
-		var allRewards = testChild.rewards.reduce(function(acc, val) { return acc + val })
-			, Xbar = allRewards / testChild.visits;
-		testChild.uct = Xbar;
-
-		createChild(parent, {move: 'test'}, testChild)
-			.then(function(res) {
-				console.log(i + 'th child has state ' + testChild.state)
-				console.log(JSON.stringify(res));
-			});
-	}
 
 	//console.log(deserializeBoard('NTU1NTU='))
 	bestChild(parentBoard)

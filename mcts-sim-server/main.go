@@ -19,6 +19,7 @@ type State struct {
     Free int
     Phase string
     Turn int
+    Steps int
     Countries []Country
 }
 
@@ -81,6 +82,7 @@ func assertState(env clips.EnvironmentPointer, state State) {
     assertTurn(env, state.Turn)
     assertPhase(env, state.Phase)
     assertFreeArmies(env, state.Free)
+    assertSteps(env, state.Steps)
 
     for _, country := range state.Countries {
         assertCountry(env, country.Name, country.Player, country.Armies)
@@ -106,4 +108,8 @@ func assertFreeArmies(env clips.EnvironmentPointer, num int) {
 func assertCountry(env clips.EnvironmentPointer, name string, player int, armies int) {
     clips.AssertString(env, "(controls (country " + name + ") (player " + strconv.Itoa(player) + "))")
     clips.AssertString(env, "(armies (country " + name + ") (num " + strconv.Itoa(armies) + "))")
+}
+
+func assertSteps(env clips.EnvironmentPointer, num int) {
+    clips.AssertString(env, "(steps " + strconv.Itoa(num) + ")")
 }

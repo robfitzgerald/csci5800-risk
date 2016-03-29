@@ -12,6 +12,7 @@
 		, request = require('request')
 		, _ = require('lodash')
 		, Q = require('q')
+		, async = require('async')
 		, neo4j = request.defaults({
 			method: 'POST',
 			url: config.get('neo4j.baseUrl'),
@@ -60,6 +61,7 @@
 
 	function createChild(p, move, c) {
 		// TODO: we need to know if this node is terminal
+		// TODO: input validation
 		var deferred = Q.defer()
 			, parentIndex = helper.serializeBoard(p)
 			, params = {
@@ -75,7 +77,6 @@
 					CREATE (c) -[pr:PARENT {move}]-> (p)
 					RETURN p, c, cr, pr`
 			, payload = helper.constructQueryBody(query, params)
-			console.log(payload)
 		neo4j({json:payload}, function(err, response, body) {
 			if (err) {
 				deferred.reject(err);
@@ -138,28 +139,28 @@
 	 * @param  {Integer} reward - delta reward calculated by defaultPolicy
 	 * @return {null | Object}  - null if success, error object if failed
 	 */
-	function backup(b, reward) {
+	function backup(child, root, reward) {
 		var deferred = Q.defer()
-		if (typeof reward !== 'number') {
+		if (typeof reward !== 'number' && !_.get(child, 'state') && !_.get(root, 'state')) {
 			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
 		} else {
-			var index = helper.serializeBoard(b)
+			var childIndex = helper.serializeBoard(child)
+				, rootIndex = helper.serializeBoard(root)
 				, query = `
-						MATCH path =(child:BOARD)-[r:PARENT*]->(boards:BOARD)
-						WHERE child.state={state:'${index}'}
-						FOREACH (board IN nodes(path)| 
-							SET 
-								board.rewards = board.rewards + ${reward}, 
-								board.visits = board.visits + 1,
-								board.uct = (toFloat(reduce(Q = 0, reward IN board.rewards | Q + reward)) / board.visits + (2.0 * ${explorationParameter} * ((2.0 * LOG(p.visits)) /  board.visits) ^ 0.5)))
-						RETURN nodes(path)`
+						MATCH (child:BOARD{state: '${childIndex}'}),(root:BOARD {state: '${rootIndex}'}),
+						path = allShortestPaths((child) -[PARENT*]-> (root))
+						WITH path
+						FOREACH (node IN nodes(path) |
+							SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward})
+						RETURN path`
 				, payload = helper.constructQueryBody(query)
+
 			neo4j({json:payload}, function(err, response, body) {
 				if (err) {
 					deferred.reject(err);
 				} else {
-					var result = _.get(body, 'results')  // parses neo4j response structure
-					deferred.resolve(body)
+					var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure				
+					deferred.resolve(result)
 				}
 			})
 			return deferred.promise;
@@ -194,17 +195,47 @@
 		return deferred.promise;
 	}
 
+	function generateTestChildren(number, parent) {
+		for (var i = 0; i < number; ++i) {
+			generateChild(i, parent);
+		}
+	}
+
+	function generateChild(i, parent) {
+		var testChild = {
+			nonTerminal: true,
+			state: helper.serializeBoard('a' + i + i + i + i + i),
+			possibleMoves: ['some', 'posible', 'moves'],
+			rewards: [(i % 2)],
+			visits: 1,
+			usedInGame: [],	
+		}
+		for (var j = 0; j < i; ++j) {
+			testChild.rewards.push((j % 2))
+			testChild.visits++;
+		}
+		var allRewards = testChild.rewards.reduce(function(acc, val) { return acc + val })
+			, Xbar = allRewards / testChild.visits;
+		testChild.uct = Xbar;
+
+		createChild(parent, {move: 'test'}, testChild)
+			.then(function(res) {
+				console.log(i + 'th child has state ' + testChild.state)
+				console.log(JSON.stringify(res));
+			});
+	}
+
 	var	parentBoard = 'board';
 
-	backup('55555', 1)
-		.then(function(res){ console.log(res); })
-	// console.log(helper.deserializeBoard('NTU1NTU='))
-	// bestChild(parentBoard)
-	//	.then(function(res) { console.log(res)})
-	// generateTestChildren(7, parentBoard);
-	// createChild(parentBoard, {moveName: 'coolNameBro'}, testChild)
-	// 	.then(function(res) { console.log(res)})
-	// 	.catch(function(err) { console.log('error!'); console.log(err)})	
+	// backup('a11111', parentBoard, 1)
+	// 	.then(function(res){ console.log(JSON.stringify(res)); })
+	// console.log(helper.deserializeBoard('YTExMTEx'))
+	bestChild(parentBoard)
+		.then(function(res) { console.log(res)})
+	// generateTestChildren(2, '55555');
+	// createChild('55555', {moveName: 'coolNameBro'}, testChild)
+	//  	.then(function(res) { console.log(res)})
+	//  	.catch(function(err) { console.log('error!'); console.log(err)})	
 	// createNewRoot(null, ['pizza', 'party'], null)
 	//  	.then(function(res) { console.log(res) }) // just in here for testing
 	// var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON

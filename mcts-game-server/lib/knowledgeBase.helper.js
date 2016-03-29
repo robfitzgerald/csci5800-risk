@@ -3,9 +3,7 @@
 	module.exports = {
 		serializeBoard,
 		deserializeBoard,
-		constructQueryBody,
-		generateTestChildren,
-		generateChild
+		constructQueryBody
 	}
 
 	function serializeBoard(board) {
@@ -35,35 +33,4 @@
 			return output;
 		}
 	}
-
-	function generateTestChildren(number, parent) {
-		for (var i = 0; i < number; ++i) {
-			generateChild(i, parent);
-		}
-	}
-
-	function generateChild(i, parent) {
-		var testChild = {
-			nonTerminal: true,
-			state: serializeBoard('' + i + i + i + i + i),
-			possibleMoves: ['some', 'posible', 'moves'],
-			rewards: [(i % 2)],
-			visits: 1,
-			usedInGame: [],	
-		}
-		for (var j = 0; j < i; ++j) {
-			testChild.rewards.push((j % 2))
-			testChild.visits++;
-		}
-		var allRewards = testChild.rewards.reduce(function(acc, val) { return acc + val })
-			, Xbar = allRewards / testChild.visits;
-		testChild.uct = Xbar;
-
-		createChild(parent, {move: 'test'}, testChild)
-			.then(function(res) {
-				console.log(i + 'th child has state ' + testChild.state)
-				console.log(JSON.stringify(res));
-			});
-	}
-
 }

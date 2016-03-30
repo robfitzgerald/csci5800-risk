@@ -190,7 +190,7 @@
 	 * @param  {Object} b - parent board state
 	 * @return {Promise}  - Promise that resolves to a tuple of board state object, move object
 	 */
-	function bestChild(b) {
+	function bestChildCpZero(b) {
 		var deferred = Q.defer()
 			, index = helper.serializeBoard(b)
 			, queries = [];
@@ -218,6 +218,27 @@
 		return deferred.promise;
 	}
 
+
+	function treePolicy(root) {
+		var v = root;
+		do {
+			var index = helper.serialize(_.get(v, 'state'))
+				, query = `
+				MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal AS isNonTerminal
+				RETURN
+				CASE
+				WHEN size(b.possibleMoves) > 0
+				THEN ** POP possibleMoves **
+				WHEN size(b.possibleMoves) = 0
+				THEN ** bestChild yo **
+			`
+			// call query
+			// if result has move, then expand(parent, move) call to CLIPS
+			// return child
+			// else if result has board, then repeat with v = that board
+		} while (v.nonTerminal)
+  	return v
+	}
 
 
 	function debugGenerateTestChildren(number, parent) {
@@ -257,7 +278,7 @@
 		.catch(function(err) { console.log(err) })
 	// console.log(helper.deserializeBoard('sloop'))
 	// console.log(helper.serializeBoard('sloop'))
-	// bestChild(parentBoard)
+	// bestChildCpZero(parentBoard)
 	// 	.then(function(res) { console.log(res)})
 	// debugGenerateTestChildren(2, '55555');
 	// createChild('55555', {moveName: 'coolNameBro'}, testChild)

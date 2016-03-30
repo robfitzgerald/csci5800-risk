@@ -27,14 +27,21 @@
 	/**
 	 * creates a root node in the knowledge base
 	 * @param  {Board} b        - game board object
-	 * @param  {Object[]} moves - list of valid moves
-	 * @param  {Object} variant - game variant object used to serialize/deserialize board states
+	 * @param  {Object[]} moves - array of valid moves from state
+	 * @param  {String} variant - game variant name - becomes root state name
 	 * @return {Promise}        - Promise that returns created node on success
 	 */
-	function createNewRoot(b, moves, variant) {
+	function createNewRoot(moves, variant) {
 		var deferred = Q.defer()
-			, board = 'board'//variant.serialize(b)  // if b is JSON
-			, index = helper.serializeBoard(board)
+	  if (!typeof variant === 'string') {
+	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 2 ("variant") should be a string, got ' + JSON.stringify(variant));
+	  	return deferred.promise;
+	  }
+	  if (!Array.isArray(moves)) {
+	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 1 ("moves") should be an array')
+	  	return deferred.promise;
+	  }
+		var index = helper.serializeBoard(variant)
 			, params = {
 				boardParams: {
 					nonTerminal: true,
@@ -46,7 +53,7 @@
 				}
 			}
 			, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
-			, payload = helper.constructQueryBody([statement], [params])
+			, payload = helper.constructQueryBody(statement, params)
 		neo4j({json:payload}, function(err, res, body) {
 			if (err) {
 				deferred.reject(err);
@@ -59,11 +66,17 @@
 	}
 
 
-	function createChild(p, move, c) {
+	function createChild(parent, move, child) {
 		// TODO: we need to know if this node is terminal
 		// TODO: input validation
+		if (!typeof child === 'object' || !typeof parent === 'object') {
+			deferred.reject('[knowledgeBase.createChild] error: createChild arg1 and arg3 should be objects');
+			return deferred.promise;
+		}
+		// TODO: serialize should be a function that takes a board state object and stringifies it
+		child.state = helper.serializeBoard(child.state)
 		var deferred = Q.defer()
-			, parentIndex = helper.serializeBoard(p)
+			, parentIndex = helper.serializeBoard(parent.state)
 			, params = {
 				child: c,
 				move: move,
@@ -81,8 +94,6 @@
 			if (err) {
 				deferred.reject(err);
 			} else {
-				console.log('createChild result')
-				console.log(body)
 				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
 				deferred.resolve(result)
 			}
@@ -141,11 +152,17 @@
 	 */
 	function backup(child, root, reward) {
 		var deferred = Q.defer()
-		if (typeof reward !== 'number' && !_.get(child, 'state') && !_.get(root, 'state')) {
+			, childStateString = _.get(child, 'state')
+			, rootStateString = _.get(root, 'state')
+		if (typeof reward !== 'number') {
 			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
+			return deferred.promise;
+		} else if (!childStateString || !rootStateString) {
+			deferred.reject('[knowledgeBase.backup] error: child state string: "' + childStateString + '", root state string: "' + rootStateString + '". both should exist.')
+			return deferred.promise;
 		} else {
-			var childIndex = helper.serializeBoard(child)
-				, rootIndex = helper.serializeBoard(root)
+			var childIndex = helper.serializeBoard(childStateString)
+				, rootIndex = helper.serializeBoard(rootStateString)
 				, query = `
 						MATCH (child:BOARD{state: '${childIndex}'}),(root:BOARD {state: '${rootIndex}'}),
 						path = (child) -[:PARENT*]-> (root)
@@ -168,6 +185,11 @@
 		}
 	}
 
+	/**
+	 * finds the bestChild of a parent board and returns it along with the move that creates the child
+	 * @param  {Object} b - parent board state
+	 * @return {Promise}  - Promise that resolves to a tuple of board state object, move object
+	 */
 	function bestChild(b) {
 		var deferred = Q.defer()
 			, index = helper.serializeBoard(b)
@@ -196,13 +218,15 @@
 		return deferred.promise;
 	}
 
-	function generateTestChildren(number, parent) {
+
+
+	function debugGenerateTestChildren(number, parent) {
 		for (var i = 0; i < number; ++i) {
-			generateChild(i, parent);
+			debugGenerateChild(i, parent);
 		}
 	}
 
-	function generateChild(i, parent) {
+	function debugGenerateChild(i, parent) {
 		var testChild = {
 			nonTerminal: true,
 			state: helper.serializeBoard('a' + i + i + i + i + i),
@@ -228,13 +252,14 @@
 
 	var	parentBoard = 'board';
 
-	backup('sloop', parentBoard, 1)
+	backup({state:'sloop'}, null, 1)
 		.then(function(res){ console.log(JSON.stringify(res)); })
+		.catch(function(err) { console.log(err) })
 	// console.log(helper.deserializeBoard('sloop'))
 	// console.log(helper.serializeBoard('sloop'))
 	// bestChild(parentBoard)
 	// 	.then(function(res) { console.log(res)})
-	// generateTestChildren(2, '55555');
+	// debugGenerateTestChildren(2, '55555');
 	// createChild('55555', {moveName: 'coolNameBro'}, testChild)
 	//  	.then(function(res) { console.log(res)})
 	//  	.catch(function(err) { console.log('error!'); console.log(err)})	

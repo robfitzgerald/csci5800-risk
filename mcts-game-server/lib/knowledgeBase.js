@@ -148,14 +148,15 @@
 				, rootIndex = helper.serializeBoard(root)
 				, query = `
 						MATCH (child:BOARD{state: '${childIndex}'}),(root:BOARD {state: '${rootIndex}'}),
-						path = allShortestPaths((child) -[PARENT*]-> (root))
-						WITH path
-						FOREACH (node IN nodes(path) |
-							SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward})
-						RETURN path`
+						path = (child) -[:PARENT*]-> (root)
+						WITH nodes(path) AS pathNodes UNWIND pathNodes as node
+						WITH DISTINCT node
+						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}
+						RETURN collect(node)`
 				, payload = helper.constructQueryBody(query)
 
 			neo4j({json:payload}, function(err, response, body) {
+				console.log(body)
 				if (err) {
 					deferred.reject(err);
 				} else {
@@ -227,11 +228,12 @@
 
 	var	parentBoard = 'board';
 
-	// backup('a11111', parentBoard, 1)
-	// 	.then(function(res){ console.log(JSON.stringify(res)); })
-	// console.log(helper.deserializeBoard('YTExMTEx'))
-	bestChild(parentBoard)
-		.then(function(res) { console.log(res)})
+	backup('sloop', parentBoard, 1)
+		.then(function(res){ console.log(JSON.stringify(res)); })
+	// console.log(helper.deserializeBoard('sloop'))
+	// console.log(helper.serializeBoard('sloop'))
+	// bestChild(parentBoard)
+	// 	.then(function(res) { console.log(res)})
 	// generateTestChildren(2, '55555');
 	// createChild('55555', {moveName: 'coolNameBro'}, testChild)
 	//  	.then(function(res) { console.log(res)})

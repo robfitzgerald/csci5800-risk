@@ -30,7 +30,7 @@
 	 * creates a root node in the knowledge base
 	 * @param  {Object[]} moves     - array of valid moves     from state
 	 * @param  {String} boardString - game boardString name - becomes root state name
-	 * @return {Promise}            - Promise that returns the created node on success
+	 * @return {Promise}            - Promise that returns the created root node on success
 	 */
 	function createNewRoot(boardString, moves) {
 		var deferred = Q.defer();
@@ -45,13 +45,19 @@
 					boardParams: {
 						nonTerminal: true,
 						state: boardString,
-						possibleMoves: moves,
-						rewards: [],
+						rewards: 0,
 						visits: 0,
 						createdAt: Date.now()
-					}
+					},
+					possibleMoves: moves
 				}
-				, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
+				, statement = `
+						CREATE (p:BOARD {boardParams})
+						WITH p
+						FOREACH (move in {possibleMoves} | 
+							CREATE (n:UNEXPLORED {state: '${boardString}'})
+				 		  CREATE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
+				 		RETURN p`
 				, payload = helper.constructQueryBody(statement, params)
 			neo4j({json:payload}, function(err, res, body) {
 				var neo4jError = _.get(body, 'errors')
@@ -59,7 +65,8 @@
 				if (errors) {
 					deferred.reject(errors);
 				} else {
-					var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
+					var result = {};
+					result.root = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
 					deferred.resolve(result)
 				}
 			});
@@ -97,25 +104,36 @@
 						child: {
 							nonTerminal: child.nonTerminal,
 							state: child.state,
-							possibleMoves: child.moves,
-							rewards: [],
+							rewards: 0,
 							visits: 0,
 							createdAt: Date.now()
 						},
-						move: move,
+						possibleMoves: child.moves,
+						move: move
 					}
 					, query = `
 							CREATE (c:BOARD {child})
 							WITH c
+							FOREACH (move in {possibleMoves} | 
+								CREATE (n:UNEXPLORED {state: '${child}'})
+					 		  CREATE (c) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
+				 		  WITH c
 							MATCH (p:BOARD {state: '${parent}'})
 							WITH c, p
-							SET p.possibleMoves = tail(p.possibleMoves)
 							CREATE (p) -[cr:CHILD {move}]-> (c)
 							CREATE (c) -[pr:PARENT {move}]-> (p)
 							RETURN p, c, cr, pr`
 				statements.push(query);
 				parameters.push(params);
-			})					
+			})
+			// delete 'possible' relation associated with this 'create' call
+			statements.push(`
+				WITH {move} AS m
+				MATCH (p:BOARD {state: '${parent}'}) -[r {name: m.name}]- (u:UNEXPLORED {state:'${parent}'})
+				DELETE r, u
+			`)		
+			parameters.push({move: move})
+
 			var payload = helper.constructQueryBody(statements, parameters)
 			console.log(JSON.stringify(payload))
 			neo4j({json:payload}, function(err, response, body) {
@@ -209,36 +227,40 @@
 		var deferred = Q.defer()
 			, v = root;
 		do {
-			var expandTestQuery = `
-				MATCH (b:BOARD{state:'${v}'})
-				WITH b, size(b.possibleMoves) > 0 AS expand
+			var query = `
+				MATCH (b:BOARD {state:'${v}'}) -[r:POSSIBLE]-> ()
+				WITH r, count(*) as possibleMoveCount
 				RETURN
-				CASE expand
+				CASE possibleMoveCount > 0
 				WHEN true
-				THEN head(b.possibleMoves)
-				ELSE false END AS expandMove
+				THEN r
+				WHEN false 
+				THEN false
+				END AS expand
 			`
-			, expandTestPayload = helper.constructQueryBody(expandTestQuery)
-			neo4j({json:expandTestPayload}, function(err, _res, body) {
+			, payload = helper.constructQueryBody(query)
+			neo4j({json:payload}, function(err, _res, body) {
 				var neo4jError = _.get(body, 'errors')
 					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 				if (errors) {
 					deferred.reject(errors);
 				} else {
+					// grab first move. order guaranteed? not guaranteed? probs not.
 					var move = _.get(body, 'results[0].data[0].row[0]')
+					console.log(JSON.stringify(move))
 					if (move) {
 						CLIPS.expand(v, move)
-							.then(function(child) {
-								console.log('[treePolicy] CLIPS.expand() result: ')
-								console.log(child)
-								createChild(v, move, child)
+							.then(function(children) {
+								// console.log('[treePolicy] CLIPS.expand() result: ')
+								// console.log(children)
+								createChildren(v, move, children)
 									.then(function(result) {
-										console.log('[treePolicy] create new child result:')
-										console.log(result)
+										// console.log('[treePolicy] create new child result:')
+										// console.log(result)
 										deferred.resolve(result)
 									})
 									.catch(function(createError) {
-										console.log('[treePolicy] error from createChild() call:' + createError)
+										// console.log('[treePolicy] error from createChild() call:' + createError)
 										deferred.reject(createError)
 									})
 							})
@@ -286,7 +308,7 @@
 			});
 	}
 
-	// treePolicy('board')
+
 	// backup({state:'sloop'}, null, 1)
 	// 	.then(function(res){ console.log(JSON.stringify(res)); })
 	// 	.catch(function(err) { console.log(err) })
@@ -297,28 +319,28 @@
 	// debugGenerateTestChildren(2, '55555');
 	
 
-	createNewRoot('betsy', ['moves', 'flooves'])
+	createNewRoot('betsy', [{name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, {name:'flooves', params: []}, {name:'shuld be not takey', params: []}])
 	 	.then(function(res) { 
 	 		console.log('createNewRoot.then()')
-	 		createChildren('betsy', {name: 'supermove'}, 
+	 		console.log(res)
+	 		createChildren('betsy', {name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, 
 	 			[
 			 		{
 			 			state: 'ronnie',
-			 			moves: ['{name:1}', '{name:2}'],
+			 			moves: [{name:'asdf', params: ["asdf","sdfg","dfgh","fghj"]}],
 			 			nonTerminal: true
 			 		},{
 			 			state: 'zuko',
-			 			moves: ['{name:3}', '{name:4}'],
+			 			moves: [{name:'fghah', params: []}],
 			 			nonTerminal: true
-			 		},{
-			 			state: 'besos grandes',
-			 			moves: ['{name:5}', '{name:6}'],
-			 			nonTerminal: true	 			
 			 		}
 		 		])
 	 			.then(function(res2) {
 	 				console.log('createChildren.then()')
 	 				console.log(res2)
+					treePolicy('betsy')
+						.then(function(res) {console.log('treePolicy success'); console.log(JSON.stringify(res))})
+						.catch(function(err) {console.log('treePolicy error'); console.log(err)})
 	 			})
 	 			.catch(function(err2) {
 	 				console.log('createChildren.catch()')
@@ -329,14 +351,5 @@
 			console.log('createNewRoot.catch()')
 	 		console.log(err) 
 	 	});
-	 
-
-
-	// var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
-	// isNonTerminal(parentBoard)
-	// 	.then(function(res) { console.log(res) }) // just in here for testing
-	// isFullyExpanded(board)
-	// 	.then(function(res) { console.log(res) }) // just in here for testing
-	// 	
-	// 	
+	  	
 }

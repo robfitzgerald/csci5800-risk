@@ -6,14 +6,18 @@
 		constructQueryBody
 	}
 
+	var _ = require('lodash')
+
 	function serializeBoard(board) {
-		var output = new Buffer(board)
-		return output.toString('base64');
+		// var output = new Buffer(JSON.stringify(board))
+		// return output.toString('base64');
+		return JSON.stringify(board)
 	}
 
-	function deserializeBoard(string) {
-		var output = new Buffer(string, 'base64')
-		return output.toString('utf8')
+	function deserializeBoard(board) {
+		// var output = new Buffer(board, 'base64')
+		// return output.toString('utf8')
+		return JSON.parse(board)
 	}
 
 	function constructQueryBody(statements, parameters) {

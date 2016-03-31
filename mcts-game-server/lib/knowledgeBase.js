@@ -4,7 +4,7 @@
 {
 	module.exports = {
 		createNewRoot,
-		createChild
+		createChildren
 	}
 
 	var config = require('config')
@@ -13,6 +13,8 @@
 		, _ = require('lodash')
 		, Q = require('q')
 		, async = require('async')
+		, CLIPS = require('../lib/clipsController.js')
+		, neo4jParser = require('neo4j-parser')
 		, neo4j = request.defaults({
 			method: 'POST',
 			url: config.get('neo4j.baseUrl'),
@@ -26,159 +28,142 @@
 
 	/**
 	 * creates a root node in the knowledge base
-	 * @param  {Board} b        - game board object
-	 * @param  {Object[]} moves - array of valid moves from state
-	 * @param  {String} variant - game variant name - becomes root state name
-	 * @return {Promise}        - Promise that returns created node on success
+	 * @param  {Object[]} moves     - array of valid moves     from state
+	 * @param  {String} boardString - game boardString name - becomes root state name
+	 * @return {Promise}            - Promise that returns the created node on success
 	 */
-	function createNewRoot(moves, variant) {
-		var deferred = Q.defer()
-	  if (!typeof variant === 'string') {
-	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 2 ("variant") should be a string, got ' + JSON.stringify(variant));
+	function createNewRoot(boardString, moves) {
+		var deferred = Q.defer();
+	  if (!typeof boardString === 'string') {
+	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 1 ("boardString") should be a string, got ' + JSON.stringify(boardString));
 	  	return deferred.promise;
-	  }
-	  if (!Array.isArray(moves)) {
-	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 1 ("moves") should be an array')
+	  } else if (!Array.isArray(moves)) {
+	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 2 ("moves") should be an array')
 	  	return deferred.promise;
-	  }
-		var index = helper.serializeBoard(variant)
-			, params = {
-				boardParams: {
-					nonTerminal: true,
-					state: index,
-					possibleMoves: moves,
-					rewards: [],
-					visits: 0,
-					usedInGame: []
+	  } else {
+			var params = {
+					boardParams: {
+						nonTerminal: true,
+						state: boardString,
+						possibleMoves: moves,
+						rewards: [],
+						visits: 0,
+						createdAt: Date.now()
+					}
 				}
-			}
-			, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
-			, payload = helper.constructQueryBody(statement, params)
-		neo4j({json:payload}, function(err, res, body) {
-			if (err) {
-				deferred.reject(err);
-			} else {
-				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-				deferred.resolve(result)
-			}
-		});
+				, statement = 'CREATE (p:BOARD {boardParams}) RETURN p'
+				, payload = helper.constructQueryBody(statement, params)
+			neo4j({json:payload}, function(err, res, body) {
+				var neo4jError = _.get(body, 'errors')
+					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
+				if (errors) {
+					deferred.reject(errors);
+				} else {
+					var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
+					deferred.resolve(result)
+				}
+			});
+		}
 		return deferred.promise;
 	}
 
-
-	function createChild(parent, move, child) {
-		// TODO: we need to know if this node is terminal
+	/**
+	 * creates children of a parent node by way of the move that generated them
+	 * @param  {String} parent                  - parent board
+	 * @param  {Object} move                    - a valid move object (see wiki for example)
+	 * @param  {Object[]} children              - contains data used to create each child board object
+	 * @param  {String} children[].state        - child board state
+	 * @param  {Object[]} children[].moves      - valid moves from the child state
+	 * @param  {Boolean} children[].nonTerminal - flag indicating it is an end of game configuration
+	 * @return {Promise}                        - resolves to 'success', else it will reject 
+	 */
+	function createChildren(parent, move, children) {
 		// TODO: input validation
-		if (!typeof child === 'object' || !typeof parent === 'object') {
-			deferred.reject('[knowledgeBase.createChild] error: createChild arg1 and arg3 should be objects');
+		if (!typeof parent === 'string') {
+			deferred.reject('[knowledgeBase.createChild] error: parent (arg1) should be a string');
+			return deferred.promise;
+		} else if (!typeof move === 'object') {
+			deferred.reject('[knowledgeBase.createChild] error: move (arg2) should be an object');
+			return deferred.promise;
+		} else if (!Array.isArray(children)) {
+			deferred.reject('[knowledgeBase.createChild] error: children (arg3) should be an array');
+			return deferred.promise;
+		} else {
+			var deferred = Q.defer()
+				, statements = []
+				, parameters = [];
+			_.forEach(children, function(child) {
+				let params = {
+						child: {
+							nonTerminal: child.nonTerminal,
+							state: child.state,
+							possibleMoves: child.moves,
+							rewards: [],
+							visits: 0,
+							createdAt: Date.now()
+						},
+						move: move,
+					}
+					, query = `
+							CREATE (c:BOARD {child})
+							WITH c
+							MATCH (p:BOARD {state: '${parent}'})
+							WITH c, p
+							SET p.possibleMoves = tail(p.possibleMoves)
+							CREATE (p) -[cr:CHILD {move}]-> (c)
+							CREATE (c) -[pr:PARENT {move}]-> (p)
+							RETURN p, c, cr, pr`
+				statements.push(query);
+				parameters.push(params);
+			})					
+			var payload = helper.constructQueryBody(statements, parameters)
+			console.log(JSON.stringify(payload))
+			neo4j({json:payload}, function(err, response, body) {
+				var neo4jError = _.get(body, 'errors')
+					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
+				if (errors) {
+					deferred.reject(errors);
+				} else {
+					var result = _.get(body, 'results')  // parses neo4j response structure
+					deferred.resolve(result)
+				}
+			})
 			return deferred.promise;
 		}
-		// TODO: serialize should be a function that takes a board state object and stringifies it
-		child.state = helper.serializeBoard(child.state)
-		var deferred = Q.defer()
-			, parentIndex = helper.serializeBoard(parent.state)
-			, params = {
-				child: c,
-				move: move,
-			}
-			, query = `
-					CREATE (c:BOARD {child})
-					WITH c
-					MATCH (p:BOARD {state: '${parentIndex}'})
-					WITH c, p
-					CREATE (p) -[cr:CHILD {move}]-> (c)
-					CREATE (c) -[pr:PARENT {move}]-> (p)
-					RETURN p, c, cr, pr`
-			, payload = helper.constructQueryBody(query, params)
-		neo4j({json:payload}, function(err, response, body) {
-			if (err) {
-				deferred.reject(err);
-			} else {
-				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-				deferred.resolve(result)
-			}
-		})
-		return deferred.promise;
-	}
-
-	/**
-	 * checks if a given board is a non-terminal node
-	 * @param  {Board}  b  - board state
-	 * @return {Promise}   - promise that resolves to a boolean or error
-	 */
-	function isNonTerminal(b) {
-		var deferred = Q.defer()
-			, index = helper.serializeBoard(b)
-			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal AS isNonTerminal`
-			, payload = helper.constructQueryBody(query);
-		neo4j({json:payload}, function(err, response, body) {
-			if (err) {
-				deferred.reject(err);
-			} else {
-				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-				deferred.resolve(result)
-			}
-		})
-		return deferred.promise;
-	}
-
-	/**
-	 * checks if a given board is fully expanded
-	 * @param  {Board}  b  - board state
-	 * @return {Promise}   - promise that resolves to a number or error
-	 */
-	function isFullyExpanded(b) {
-		var deferred = Q.defer()
-			, index = helper.serializeBoard(b)
-			, query = `MATCH (b:BOARD{state:'${index}'}) RETURN size(b.possibleMoves) = 0 AS isFullyExpanded`
-			, payload = helper.constructQueryBody(query)
-		neo4j({json:payload}, function(err, response, body) {
-			if (err) {
-				deferred.reject(err);
-			} else {
-				var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure
-				deferred.resolve(result)
-			}
-		})
-		return deferred.promise;
 	}
 
 
 	/**
 	 * backup operation for Monte Carlo Tree Search
-	 * @param  {Board} b        - board state
-	 * @param  {Integer} reward - delta reward calculated by defaultPolicy
-	 * @return {null | Object}  - null if success, error object if failed
+	 * @param  {String} child        - child board state we will backup from
+	 * @param  {String} root         - root board state (empty starting point)
+	 * @param  {Integer} reward      - delta reward calculated by defaultPolicy
+	 * @return {'success' | Object}  - error object if failed
 	 */
 	function backup(child, root, reward) {
 		var deferred = Q.defer()
-			, childStateString = _.get(child, 'state')
-			, rootStateString = _.get(root, 'state')
 		if (typeof reward !== 'number') {
 			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
 			return deferred.promise;
-		} else if (!childStateString || !rootStateString) {
-			deferred.reject('[knowledgeBase.backup] error: child state string: "' + childStateString + '", root state string: "' + rootStateString + '". both should exist.')
+		} else if (typeof child !== 'string' || typeof root !== 'string') {
+			deferred.reject('[knowledgeBase.backup] error: child state string: "' + child + '", root state string: "' + root + '". both should exist.')
 			return deferred.promise;
 		} else {
-			var childIndex = helper.serializeBoard(childStateString)
-				, rootIndex = helper.serializeBoard(rootStateString)
-				, query = `
-						MATCH (child:BOARD{state: '${childIndex}'}),(root:BOARD {state: '${rootIndex}'}),
+			var query = `
+						MATCH (child:BOARD{state: '${child}'}),(root:BOARD {state: '${root}'}),
 						path = (child) -[:PARENT*]-> (root)
 						WITH nodes(path) AS pathNodes UNWIND pathNodes as node
 						WITH DISTINCT node
 						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}
 						RETURN collect(node)`
 				, payload = helper.constructQueryBody(query)
-
 			neo4j({json:payload}, function(err, response, body) {
-				console.log(body)
-				if (err) {
-					deferred.reject(err);
+				var neo4jError = _.get(body, 'errors')
+					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
+				if (errors) {
+					deferred.reject(errors);
 				} else {
-					var result = _.get(body, 'results[0].data[0].row[0]')  // parses neo4j response structure				
-					deferred.resolve(result)
+					deferred.resolve('success')
 				}
 			})
 			return deferred.promise;
@@ -187,27 +172,28 @@
 
 	/**
 	 * finds the bestChild of a parent board and returns it along with the move that creates the child
-	 * @param  {Object} b - parent board state
+	 * @param  {Object} parent - parent board state
 	 * @return {Promise}  - Promise that resolves to a tuple of board state object, move object
 	 */
-	function bestChildCpZero(b) {
+	function bestChildCpZero(parent) {
 		var deferred = Q.defer()
-			, index = helper.serializeBoard(b)
 			, queries = [];
 			queries.push(`
-					MATCH (p:BOARD {state:'${index}'}) -[r:CHILD]-> (c:BOARD)
+					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (c:BOARD)
 					WITH c, r
 					SET c.uct = toFloat(reduce(Q = 0, reward IN c.rewards | Q + reward)) / c.visits
 					WITH c, r
 					WHERE c.uct = 0
 					SET c.uct = ${infinity}`);
 			queries.push(`
-					MATCH (p:BOARD {state:'${index}'}) -[r:CHILD]-> (c:BOARD)
+					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (c:BOARD)
 					RETURN c, r ORDER BY c.uct DESC LIMIT 1`)
 		var payload = helper.constructQueryBody(queries, [null,null])
 		neo4j({json:payload}, function(err, response, body) {
-			if (err) {
-				deferred.reject(err);
+			var neo4jError = _.get(body, 'errors')
+				, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
+			if (errors) {
+				deferred.reject(errors);
 			} else {
 				var result = {};
 				result.move = _.get(body, 'results[1].data[0].row[1]')  // parses neo4j response structure
@@ -220,24 +206,53 @@
 
 
 	function treePolicy(root) {
-		var v = root;
+		var deferred = Q.defer()
+			, v = root;
 		do {
-			var index = helper.serialize(_.get(v, 'state'))
-				, query = `
-				MATCH (b:BOARD{state:'${index}'}) RETURN b.nonTerminal AS isNonTerminal
+			var expandTestQuery = `
+				MATCH (b:BOARD{state:'${v}'})
+				WITH b, size(b.possibleMoves) > 0 AS expand
 				RETURN
-				CASE
-				WHEN size(b.possibleMoves) > 0
-				THEN ** POP possibleMoves **
-				WHEN size(b.possibleMoves) = 0
-				THEN ** bestChild yo **
+				CASE expand
+				WHEN true
+				THEN head(b.possibleMoves)
+				ELSE false END AS expandMove
 			`
-			// call query
+			, expandTestPayload = helper.constructQueryBody(expandTestQuery)
+			neo4j({json:expandTestPayload}, function(err, _res, body) {
+				var neo4jError = _.get(body, 'errors')
+					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
+				if (errors) {
+					deferred.reject(errors);
+				} else {
+					var move = _.get(body, 'results[0].data[0].row[0]')
+					if (move) {
+						CLIPS.expand(v, move)
+							.then(function(child) {
+								console.log('[treePolicy] CLIPS.expand() result: ')
+								console.log(child)
+								createChild(v, move, child)
+									.then(function(result) {
+										console.log('[treePolicy] create new child result:')
+										console.log(result)
+										deferred.resolve(result)
+									})
+									.catch(function(createError) {
+										console.log('[treePolicy] error from createChild() call:' + createError)
+										deferred.reject(createError)
+									})
+							})
+					} else {
+						console.log('bestChild()')
+						deferred.resolve('gets best child and repeats loop')
+					}
+				}
+			})
 			// if result has move, then expand(parent, move) call to CLIPS
 			// return child
 			// else if result has board, then repeat with v = that board
-		} while (v.nonTerminal)
-  	return v
+		} while (false/*v.nonTerminal*/)
+  	return deferred.promise;
 	}
 
 
@@ -271,23 +286,54 @@
 			});
 	}
 
-	var	parentBoard = 'board';
-
-	backup({state:'sloop'}, null, 1)
-		.then(function(res){ console.log(JSON.stringify(res)); })
-		.catch(function(err) { console.log(err) })
-	// console.log(helper.deserializeBoard('sloop'))
+	// treePolicy('board')
+	// backup({state:'sloop'}, null, 1)
+	// 	.then(function(res){ console.log(JSON.stringify(res)); })
+	// 	.catch(function(err) { console.log(err) })
+	// console.log(helper.deserializeBoard('puppies'))
 	// console.log(helper.serializeBoard('sloop'))
 	// bestChildCpZero(parentBoard)
 	// 	.then(function(res) { console.log(res)})
 	// debugGenerateTestChildren(2, '55555');
-	// createChild('55555', {moveName: 'coolNameBro'}, testChild)
-	//  	.then(function(res) { console.log(res)})
-	//  	.catch(function(err) { console.log('error!'); console.log(err)})	
-	// createNewRoot(null, ['pizza', 'party'], null)
-	//  	.then(function(res) { console.log(res) }) // just in here for testing
+	
+
+	createNewRoot('betsy', ['moves', 'flooves'])
+	 	.then(function(res) { 
+	 		console.log('createNewRoot.then()')
+	 		createChildren('betsy', {name: 'supermove'}, 
+	 			[
+			 		{
+			 			state: 'ronnie',
+			 			moves: ['{name:1}', '{name:2}'],
+			 			nonTerminal: true
+			 		},{
+			 			state: 'zuko',
+			 			moves: ['{name:3}', '{name:4}'],
+			 			nonTerminal: true
+			 		},{
+			 			state: 'besos grandes',
+			 			moves: ['{name:5}', '{name:6}'],
+			 			nonTerminal: true	 			
+			 		}
+		 		])
+	 			.then(function(res2) {
+	 				console.log('createChildren.then()')
+	 				console.log(res2)
+	 			})
+	 			.catch(function(err2) {
+	 				console.log('createChildren.catch()')
+	 				console.log(err2)
+	 			})
+	 	}) // just in here for testing
+	 	.catch(function(err) { 
+			console.log('createNewRoot.catch()')
+	 		console.log(err) 
+	 	});
+	 
+
+
 	// var board = '--BOARDTEST--p1:human,;p2:ai,'//variant.serialize(b)  // if b is JSON
-	// isNonTerminal(board)
+	// isNonTerminal(parentBoard)
 	// 	.then(function(res) { console.log(res) }) // just in here for testing
 	// isFullyExpanded(board)
 	// 	.then(function(res) { console.log(res) }) // just in here for testing

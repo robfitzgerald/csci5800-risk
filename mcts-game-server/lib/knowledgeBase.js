@@ -190,33 +190,53 @@
 
 	/**
 	 * finds the bestChild of a parent board and returns it along with the move that creates the child
-	 * @param  {Object} parent - parent board state
+	 * @param  {Object} parent - parent board state object
 	 * @return {Promise}  - Promise that resolves to a tuple of board state object, move object
 	 */
-	function bestChildCpZero(parent) {
+	function bestChild(parent, Cp) {
 		var deferred = Q.defer()
-			, queries = [];
-			queries.push(`
-					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (c:BOARD)
-					WITH c, r
-					SET c.uct = toFloat(reduce(Q = 0, reward IN c.rewards | Q + reward)) / c.visits
-					WITH c, r
-					WHERE c.uct = 0
-					SET c.uct = ${infinity}`);
-			queries.push(`
-					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (c:BOARD)
-					RETURN c, r ORDER BY c.uct DESC LIMIT 1`)
-		var payload = helper.constructQueryBody(queries, [null,null])
+			, query = `
+					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (child:BOARD)
+					WITH collect(child) AS children, r AS moves, p AS parent
+					RETURN EXTRACT(board in children |
+							CASE 
+							WHEN board.visits = 0 OR parent.visits = 0
+							THEN {state:board.state, uct: 0}
+							ELSE {
+					      state: board.state, 
+					      uct: 
+					      	((toFloat
+					      			(board.rewards) / board.visits)
+					       		+ ${Cp}
+					       			* SQRT(
+					        			(toFloat(2 * LOG(parent.visits)))
+					        		/ board.visits)
+					       		)
+					    }
+				  	END)
+			  	AS uct, moves`
+			  	console.log(query)
+					// TODO: within query, "ORDER BY uct DESC LIMIT 1"
+		var payload = helper.constructQueryBody(query)
 		neo4j({json:payload}, function(err, response, body) {
 			var neo4jError = _.get(body, 'errors')
 				, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 			if (errors) {
 				deferred.reject(errors);
 			} else {
-				var result = {};
-				result.move = _.get(body, 'results[1].data[0].row[1]')  // parses neo4j response structure
-				result.bestChild = _.get(body, 'results[1].data[0].row[0]')
-				deferred.resolve(result)
+				var result = []
+					, childCount = _.get(body, 'results[0].data.length')
+				for (var i = 0; i < childCount; ++i) {
+					var child = {};
+					// TODO: create helper to parse neo4j response object (or find one)
+					child.board = _.get(body, 'results[0].data[' + i + '].row[0][0]');
+					child.move = _.get(body, 'results[0].data[' + i + '].row[1]');
+					result.push(child)
+				}
+				result.sort(function(a,b) {
+					return b.board.uct - a.board.uct;
+				})
+				deferred.resolve(_.get(result, '[0]'))
 			}
 		})
 		return deferred.promise;
@@ -266,7 +286,17 @@
 							})
 					} else {
 						console.log('bestChild()')
-						deferred.resolve('gets best child and repeats loop')
+						console.log(v)
+						console.log(explorationParameter)
+						bestChild(v, explorationParameter)
+							.then(function(vBestChild) {
+								console.log(vBestChild)
+								deferred.resolve(vBestChild)
+							})
+							.catch(function(bestChildError) {
+								deferred.reject(bestChildError)
+							})
+						// copied from bestChild() above (before refactoring to not set c.uct)
 					}
 				}
 			})
@@ -278,78 +308,49 @@
 	}
 
 
-	function debugGenerateTestChildren(number, parent) {
-		for (var i = 0; i < number; ++i) {
-			debugGenerateChild(i, parent);
-		}
-	}
-
-	function debugGenerateChild(i, parent) {
-		var testChild = {
-			nonTerminal: true,
-			state: helper.serializeBoard('a' + i + i + i + i + i),
-			possibleMoves: ['some', 'posible', 'moves'],
-			rewards: [(i % 2)],
-			visits: 1,
-			usedInGame: [],	
-		}
-		for (var j = 0; j < i; ++j) {
-			testChild.rewards.push((j % 2))
-			testChild.visits++;
-		}
-		var allRewards = testChild.rewards.reduce(function(acc, val) { return acc + val })
-			, Xbar = allRewards / testChild.visits;
-		testChild.uct = Xbar;
-
-		createChild(parent, {move: 'test'}, testChild)
-			.then(function(res) {
-				console.log(i + 'th child has state ' + testChild.state)
-				console.log(JSON.stringify(res));
-			});
-	}
-
 
 	// backup({state:'sloop'}, null, 1)
 	// 	.then(function(res){ console.log(JSON.stringify(res)); })
 	// 	.catch(function(err) { console.log(err) })
 	// console.log(helper.deserializeBoard('puppies'))
 	// console.log(helper.serializeBoard('sloop'))
-	// bestChildCpZero(parentBoard)
-	// 	.then(function(res) { console.log(res)})
+	// bestChild('betsy', 0)
+	// 	.then(function(res) { console.log(JSON.stringify(res))})
+	// 	.catch(function(err) { console.log(err)})
 	// debugGenerateTestChildren(2, '55555');
 	
 
-	createNewRoot('betsy', [{name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, {name:'flooves', params: []}, {name:'shuld be not takey', params: []}])
-	 	.then(function(res) { 
-	 		console.log('createNewRoot.then()')
-	 		console.log(res)
-	 		createChildren('betsy', {name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, 
-	 			[
-			 		{
-			 			state: 'ronnie',
-			 			moves: [{name:'asdf', params: ["asdf","sdfg","dfgh","fghj"]}],
-			 			nonTerminal: true
-			 		},{
-			 			state: 'zuko',
-			 			moves: [{name:'fghah', params: []}],
-			 			nonTerminal: true
-			 		}
-		 		])
-	 			.then(function(res2) {
-	 				console.log('createChildren.then()')
-	 				console.log(res2)
+	// createNewRoot('betsy', [{name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, {name:'flooves', params: []}, {name:'shuld be not takey', params: []}])
+	//  	.then(function(res) { 
+	//  		console.log('createNewRoot.then()')
+	//  		console.log(res)
+	//  		createChildren('betsy', {name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, 
+	//  			[
+	// 		 		{
+	// 		 			state: 'ronnie',
+	// 		 			moves: [{name:'asdf', params: ["asdf","sdfg","dfgh","fghj"]}],
+	// 		 			nonTerminal: true
+	// 		 		},{
+	// 		 			state: 'zuko',
+	// 		 			moves: [{name:'fghah', params: []}],
+	// 		 			nonTerminal: true
+	// 		 		}
+	// 	 		])
+	//  			.then(function(res2) {
+	//  				console.log('createChildren.then()')
+	//  				console.log(res2)
 					treePolicy('betsy')
 						.then(function(res) {console.log('treePolicy success'); console.log(JSON.stringify(res))})
 						.catch(function(err) {console.log('treePolicy error'); console.log(err)})
-	 			})
-	 			.catch(function(err2) {
-	 				console.log('createChildren.catch()')
-	 				console.log(err2)
-	 			})
-	 	}) // just in here for testing
-	 	.catch(function(err) { 
-			console.log('createNewRoot.catch()')
-	 		console.log(err) 
-	 	});
+	//  			})
+	//  			.catch(function(err2) {
+	//  				console.log('createChildren.catch()')
+	//  				console.log(err2)
+	//  			})
+	//  	}) // just in here for testing
+	//  	.catch(function(err) { 
+	// 		console.log('createNewRoot.catch()')
+	//  		console.log(err) 
+	//  	});
 	  	
 }

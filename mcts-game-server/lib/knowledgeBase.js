@@ -199,9 +199,10 @@
 	}
 
 	/**
-	 * finds the bestChild of a parent board and returns it along with the move that creates the child
+	 * bestChild operation in Monte Carlo Tree Search, using UCT method. finds the bestChild of a parent board and returns it along with the move that creates the child
 	 * @param  {String} parent - parent board state string
-	 * @return {Promise}  - Promise that resolves to a tuple of board state object, move object
+	 * @param  {Integer}    Cp - the coefficient used in UCT for the second term. See essay on MCTS methods.
+	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object
 	 */
 	function bestChild(parent, Cp) {
 		var deferred = Q.defer()
@@ -210,8 +211,8 @@
 					WITH collect(child) AS children, r AS moves, p AS parent
 					RETURN EXTRACT(board in children |
 							CASE 
-							WHEN board.visits = 0 OR parent.visits = 0
-							THEN {state:board.state, nonTerminal: board.nonTerminal, uct: 0}
+							WHEN board.visits = 0
+							THEN {state:board.state, nonTerminal: board.nonTerminal, uct: ${infinity}}						
 							ELSE {
 					      state: board.state, 
 					      nonTerminal: board.nonTerminal,
@@ -253,6 +254,11 @@
 	}
 
 
+	/**
+	 * treePolicy method as described in Monte Carlo Tree Search. searches for a best child board state to pass to our defaultPolicy for simulation.
+	 * @param  {String} root - root state string for the tree we are exploring
+	 * @return {Promise}     - resolves to a board state object, rejects with any error messages.
+	 */
 	function treePolicy(root) {
 		var deferred = Q.defer()
 			, v = {state:root, nonTerminal:true}
@@ -375,20 +381,20 @@
 	// 					.then(function(res) {
 	// 						// console.log('treePolicy success');
 	// 						// console.log(JSON.stringify(res))
-	// 						var i = 0
-	// 							, generate = 20
-	// 							, counter = Date.now();	
-	// 						async.whilst(function() { return i < generate }
-	// 							, function(callback) {
-	// 								i++;
-	// 								treePolicy('betsy')
-	// 									.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
-	// 									.catch(function(err) { callback(err)})
-	// 							},
-	// 							function(error, result) {
-	// 								console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
-	// 								console.log(result)
-	// 							})
+							var i = 0
+								, generate = 5
+								, counter = Date.now();	
+							async.whilst(function() { return i < generate }
+								, function(callback) {
+									i++;
+									treePolicy('betsy')
+										.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
+										.catch(function(err) { callback(err)})
+								},
+								function(error, result) {
+									console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
+									console.log(result)
+								})
 	// 					})
 	// 					.catch(function(err) {console.log('treePolicy error'); console.log(err)})
 	//  			})

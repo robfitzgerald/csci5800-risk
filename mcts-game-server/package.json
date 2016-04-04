@@ -31,10 +31,13 @@
   },
   "homepage": "https://github.com/robfitzgerald/csci5800-risk#readme",
   "dependencies": {
+    "async": "^1.5.2",
     "body-parser": "^1.15.0",
     "config": "^1.19.0",
     "express": "^4.13.4",
     "lodash": "^4.6.1",
+    "neo4j-parser": "^2.0.4",
+    "q": "^1.4.1",
     "request": "^2.69.0"
   },
   "devDependencies": {

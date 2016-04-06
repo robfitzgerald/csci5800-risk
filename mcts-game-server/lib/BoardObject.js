@@ -32,9 +32,7 @@
 					} else if (thisType !== 'AI' && thisType !== 'HUMAN') {
 						throw new TypeError('[BoardClass]: this player element was not of the form "AI" or "HUMAN", got ' + JSON.stringify(player))
 					} else {
-						outerScope.players.push({
-							type: player
-						})
+						outerScope.players.push(player)
 					}
 				})				
 			}

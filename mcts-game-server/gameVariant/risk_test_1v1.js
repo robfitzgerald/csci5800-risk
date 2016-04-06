@@ -18,9 +18,10 @@
 		return 6;
 	}
 
-	class riskBoard extends BoardClass {
+	class RiskBoard extends BoardObject {
 		constructor (gameNum, gameVariant, players, ) {
-			super ()
+			super (gameNum, gameVariant, players);
+			
 		}
 	}
 

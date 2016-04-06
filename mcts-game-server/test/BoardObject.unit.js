@@ -63,6 +63,21 @@
 			}
 			expect(result).to.not.exist;
 			expect(error.message).to.contain('"AI" or "HUMAN"');
+		})
+		it('should construct the correct object with simple 2 player game parameters', function() {
+			var result, error;
+			try {
+				result = new BoardObject(2, 'someGameType', [{type:'HUMAN'},{type:'AI'}])
+			} catch (e) {
+				error = e;
+			}
+			expect(error).to.not.exist;
+			expect(result.gameNumber).to.equal(2)
+			expect(result.gameVariant).to.equal('someGameType')
+			expect(result.current.turn).to.equal(1)
+			expect(result.current.player).to.equal(0)
+			expect(result.players[0].type).to.equal('HUMAN')
+			expect(result.players[1].type).to.equal('AI')
 		})						
 	})
 }

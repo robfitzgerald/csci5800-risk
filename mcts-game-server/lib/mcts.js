@@ -1,7 +1,7 @@
 'use strict';
 {
 	var treePolicy = require('./knowledgeBase').treePolicy
-		, defaultPolicy = require('./defaultPolicy')
+		, defaultPolicy = require('./clipsController').defaultPolicy
 		, backup = require('./knowledgeBase').backup
 
 	/**

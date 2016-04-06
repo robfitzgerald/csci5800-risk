@@ -1,7 +1,8 @@
 'use strict';
 {
 	module.exports = {
-		expand
+		expand,
+		defaultPolicy
 	}
 
 	var request = require('request')
@@ -29,4 +30,6 @@
 		}])
 		return deferred.promise;
 	}
+
+	function defaultPolicy () {}
 }

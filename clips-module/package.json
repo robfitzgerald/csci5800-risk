@@ -1,0 +1,14 @@
+{
+  "name": "clips-module",
+  "version": "0.0.1",
+  "description": "A node module for calling CLIPS functionality",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "W. Max Lees <max.lees@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "q": "^1.4.1"
+  }
+}

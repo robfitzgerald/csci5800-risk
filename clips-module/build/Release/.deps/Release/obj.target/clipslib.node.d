@@ -1,0 +1,1 @@
+cmd_Release/obj.target/clipslib.node := g++ -shared -pthread -rdynamic -m64  -Wl,-soname=clipslib.node -o Release/obj.target/clipslib.node -Wl,--start-group Release/obj.target/clipslib/factparser.o Release/obj.target/clipslib/agendaparser.o Release/obj.target/clipslib/clips.o -Wl,--end-group /usr/local/lib/libclips++.a -lclips

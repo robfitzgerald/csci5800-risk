@@ -3,6 +3,8 @@ package main
 import ("github.com/wmaxlees/clips"
         "fmt"
         "github.com/emicklei/go-restful"
+        // "github.com/wmaxlees/clips/factparser"
+        // "github.com/wmaxlees/clips/agendaparser"
         "net/http"
         "strings"
         "strconv")
@@ -48,13 +50,21 @@ func getActions(request *restful.Request, response *restful.Response) {
     clips.Load(env, "risk.clips")
     clips.Reset(env)
     assertState(env, *state)
+    clips.SetStrategy(env, clips.RANDOM_STRATEGY)
 
-    str := clips.GetFactList(env)
-    fmt.Printf(str)
+    // Push facts into the fact parser
+    /*fp := factparser.NewFactParser(*/clips.GetFactList(env)/*)*/
+    // fp.GetFact(0)
 
-    // Get the possible actions
+    /*agenda := */ // clips.GetAgenda(env)
+
+    // agendaparser.NewAgendaParser(agenda)
+    // fmt.Printf("%s\n", ap.GetAgenda(0, fp))
 
     response.WriteAsJson("STUB")
+    clips.Run(env, 1)
+
+    clips.DestroyEnvironment(env)
 }
 
 
@@ -74,7 +84,11 @@ func runSimulation(request *restful.Request, response *restful.Response) {
 
     resultPtr := clips.FindGlobal(env, "result")
 
-    response.WriteAsJson("{\"result\": " + strings.Split(clips.GetGlobalValueForm(env, resultPtr, 15), " ")[2] + "}")
+    // clips.DestroyEnvironment(env)
+
+    response.WriteAsJson("{'result': " + strings.Split(clips.GetGlobalValueForm(env, resultPtr, 15), " ")[2] + "}")
+
+    clips.DestroyEnvironment(env)
 }
 
 func assertState(env clips.EnvironmentPointer, state State) {

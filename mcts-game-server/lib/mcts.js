@@ -1,8 +1,8 @@
 'use strict';
 {
-	var treePolicy = require('./treePolicy')
+	var treePolicy = require('./knowledgeBase').treePolicy
 		, defaultPolicy = require('./defaultPolicy')
-		, backup = require('./backup')
+		, backup = require('./knowledgeBase').backup
 
 	/**
 	 * Monte Carlo Tree Search

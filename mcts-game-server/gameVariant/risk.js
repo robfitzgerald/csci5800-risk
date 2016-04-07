@@ -12,6 +12,15 @@
 		, _ = require('lodash')
 
 	/**
+	 * this array contains a list of the properties that should be found
+	 * on a board object.
+	 * @type {Array}
+	 */
+	var schema = [
+			'Turn', 'Countries', 'Phase', 'Free', 'Steps', 'Players'
+			]
+
+	/**
 	 * returns the maximum number of players for this game
 	 * @return {Number} max number of Risk players
 	 */
@@ -27,24 +36,31 @@
 	 * @return {RiskBoard}       - reformatted for CLIPS and neo4j indexing
 	 */
 	function generalize (board) {
-		console.log('risk.generalize() called with')
-		console.log(board)
+		var schemaValidate = _.difference(schema, _.keys(board));
+		if (schemaValidate.length > 0) {
+			throw new TypeError('[risk.generalize]: board did not contain all properties required. missing: ' + schemaValidate)
+		} else {
+			var generalizedBoard = _.cloneDeep(board)
+				, playerMap = [] // array that acts as a mapping function for player numbers
+				, currentPlayer = generalizedBoard.Turn;
+			console.log('risk.generalize() called with')
+			console.log(board)	
+			return board;		
+		}
 	}
 
 	/**
 	 * re-assigns the correct details for this board 
 	 * @param  {RiskBoard} board               - CLIPS-formatted RiskBoard object
 	 * @param  {Number} currentPlayerNumber    - the current player's actual player number
-	 * @param  {Object} decoratingObject       - any properties will be copied into this RiskBoard
+	 * @param  {Object} decoratingObject       - any properties will be copied into this RiskBoard as long as they do not overwrite any properties on board
 	 * @return {RiskBoard}                     - reformatted for play
 	 */
 	function deGeneralize (board, currentPlayerNumber, decoratingObject) {
-		var intersection = _.intersection(_.keys(board), _.keys(decoratingObject));
-		if (typeof board !== 'object' || !board.hasOwnProperty('Turn')) {
-			// TODO: create a static class member function equivalent to isArray()
-			// Javascript instanceof fails when class object is passed from module to module,
-			// and each module has its own copy of the class definition, as this is currently set up.
-			throw new TypeError('[risk.deGeneralize]: board parameter is not an instance of RiskBoard, is a/an: ' + typeof RiskBoard)
+		var intersection = _.intersection(_.keys(board), _.keys(decoratingObject))
+			, schemaValidate = _.difference(schema, _.keys(board));
+		if (schemaValidate.length > 0) {
+			throw new TypeError('[risk.deGeneralize]: board did not contain all properties required. missing: ' + schemaValidate)
 		} else if (typeof currentPlayerNumber !== 'number') {
 			throw new TypeError('[risk.deGeneralize]: currentPlayerNumber is not a number, got ' + JSON.stringify(currentPlayerNumber))
 		} else if (!_.isObjectLike(decoratingObject)) {
@@ -53,7 +69,7 @@
 			throw new TypeError('[risk.deGeneralize]: decoratingObject contains properties that will overwrite properties in board: ' + intersection)
 		} else {
 			var deGeneralizedBoard = _.cloneDeep(board)
-				, playerMap = []; // array that acts as a hashing function
+				, playerMap = []; // array that acts as a mapping function for player numbers
 			Object.assign(deGeneralizedBoard, decoratingObject)
 			playerMap.push(currentPlayerNumber); // index 0 
 			for (var i = 1, j = 0; i < deGeneralizedBoard.Players; ++i, ++j) {

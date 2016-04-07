@@ -11,6 +11,21 @@
 				expect(board instanceof RiskBoard).to.equal(true)				
 			})
 		})
+		describe('.generalize()', function() {
+			it('should throw an error if some properties are missing', function() {
+				var board = {Players:2}
+					, result
+					, error;
+				try {
+					result = Risk.generalize(board);
+				} catch (e) {
+					error = e;
+				}
+				expect(result).to.not.exist;
+				expect(error).to.exist;
+				expect(error.message).to.not.contain('Players')
+			})
+		})
 		describe('.deGeneralize()', function() {
 			it('should throw an error on bad types', function() {
 				var badBoard, badPlayerNum, badObject, confictingObject
@@ -45,7 +60,7 @@
 				expect(objError).to.exist;
 				expect(cfOError).to.exist;
 			})
-			it('should remap the players ordered from 0,1,2,3 to 2,0,1,3, and merge in the decoratingObject parameter', function() {
+			it('should remap the players ordered from 0,1,2,3 to 2,0,1,3, and merge in the decoratingObject parameter, when currentPlayer is 2', function() {
 				var board = Risk.generate([{type:'AI'},{type:'HUMAN'},{type:'HUMAN'},{type:'AI'}], 'Risk')
 					, result = Risk.deGeneralize(board, 2, {test:'merged in property'})
 					, mapping = [2, 0, 1, 3]; // this should be the mapping generated in deGeneralize

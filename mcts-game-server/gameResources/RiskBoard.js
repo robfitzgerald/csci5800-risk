@@ -11,7 +11,7 @@
       this.Phase = 'attack';
       this.Countries = setupCountries(this.Players);
       this.Free = 0;
-      this.Steps = config.get('clips.steps')
+      this.Steps = config.get('clips.steps');
     }
 
     /**

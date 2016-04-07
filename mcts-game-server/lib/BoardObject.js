@@ -19,11 +19,10 @@
 			} else {
 				this.gameNumber = gameNum;
 				this.gameVariant = gameVariant;
-				this.current = {
-					turn: 1,
-					player: 0
-				}
-				this.players = [];
+				this.Players = players.length;
+				this.Turn = 0;
+				this.moveCount = 0;
+				this.playerDetails = [];
 				var outerScope = this;
 				_.forEach(players, function(player) {
 					var thisType = _.get(player, 'type');
@@ -32,7 +31,7 @@
 					} else if (thisType !== 'AI' && thisType !== 'HUMAN') {
 						throw new TypeError('[BoardClass]: this player element was not of the form "AI" or "HUMAN", got ' + JSON.stringify(player))
 					} else {
-						outerScope.players.push(player)
+						outerScope.playerDetails.push(player)
 					}
 				})				
 			}

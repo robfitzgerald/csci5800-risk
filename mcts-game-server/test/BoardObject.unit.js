@@ -1,7 +1,8 @@
 'use strict';
 {
 	var BoardObject = require('../lib/BoardObject')
-		, expect = require('chai').expect;
+		, expect = require('chai').expect
+		, example;
 
 	describe('BoardObject', function() {
 		it('should be new-able but should throw an error without any parameters', function() {
@@ -67,17 +68,19 @@
 		it('should construct the correct object with simple 2 player game parameters', function() {
 			var result, error;
 			try {
-				result = new BoardObject(2, 'someGameType', [{type:'HUMAN'},{type:'AI'}])
+				result = new BoardObject(34, 'someGameType', [{type:'HUMAN'},{type:'AI'}])
 			} catch (e) {
 				error = e;
 			}
 			expect(error).to.not.exist;
-			expect(result.gameNumber).to.equal(2)
+			expect(result.gameNumber).to.equal(34)
+			expect(result.Players).to.equal(2)
 			expect(result.gameVariant).to.equal('someGameType')
-			expect(result.current.turn).to.equal(1)
-			expect(result.current.player).to.equal(0)
-			expect(result.players[0].type).to.equal('HUMAN')
-			expect(result.players[1].type).to.equal('AI')
-		})						
+			expect(result.Turn).to.equal(0)
+			expect(result.moveCount).to.equal(0)
+			expect(result.playerDetails[0].type).to.equal('HUMAN')
+			expect(result.playerDetails[1].type).to.equal('AI')
+			example = result;
+		})					
 	})
 }

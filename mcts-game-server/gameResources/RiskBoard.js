@@ -6,8 +6,8 @@
     , config = require('config')
 
   module.exports = class RiskBoard extends BoardObject {
-    constructor (gameNum, players) {
-      super (gameNum, 'Risk', players);
+    constructor (gameNum, variant, players) {
+      super (gameNum, variant, players);
       this.Phase = 'attack';
       this.Countries = setupCountries(this.Players);
       this.Free = 0;
@@ -26,6 +26,11 @@
     
   }
 
+  /**
+   * distributes the countries evenly and evenly populates them with armies
+   * @param  {Number} numPlayers - number of players
+   * @return {Object[]}          - array of country objects
+   */
   function setupCountries(numPlayers) {
     var countries = [
       { "Name": "Alaska" },

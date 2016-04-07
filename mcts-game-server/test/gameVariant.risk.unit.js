@@ -7,7 +7,7 @@
 	describe('Risk', function() {
 		describe('.generate()', function() {
 			it('should generate a board', function() {
-				var board = Risk.generate([{type:'AI'},{type:'HUMAN'}], 'Risk')
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
 				expect(board instanceof RiskBoard).to.equal(true)				
 			})
 		})
@@ -25,8 +25,19 @@
 				expect(error).to.exist;
 				expect(error.message).to.not.contain('Players')
 			})
+			it('should remap the players ordered from 0,1,2,3 to 2,3,0,1, when currentPlayer is 2', function() {
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'},{type:'HUMAN'},{type:'AI'}])
+				board.Turn = 2;
+				var result = Risk.generalize(board)
+				for (var i = 0; i < board.Countries.length; ++i) {
+					var before = board.Countries[i].Player 
+						,	after = result.Countries[i].Player
+					function diffBy2(val) { return (((before + 4) - 2) % 4); } // 4 players, currentPlayer = 2
+					expect(after).to.equal(diffBy2(before));
+				}
+			})
 		})
-		describe('.deGeneralize()', function() {
+		describe.skip('.deGeneralize()', function() {
 			it('should throw an error on bad types', function() {
 				var badBoard, badPlayerNum, badObject, confictingObject
 					, badError, plNError, objError, cfOError

@@ -28,6 +28,7 @@
 		} else {
 			console.log('[training.middleware] variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget)
 			// some loop running numberOfGames games
+			// see mcts.middleware.js for some direction on this
 			next();
 		}
 	}

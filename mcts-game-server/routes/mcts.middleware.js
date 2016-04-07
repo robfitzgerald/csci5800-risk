@@ -29,6 +29,7 @@
 	 		try {
 				variant = boards[variantName];
 				board = req.body;
+				board.gameVariant = variantName;
 				stopTime = Date.now() + computationalBudget;
 				mctsIterations = 0;
 			} catch (e) {

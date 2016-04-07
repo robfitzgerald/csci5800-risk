@@ -3,9 +3,9 @@
 	module.exports = {
 		maxPlayers,
 		generalize,
-		deGeneralize,
+		deGeneralize,  // TODO: rewrite mapping to cyclical if you want to start using this again.
 		play,
-		generate
+		generate,
 	}
 
 	var RiskBoard = require('../gameResources/RiskBoard')
@@ -41,11 +41,12 @@
 			throw new TypeError('[risk.generalize]: board did not contain all properties required. missing: ' + schemaValidate)
 		} else {
 			var generalizedBoard = _.cloneDeep(board)
-				, playerMap = [] // array that acts as a mapping function for player numbers
-				, currentPlayer = generalizedBoard.Turn;
-			console.log('risk.generalize() called with')
-			console.log(board)	
-			return board;		
+				, distance = generalizedBoard.Turn
+				, numPlayers = generalizedBoard.Players
+			generalizedBoard.Countries.forEach(function(country) {
+				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
+			});
+			return _.pick(generalizedBoard, schema);		
 		}
 	}
 
@@ -54,6 +55,7 @@
 	 * @param  {RiskBoard} board               - CLIPS-formatted RiskBoard object
 	 * @param  {Number} currentPlayerNumber    - the current player's actual player number
 	 * @param  {Object} decoratingObject       - any properties will be copied into this RiskBoard as long as they do not overwrite any properties on board
+	 * @deprecated                             - generalization is now a 1-way trip to neo4j and that's all. right?
 	 * @return {RiskBoard}                     - reformatted for play
 	 */
 	function deGeneralize (board, currentPlayerNumber, decoratingObject) {
@@ -95,13 +97,13 @@
 
 	/**
 	 * instantiates a new basic risk board
+	 * @param  {String} variant        - valid gameVariant filename
 	 * @param  {Object[]} players      - array of player objects
 	 * @param  {String} players[].type - a player type such as AI, HUMAN
-	 * @param  {String} variant        - valid gameVariant filename
 	 * @return {RiskBoard}             - new game board
 	 */
-	function generate (players, variant) {
-		var gameNumber = variant.length;  // go to database, increment gameCount, return incremented value
-		return new RiskBoard(gameNumber, players)
+	function generate (variant, players) {
+		var gameNumber = 0;  // go to database, increment gameCount, return incremented value
+		return new RiskBoard(gameNumber, variant, players)
 	}
 }

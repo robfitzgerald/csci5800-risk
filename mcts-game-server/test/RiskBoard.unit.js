@@ -20,8 +20,8 @@
 				, error
 				, players = [{type:'AI'},{type:'HUMAN'}]
 			try {
-				board1 = new RiskBoard(2112, players);
-				board2 = new RiskBoard(2113, players);
+				board1 = new RiskBoard(2112, 'Risk', players);
+				board2 = new RiskBoard(2113, 'Risk', players);
 			} catch (e) {
 				error = e;
 			}
@@ -45,7 +45,7 @@
 			expect(playerNumberInRange).to.equal(true);
 		})
 		it('should move to the next player and update free armies on endTurn()', function() {
-			var board = new RiskBoard(1972, [{type:'AI'},{type:'AI'}])
+			var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
 				, player1CountryCount = board.Countries.filter(c => c.Player === 1).length;
 			board.endTurn();
 			expect(board.Turn).to.equal(1);

@@ -43,7 +43,7 @@
 			var generalizedBoard = _.cloneDeep(board)
 				, distance = generalizedBoard.Turn
 				, numPlayers = generalizedBoard.Players
-			generalizedBoard.Countries.forEach(function(country) {
+			_.forEach(generalizedBoard.Countries, function(country) {
 				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
 			});
 			return _.pick(generalizedBoard, schema);		

@@ -15,13 +15,18 @@
     }
 
     /**
-     * advances the board player to the next player and issues
-     * armies that can be placed by the new player.
+     * ends the game turn for a player and issues new armies to the next player
+     * @return {RiskBoard} - returns this for method chaining
      */
     endTurn () {
       this.Turn = ((this.Turn + 1) % this.Players);
       this.Free = Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3);
       this.Phase = 'placement';
+      return this;
+    }
+
+    equals(board) {
+      return super.equals(board)
     }
     
   }
@@ -66,13 +71,12 @@
       j++;
       j = j % countriesShuffled.length;
     }
+    countriesShuffled.sort((a,b) => a.Name > b.Name)
     var output = {};
     for (var i = 0; i < countriesShuffled.length; ++i) {
       var country = { "Player": countriesShuffled[i].Player, "Armies": countriesShuffled[i].Armies };
       output[countriesShuffled[i].Name] = country;
     }
-
-    // countriesShuffled.sort((a, b) => a.Name > b.Name)
     return output;
   }
 }

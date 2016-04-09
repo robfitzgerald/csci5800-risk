@@ -36,5 +36,8 @@
 				})				
 			}
 		}
+		equals(board) {
+			return _.isEqual(this,board)
+		}
 	}
 }

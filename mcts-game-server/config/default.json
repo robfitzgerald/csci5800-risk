@@ -13,6 +13,7 @@
 
 	},
 	"clips": {
-		"baseUrl": ""
+		"baseUrl": "",
+		"steps": 1000
 	}
 }

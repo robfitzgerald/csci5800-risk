@@ -44,10 +44,11 @@
 	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 2 ("moves") should be an array')
 	  	return deferred.promise;
 	  } else {
-			var params = {
+	  	var serializedBoard = helper.serialize(boardString)
+				, params = {
 					boardParams: {
 						nonTerminal: true,
-						state: boardString,
+						state: serializedBoard,
 						rewards: 0,
 						visits: 0,
 						createdAt: Date.now()
@@ -58,7 +59,7 @@
 						CREATE (p:BOARD {boardParams})
 						WITH p
 						FOREACH (move in {possibleMoves} | 
-							CREATE (n:UNEXPLORED {state: '${boardString}'})
+							CREATE (n:UNEXPLORED {state: '${serializedBoard}'})
 				 		  CREATE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
 				 		RETURN p`
 				, payload = helper.constructQueryBody(statement, params)
@@ -79,7 +80,7 @@
 
 	/**
 	 * creates children of a parent node by way of the move that generated them
-	 * @param  {String} parent                  - parent board
+	 * @param  {String} parent                  - serialized parent board
 	 * @param  {Object} move                    - a valid move object (see wiki for example)
 	 * @param  {Object[]} children              - contains data used to create each child board object
 	 * @param  {String} children[].state        - child board state
@@ -177,8 +178,10 @@
 			deferred.reject('[knowledgeBase.backup] error: child state string: "' + child + '", root state string: "' + root + '". both should exist.')
 			return deferred.promise;
 		} else {
-			var query = `
-						MATCH (child:BOARD{state: '${child}'}),(root:BOARD {state: '${root}'}),
+			var serializedChild = helper.serialize(child)
+				, serializedRoot = helper.serialize(child)
+				, query = `
+						MATCH (child:BOARD{state: '${serializedChild}'}),(root:BOARD {state: '${serializedRoot}'}),
 						path = (child) -[:PARENT*]-> (root)
 						WITH nodes(path) AS pathNodes UNWIND pathNodes as node
 						WITH DISTINCT node
@@ -261,7 +264,8 @@
 	 */
 	function treePolicy(root) {
 		var deferred = Q.defer()
-			, v = {state:root, nonTerminal:true}
+			, serializedRoot = helper.serialize(root)
+			, v = {state:serializedRoot,nonTerminal:true}
 			, expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
 			var query = `
@@ -381,20 +385,20 @@
 	// 					.then(function(res) {
 	// 						// console.log('treePolicy success');
 	// 						// console.log(JSON.stringify(res))
-							var i = 0
-								, generate = 5
-								, counter = Date.now();	
-							async.whilst(function() { return i < generate }
-								, function(callback) {
-									i++;
-									treePolicy('betsy')
-										.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
-										.catch(function(err) { callback(err)})
-								},
-								function(error, result) {
-									console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
-									console.log(result)
-								})
+							// var i = 0
+							// 	, generate = 5
+							// 	, counter = Date.now();	
+							// async.whilst(function() { return i < generate }
+							// 	, function(callback) {
+							// 		i++;
+							// 		treePolicy('betsy')
+							// 			.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
+							// 			.catch(function(err) { callback(err)})
+							// 	},
+							// 	function(error, result) {
+							// 		console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
+							// 		console.log(result)
+							// 	})
 	// 					})
 	// 					.catch(function(err) {console.log('treePolicy error'); console.log(err)})
 	//  			})

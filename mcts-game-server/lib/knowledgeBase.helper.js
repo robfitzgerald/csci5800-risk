@@ -1,20 +1,20 @@
 'use strict';
 {
 	module.exports = {
-		serializeBoard,
-		deserializeBoard,
+		serialize,
+		deserialize,
 		constructQueryBody
 	}
 
 	var _ = require('lodash')
 
-	function serializeBoard(board) {
+	function serialize(board) {
 		// var output = new Buffer(JSON.stringify(board))
 		// return output.toString('base64');
 		return JSON.stringify(board)
 	}
 
-	function deserializeBoard(board) {
+	function deserialize(board) {
 		// var output = new Buffer(board, 'base64')
 		// return output.toString('utf8')
 		return JSON.parse(board)

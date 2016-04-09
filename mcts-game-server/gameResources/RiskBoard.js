@@ -20,7 +20,7 @@
      */
     endTurn () {
       this.Turn = ((this.Turn + 1) % this.Players);
-      this.Free = this.Countries.filter(c => c.Player === this.Turn).length;
+      this.Free = Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3);
       this.Phase = 'placement';
     }
     
@@ -66,7 +66,13 @@
       j++;
       j = j % countriesShuffled.length;
     }
-    countriesShuffled.sort((a, b) => a.Name > b.Name)
-    return countriesShuffled;
+    var output = {};
+    for (var i = 0; i < countriesShuffled.length; ++i) {
+      var country = { "Player": countriesShuffled[i].Player, "Armies": countriesShuffled[i].Armies };
+      output[countriesShuffled[i].Name] = country;
+    }
+
+    // countriesShuffled.sort((a, b) => a.Name > b.Name)
+    return output;
   }
 }

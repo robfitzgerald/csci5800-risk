@@ -1,6 +1,7 @@
 'use strict';
 {
 	var expect = require('chai').expect
+		, _ = require('lodash')
 		, RiskBoard = require('../gameResources/RiskBoard');
 
 	describe('RiskBoard', function() {
@@ -27,16 +28,17 @@
 			}
 			expect(error).to.not.exist;	
 			var exactlyTheSame = true
-				, playerNumberInRange = true;
-			for (var i = 0; i < board1.Countries.length; ++i) {
-				if (board1.Countries[i].Player !== board2.Countries[i].Player) {
+				, playerNumberInRange = true
+				, keys = _.keys(board1.Countries)
+			for (var i = 0; i < keys.length; ++i) {
+				if (board1.Countries[keys[i]].Player !== board2.Countries[keys[i]].Player) {
 					exactlyTheSame = false;
 				}
 				if(
-					board1.Countries[i].Player < 0 ||
-					board1.Countries[i].Player >= players.length || 
-					board2.Countries[i].Player < 0 ||
-					board2.Countries[i].Player >= players.length
+					board1.Countries[keys[i]].Player < 0 ||
+					board1.Countries[keys[i]].Player >= players.length || 
+					board2.Countries[keys[i]].Player < 0 ||
+					board2.Countries[keys[i]].Player >= players.length
 					) {
 					playerNumberInRange = false;
 				}
@@ -46,7 +48,7 @@
 		})
 		it('should move to the next player and update free armies on endTurn()', function() {
 			var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
-				, player1CountryCount = board.Countries.filter(c => c.Player === 1).length;
+				, player1CountryCount = Math.floor(_.filter(board.Countries, c => c.Player === 1).length / 3);
 			board.endTurn();
 			expect(board.Turn).to.equal(1);
 			expect(board.Free).to.equal(player1CountryCount);

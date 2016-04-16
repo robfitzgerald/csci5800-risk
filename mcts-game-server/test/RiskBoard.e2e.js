@@ -2,6 +2,7 @@
 {
 	var RiskBoard = require('../gameResources/RiskBoard.js')
 		, expect = require('chai').expect
+		, _ = require('lodash')
 
 	describe('RiskBoard', function() {
 		it('both players lost 1 army when player 0 attacked from Alberta to NorthwestTerritory', function() {
@@ -67,5 +68,29 @@
 			expect(board.getCountryArmies('Alberta')).to.equal(3)
 			expect(board.getCountryArmies('NorthwestTerritory')).to.equal(4)
 		})
+		it('should award 2 + 2 points for owning South America and 6 total countries', function() {
+			// setup
+			var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+				, allCountries = Object.keys(board.Countries)
+			_.forEach(allCountries, function(cName) {
+				board.setCountryPlayer(cName, 0)
+			})
+			board.setCountryPlayer('Venezuela', 1)
+			board.setCountryPlayer('Peru', 1)
+			board.setCountryPlayer('Brazil', 1)
+			board.setCountryPlayer('Argentina', 1)
+			board.setCountryPlayer('Alberta', 1)
+			board.setCountryPlayer('NorthwestTerritory', 1)
+
+			// pre-test
+			expect(board.Turn).to.equal(0)
+
+			// example
+			board.endTurn();
+
+			// post-test
+			expect(board.Turn).to.equal(1)
+			expect(board.Free).to.equal(4)
+		})	
 	})
 }

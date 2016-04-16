@@ -5,6 +5,16 @@
     , _ = require('lodash')
     , config = require('config')
 
+  /**
+   * @property {Object} Country     - object to represent a country
+   * @param {String} Country.Name   - name of country
+   * @param {Number} Country.Player - enumeration of player owning this country
+   * @param {Number} Country.Armies - number of armies on this Country
+   */
+
+  /**
+   * RiskBoard class for a given board instance floating through the Nodejs code base
+   */
   module.exports = class RiskBoard extends BoardObject {
     constructor (gameNum, variant, players) {
       super (gameNum, variant, players);
@@ -12,6 +22,55 @@
       this.Countries = setupCountries(this.Players);
       this.Free = 0;
       this.Steps = config.get('clips.steps');
+      this.rules = {};
+
+      /**
+       * an object containing continents, their countries and army bonus values
+       * @type {Object}
+       */
+      this.rules.continents = { 
+        "NorthAmerica": {
+          "countries": [
+            { "Name": "Alaska" },
+            { "Name": "NorthwestTerritory" },
+            { "Name": "Greenland" },
+            { "Name": "Alberta" },
+            { "Name": "Ontario" },
+            { "Name": "WesternUnitedStates" },
+            { "Name": "EasternUnitedStates" },
+            { "Name": "CentralAmerica" }
+          ],
+          "bonus": 5
+        },
+        "SouthAmerica": {
+          "countries": [
+            { "Name": "Venezuela" },
+            { "Name": "Peru" },
+            { "Name": "Brazil" },
+            { "Name": "Argentina" }
+          ],
+          "bonus": 2
+        }
+      }
+    } 
+
+    getCountryPlayer(country) {
+      if (!_.get(this.Countries, country)) {
+        throw new Error('[RiskBoard.getCountryPlayer()]: country ' + country + ' is an invalid country name.')
+      } else {
+        return this.Countries[country];
+      }
+    }
+
+    setCountryPlayer(country, player) {
+      if (!_.get(this.Countries, country)) {
+        throw new Error('[RiskBoard.setCountryPlayer()]: country ' + country + ' is an invalid country name.')
+      } else if (!_.isNumber(player)) {
+        throw new Error('[RiskBoard.setCountryPlayer()]: arg2 should be a Number, but got ' + typeof player + '.')
+      } else if (player < 0 || player >= this.Players) {
+        throw new Error('[RiskBoard.setCountryPlayer()]: arg2 needs to be a number between 0 and ' + (this.Players - 1) + ', but was ' + player + '.')
+      }
+      this.Countries[country].Player = player;
     }
 
     /**
@@ -29,7 +88,41 @@
       return super.equals(board)
     }
     
+    _continentReward () {
+      var thisPlayersCountries = _.filter(this.Countries, function(country) {
+        return country.Player === this.Turn;
+      })
+      return _.reduce(
+              _.map(this.rules.continents, function(continent) {
+                var diff = _.differenceBy(continent, thisPlayersCountries, function(c) { return c.Name })
+                return ((diff.length === 0) ? continent.bonus : 0)
+              }),
+              function (sum, n) { return sum + n; },
+              0);
+      
+    }
+
   }
+
+  /**
+   * an array of all valid countries and their respective continents
+   * @type {Object[]}
+   * @param {String} countries[].Name       - country name
+   */      
+  var countries = [
+    { "Name": "Alaska" },
+    { "Name": "NorthwestTerritory" },
+    { "Name": "Greenland" },
+    { "Name": "Alberta" },
+    { "Name": "Ontario" },
+    { "Name": "WesternUnitedStates" },
+    { "Name": "EasternUnitedStates" },
+    { "Name": "CentralAmerica" },
+    { "Name": "Venezuela" },
+    { "Name": "Peru" },
+    { "Name": "Brazil" },
+    { "Name": "Argentina" }
+  ];
 
   /**
    * distributes the countries evenly and evenly populates them with armies
@@ -37,21 +130,7 @@
    * @return {Object[]}          - array of country objects
    */
   function setupCountries(numPlayers) {
-    var countries = [
-      { "Name": "Alaska" },
-      { "Name": "NorthwestTerritory" },
-      { "Name": "Greenland" },
-      { "Name": "Alberta" },
-      { "Name": "Ontario" },
-      { "Name": "WesternUnitedStates" },
-      { "Name": "EasternUnitedStates" },
-      { "Name": "CentralAmerica" },
-      { "Name": "Venezuela" },
-      { "Name": "Peru" },
-      { "Name": "Brazil" },
-      { "Name": "Argentina" }
-    ]
-      , totalArmiesOnBoard = [null, null, 80, 115, 120, 125, 120][numPlayers]
+    var totalArmiesOnBoard = [null, null, 80, 115, 120, 125, 120][numPlayers]
       , stepPlayer = 0
       , countriesShuffled = _.shuffle(countries);
     totalArmiesOnBoard -= countries.length;

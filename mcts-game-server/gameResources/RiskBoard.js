@@ -54,6 +54,11 @@
       }
     } 
 
+    /**
+     * get the enumerated player number for a given country
+     * @param  {String} country - country name
+     * @return {Number}         - player number
+     */
     getCountryPlayer(country) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.getCountryPlayer()]: country ' + country + ' is an invalid country name.')
@@ -62,6 +67,11 @@
       }
     }
 
+    /**
+     * sets the enumerated player number for a given country
+     * @param {String} country - country name
+     * @param {Number} player  - player number
+     */
     setCountryPlayer(country, player) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.setCountryPlayer()]: country ' + country + ' is an invalid country name.')
@@ -73,6 +83,11 @@
       this.Countries[country].Player = player;
     }
 
+    /**
+     * get the number of armies on a given country
+     * @param  {String} country - country name
+     * @return {Number}         - army count
+     */
     getCountryArmies(country) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.getCountryArmies()]: country ' + country + ' is an invalid country name.')
@@ -81,6 +96,11 @@
       }
     }
 
+    /**
+     * set the number of armies on a given country
+     * @param {String} country - country name
+     * @param {Number} armies  - new army count
+     */
     setCountryArmies(country, armies) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.setCountryArmies()]: country ' + country + ' is an invalid country name.')
@@ -98,16 +118,26 @@
      */
     endTurn () {
       this.Turn = ((this.Turn + 1) % this.Players);
-      this.Free = Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3);
+      this.Free = this._countriesReward();
       this.Free += this._continentReward();
       this.Phase = 'placement';
       return this;
     }
 
+    /**
+     * test equality between two RiskBoard objects
+     * @param  {RiskBoard} board - a RiskBoard object
+     * @return {Boolean}         - equality
+     */
     equals(board) {
       return super.equals(board)
     }
     
+    /**
+     * evaluates the number of new armies to award based on continent ownership
+     * @private
+     * @return {Number}  - armies rewarded from continent ownership
+     */
     _continentReward () {
       var currentTurn = this.Turn
         , continents = this.rules.continents
@@ -127,6 +157,15 @@
               function (sum, n) { return sum + n; },
               0);
       
+    }
+
+    /**
+     * evaluates the number of new armies to award based on country ownership
+     * @private
+     * @return {Number}  - armies rewarded by calculating # of countries divided by 3
+     */
+    _countriesReward () {
+      return Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3)
     }
 
   }

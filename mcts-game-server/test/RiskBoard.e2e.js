@@ -14,12 +14,8 @@
 			board.setCountryArmies('NorthwestTerritory', 4)
 			
 			// example usage
-			// it really begs for a function like board.modifyCountryArmies('Alberta', 8, -1)..
-			// but this is what you get for now :-|
-			var p0Armies = board.getCountryArmies('Alberta')
-			board.setCountryArmies('Alberta', p0Armies - 1)
-			var p1Armies = board.getCountryArmies('NorthwestTerritory')
-			board.setCountryArmies('NorthwestTerritory', p1Armies - 1)
+			board.modifyCountryArmies('Alberta', -1)
+			board.modifyCountryArmies('NorthwestTerritory', -1)
 
 			// test
 			expect(board.getCountryArmies('Alberta')).to.equal(7)
@@ -53,7 +49,7 @@
 			board.setCountryArmies('NorthwestTerritory', 7)		
 
 			// example usage
-			var p0ArmiesAfterAttack = (board.getCountryArmies('Alberta') - 2)
+			var p0ArmiesAfterAttack = board.modifyCountryArmies('Alberta', -2)
 			if (p0ArmiesAfterAttack <= 0) {
 				// killed player at country.
 				var sourceArmiesRemaining = board.getCountryArmies('NorthwestTerritory') - attackedWith;

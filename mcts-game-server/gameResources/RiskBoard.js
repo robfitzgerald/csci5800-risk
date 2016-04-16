@@ -112,6 +112,12 @@
       this.Countries[country].Armies = armies;
     }
 
+    /**
+     * modify the number of armies on a given country += the value passed in
+     * @param  {String} country - country name
+     * @param  {Number} armies  - army count magnitude
+     * @return {Number}         - new army count at country
+     */
     modifyCountryArmies(country, armies) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.modifyCountryArmies()]: country ' + country + ' is an invalid country name.')

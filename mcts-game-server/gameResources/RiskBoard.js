@@ -183,6 +183,18 @@
       return Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3)
     }
 
+    /**
+     * returns true when the game is over
+     * @return {Boolean} game over?
+     */
+    gameOver() {
+      var remainingPlayers = _.uniq(
+        _.map(
+          this.Countries, 
+          function(c) { return c.Player; }));
+      return remainingPlayers.length === 1;
+    }
+
   }
 
   /**

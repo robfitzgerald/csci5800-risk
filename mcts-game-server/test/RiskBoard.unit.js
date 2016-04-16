@@ -304,6 +304,25 @@
 				expect(result).to.equal(0);
 			})
 		})
+		describe('gameOver()', function() {
+			it('should return true when only one player remains', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, allCountries = Object.keys(board.Countries)
+				_.forEach(allCountries, function(cName) {
+					board.setCountryPlayer(cName, 1)
+				})
+				var result = board.gameOver();
+				expect(result).to.be.true;				
+			})
+			it('should return false when more than one player remains', function() {
+				var board2 = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, board5 = new RiskBoard(0, 'Risk', [{type:'AI'},{type:'AI'},{type:'AI'},{type:'AI'},{type:'AI'}])
+					, result2 = board2.gameOver()
+					, result5 = board5.gameOver();
+				expect(result2).to.be.false;
+				expect(result5).to.be.false;
+			})	
+		})
 	})
 
 }

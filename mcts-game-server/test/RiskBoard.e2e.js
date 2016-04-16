@@ -88,5 +88,23 @@
 			expect(board.Turn).to.equal(1)
 			expect(board.Free).to.equal(4)
 		})	
+		it('should identify that the game is over when player 1 owns the board', function() {
+			// setup
+			var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+				, allCountries = Object.keys(board.Countries)
+				, player1 = 1
+				, over = false;
+			_.forEach(allCountries, function(cName) {
+				board.setCountryPlayer(cName, player1)  // player one owns every country
+			})
+
+			// example
+			if (board.gameOver()) {
+				over = true;
+			}
+
+			// test
+			expect(over).to.be.true;
+		})
 	})
 }

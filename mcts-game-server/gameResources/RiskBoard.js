@@ -58,19 +58,38 @@
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.getCountryPlayer()]: country ' + country + ' is an invalid country name.')
       } else {
-        return this.Countries[country];
+        return this.Countries[country].Player;
       }
     }
 
     setCountryPlayer(country, player) {
       if (!_.get(this.Countries, country)) {
         throw new Error('[RiskBoard.setCountryPlayer()]: country ' + country + ' is an invalid country name.')
-      } else if (!_.isNumber(player)) {
-        throw new Error('[RiskBoard.setCountryPlayer()]: arg2 should be a Number, but got ' + typeof player + '.')
+      } else if (!_.isInteger(player)) {
+        throw new Error('[RiskBoard.setCountryPlayer()]: arg2 should be an integer Number, but got ' + typeof player + ' ' + player + '.')
       } else if (player < 0 || player >= this.Players) {
         throw new Error('[RiskBoard.setCountryPlayer()]: arg2 needs to be a number between 0 and ' + (this.Players - 1) + ', but was ' + player + '.')
       }
       this.Countries[country].Player = player;
+    }
+
+    getCountryArmies(country) {
+      if (!_.get(this.Countries, country)) {
+        throw new Error('[RiskBoard.getCountryArmies()]: country ' + country + ' is an invalid country name.')
+      } else {
+        return this.Countries[country].Armies;
+      }
+    }
+
+    setCountryArmies(country, armies) {
+      if (!_.get(this.Countries, country)) {
+        throw new Error('[RiskBoard.setCountryArmies()]: country ' + country + ' is an invalid country name.')
+      } else if (!_.isInteger(armies)) {
+        throw new Error('[RiskBoard.setCountryArmies()]: arg2 should be a Number, but got ' + typeof armies + '.')
+      } else if (armies < 0) {
+        throw new Error('[RiskBoard.setCountryArmies()]: arg2 needs to be a non-negative integer, but was ' + armies + '.')
+      }
+      this.Countries[country].Armies = armies;
     }
 
     /**

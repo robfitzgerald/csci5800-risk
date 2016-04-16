@@ -84,17 +84,17 @@
 			})
 		})
 		describe('getCountryPlayer()', function() {
-			it('should return the correct country player for a few countries', function() {
+			it('should return the correct country player for a player\'s countries', function() {
 				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
       		, thisPlayersCountries = _.filter(
   						_.map(board.Countries, function(v, k) {
   							return {Name: k, Player: v.Player, Armies: v.Armies}
   						})    			
       			, function(country) {
-          return country.Player === board.Turn;
-        })
+          		return country.Player === board.Turn;
+        		})
       	_.forEach(thisPlayersCountries, function(c) {
-      		expect(board.getCountryPlayer(c.Name).Player).to.equal(board.Turn);
+      		expect(board.getCountryPlayer(c.Name)).to.equal(board.Turn);
       	})
 			})
 			it('should throw an error if an invalid country name is asked for', function() {
@@ -116,7 +116,7 @@
 					, otherPlayer = (Alberta.Player === 0 ? 1 : 0)
 				board.setCountryPlayer('Alberta', otherPlayer)
 				result = board.getCountryPlayer('Alberta')
-				expect(result.Player).to.equal(otherPlayer)				
+				expect(result).to.equal(otherPlayer)				
 			})
 			it('should throw an error if an invalid country name is asked for', function() {
 				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
@@ -134,7 +134,7 @@
 				try {
 					result = board.setCountryPlayer('Alberta', '2');
 				} catch (e) {
-					expect(e.message).to.contain('[RiskBoard.setCountryPlayer()]: arg2 should be a Number, but got string.');
+					expect(e.message).to.contain('[RiskBoard.setCountryPlayer()]: arg2 should be an integer Number, but got string 2.');
 				}
 				expect(result).to.not.exist;				
 			})
@@ -155,11 +155,69 @@
 			})			
 		})
 		describe('getCountryArmies()', function() {
-			
+			it('should return the correct country armies for a player\'s countries', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+      		, thisPlayersCountries = _.filter(
+  						_.map(board.Countries, function(v, k) {
+  							return {Name: k, Player: v.Player, Armies: v.Armies}
+  						})    			
+      			, function(country) {
+          			return country.Player === board.Turn;
+        			})
+      	_.forEach(thisPlayersCountries, function(c) {
+      		expect(board.getCountryArmies(c.Name)).to.equal(board.Countries[c.Name].Armies);
+      	})
+			})
+			it('should throw an error if an invalid country name is asked for', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.getCountryArmies('Atlantis');
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.getCountryArmies()]: country Atlantis is an invalid country name.');
+				}
+				expect(result).to.not.exist;
+			})
 		})
 		describe('setCountryArmies()', function() {
-			
-		})		
+			it('should properly set the armies attribute of a country', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result
+				board.setCountryArmies('Alberta', 10)
+				result = board.getCountryArmies('Alberta')
+				expect(result).to.equal(10)				
+			})
+			it('should throw an error if an invalid country name is asked for', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.setCountryArmies('Atlantis', 0);
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.setCountryArmies()]: country Atlantis is an invalid country name.');
+				}
+				expect(result).to.not.exist;
+			})
+			it('should throw an error if the player argument is not an integer', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.setCountryArmies('Alberta', '2');
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.setCountryArmies()]: arg2 should be a Number, but got string.');
+				}
+				expect(result).to.not.exist;				
+			})
+			it('should throw an error if the player argument is out of range', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.setCountryArmies('Alberta', -1);
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.setCountryArmies()]: arg2 needs to be a non-negative integer, but was -1.');
+				}
+				expect(result).to.not.exist;	
+			})			
+		})	
 		describe('_continentReward', function() {
 
 		})

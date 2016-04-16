@@ -112,6 +112,15 @@
       this.Countries[country].Armies = armies;
     }
 
+    modifyCountryArmies(country, armies) {
+      if (!_.get(this.Countries, country)) {
+        throw new Error('[RiskBoard.modifyCountryArmies()]: country ' + country + ' is an invalid country name.')
+      } else if (!_.isInteger(armies)) {
+        throw new Error('[RiskBoard.modifyCountryArmies()]: arg2 should be a Number, but got ' + typeof armies + '.')
+      }
+      return this.Countries[country].Armies += armies;
+    }
+
     /**
      * ends the game turn for a player and issues new armies to the next player
      * @return {RiskBoard} - returns this for method chaining

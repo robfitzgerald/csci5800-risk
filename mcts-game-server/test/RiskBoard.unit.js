@@ -248,6 +248,38 @@
 				expect(result).to.not.exist;	
 			})			
 		})	
+		describe('modifyCountryArmies()', function() {
+			it('should properly modify the armies attribute of a country', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result
+				board.setCountryArmies('Alberta', 10)
+				board.setCountryArmies('NorthwestTerritory', 10)
+				var alberta = board.modifyCountryArmies('Alberta', 2)
+				var nwt = board.modifyCountryArmies('NorthwestTerritory', -2)
+				expect(alberta).to.equal(12)
+				expect(nwt).to.equal(8)				
+			})
+			it('should throw an error if an invalid country name is asked for', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.modifyCountryArmies('Atlantis', 0);
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.modifyCountryArmies()]: country Atlantis is an invalid country name.');
+				}
+				expect(result).to.not.exist;
+			})
+			it('should throw an error if the player argument is not an integer', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, result;
+				try {
+					result = board.modifyCountryArmies('Alberta', '2');
+				} catch (e) {
+					expect(e.message).to.contain('[RiskBoard.modifyCountryArmies()]: arg2 should be a Number, but got string.');
+				}
+				expect(result).to.not.exist;				
+			})				
+		})
 		describe('_continentReward()', function() {
 			it('should generate a continent reward of 2 when South America is controlled', function() {
 				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])

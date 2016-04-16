@@ -56,6 +56,36 @@
 				expect(board.Free).to.equal(player1CountryCount);
 				expect(board.Phase).to.equal('placement');
 			})
+			it('should award 1 + 2 points for owning South America', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, allCountries = Object.keys(board.Countries)
+				_.forEach(allCountries, function(cName) {
+					board.setCountryPlayer(cName, 0)
+				})
+				board.setCountryPlayer('Venezuela', 1)
+				board.setCountryPlayer('Peru', 1)
+				board.setCountryPlayer('Brazil', 1)
+				board.setCountryPlayer('Argentina', 1)
+				board.endTurn();
+				expect(board.Turn).to.equal(1)
+				expect(board.Free).to.equal(3)
+			})
+			it('should award 2 + 2 points for owning South America and 6 total countries', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, allCountries = Object.keys(board.Countries)
+				_.forEach(allCountries, function(cName) {
+					board.setCountryPlayer(cName, 0)
+				})
+				board.setCountryPlayer('Venezuela', 1)
+				board.setCountryPlayer('Peru', 1)
+				board.setCountryPlayer('Brazil', 1)
+				board.setCountryPlayer('Argentina', 1)
+				board.setCountryPlayer('Alberta', 1)
+				board.setCountryPlayer('NorthwestTerritory', 1)
+				board.endTurn();
+				expect(board.Turn).to.equal(1)
+				expect(board.Free).to.equal(4)
+			})			
 		})
 		describe('equals()', function() {
 			it('should recognize when two RiskBoards are equivalent', function() {

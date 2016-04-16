@@ -99,6 +99,7 @@
     endTurn () {
       this.Turn = ((this.Turn + 1) % this.Players);
       this.Free = Math.floor(_.filter(this.Countries, c => c.Player === this.Turn).length / 3);
+      this.Free += this._continentReward();
       this.Phase = 'placement';
       return this;
     }

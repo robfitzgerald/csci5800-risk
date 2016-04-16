@@ -81,6 +81,25 @@
 			expect(result.playerDetails[0].type).to.equal('HUMAN')
 			expect(result.playerDetails[1].type).to.equal('AI')
 			example = result;
-		})					
+		})
+		describe('equals()', function() {
+			it('should recognize when two BoardObjects are equivalent', function() {
+				var board2 = new BoardObject(1972, 'Stratego', [{type:'AI'},{type:'AI'}])
+					, board1 = new BoardObject(1972, 'Stratego', [{type:'AI'},{type:'AI'}])	
+				expect(board1.equals(board2)).to.be.true
+				expect(board2.equals(board1)).to.be.true			
+			})
+			it('should fail when checking equivalency against non-BoardObject things', function() {
+				var board = new BoardObject(1972, 'Stratego', [{type:'AI'},{type:'AI'}])
+					, string = "test"
+					, int = 1234
+					, object = {}
+				expect(board.equals(string)).to.be.false
+				expect(board.equals(int)).to.be.false
+				expect(board.equals(object)).to.be.false
+				expect(board.equals(undefined)).to.be.false
+				expect(board.equals(null)).to.be.false
+			})
+		})
 	})
 }

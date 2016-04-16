@@ -80,6 +80,7 @@
 				else
 					playerMap[i] = i;
 			}
+			
 			deGeneralizedBoard.Countries.forEach(function(country) {
 				country.Player = playerMap[country.Player];
 			})

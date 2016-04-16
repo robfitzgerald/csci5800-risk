@@ -218,8 +218,29 @@
 				expect(result).to.not.exist;	
 			})			
 		})	
-		describe('_continentReward', function() {
-
+		describe('_continentReward()', function() {
+			it('should generate a continent reward of 2 when South America is controlled', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, allCountries = Object.keys(board.Countries)
+				_.forEach(allCountries, function(cName) {
+					board.setCountryPlayer(cName, 1)
+				})
+				board.setCountryPlayer('Venezuela', 0)
+				board.setCountryPlayer('Peru', 0)
+				board.setCountryPlayer('Brazil', 0)
+				board.setCountryPlayer('Argentina', 0)
+				var result = board._continentReward();
+				expect(result).to.equal(board.rules.continents.SouthAmerica.bonus);
+			})
+			it('should generate a continent reward of 0 when no continent is controlled', function() {
+				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
+					, allCountries = Object.keys(board.Countries)
+				_.forEach(allCountries, function(cName) {
+					board.setCountryPlayer(cName, 1)
+				})
+				var result = board._continentReward();
+				expect(result).to.equal(0);
+			})
 		})
 	})
 

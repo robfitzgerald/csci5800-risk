@@ -108,12 +108,19 @@
     }
     
     _continentReward () {
-      var thisPlayersCountries = _.filter(this.Countries, function(country) {
-        return country.Player === this.Turn;
-      })
+      var currentTurn = this.Turn
+        , continents = this.rules.continents
+        , thisPlayersCountries = _.filter(
+            _.map(this.Countries, function(v, k) {
+              return {Name: k, Player: v.Player, Armies: v.Armies}
+              }),
+            function(country) {
+              return country.Player === currentTurn;
+              }
+            )     
       return _.reduce(
-              _.map(this.rules.continents, function(continent) {
-                var diff = _.differenceBy(continent, thisPlayersCountries, function(c) { return c.Name })
+              _.map(continents, function(continent) {
+                var diff = _.differenceBy(continent.countries, thisPlayersCountries, function(c) { return c.Name })
                 return ((diff.length === 0) ? continent.bonus : 0)
               }),
               function (sum, n) { return sum + n; },

@@ -19,8 +19,8 @@
     constructor (gameNum, variant, players) {
       super (gameNum, variant, players);
       this.Phase = 'attack';
-      this.Countries = setupCountries(this.Players);
-      this.Free = 0;
+      this.Countries = assignCountries(this.Players);
+      this.Free = _.nth([null, null, 40, 35, 30, 25, 20], this.Players);
       this.Steps = config.get('clips.steps');
       this.rules = {};
 
@@ -218,8 +218,31 @@
   ];
 
   /**
+   * assigns countries to players in the same order every time. doesn't place armies.
+   * @param  {Number} numPlayers - number of players
+   * @return {Object[]}          - array of country objects
+   */
+  function assignCountries(numPlayers) {
+    let stepPlayer = 0
+      , thisCountries = _.cloneDeep(countries)
+    // it is important that is order is the same every time.
+    _.forEach(thisCountries, function(country) {
+      country.Player = stepPlayer;
+      country.Armies = 1;
+      stepPlayer = ((stepPlayer + 1) % numPlayers)     
+    })
+    var output = {};
+    for (var i = 0; i < thisCountries.length; ++i) {
+      var country = { "Player": thisCountries[i].Player, "Armies": thisCountries[i].Armies };
+      output[thisCountries[i].Name] = country;
+    }
+    return output;
+  }
+
+  /**
    * distributes the countries evenly and evenly populates them with armies
    * @param  {Number} numPlayers - number of players
+   * @deprecated                 - we are starting with the same countries each time, and without armies placed
    * @return {Object[]}          - array of country objects
    */
   function setupCountries(numPlayers) {

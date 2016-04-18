@@ -30,7 +30,7 @@
 			var boardOne = variant.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
 				, boardTwo = variant.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
 				, hashOne = helper.hash(helper.serialize(variant.generalize(boardOne))) 
-				, hashTwo = helper.hash(helper.serialize(variant.generalize(boardTwo))) 
+				, hashTwo = helper.hash(helper.serialize(variant.generalize(boardTwo)))
 			expect(_.isEqual(hashOne, hashTwo)).to.be.true;
 		})
 	})

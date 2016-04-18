@@ -16,7 +16,8 @@
 			expect(error).to.exist;
 			expect(result).to.not.exist;
 		})
-		it('given 2 players, it should randomize country ownership differently on repeated new RiskBoards', function() {
+		it.skip('given 2 players, it should randomize country ownership differently on repeated new RiskBoards (deprecated)', function() {
+			// this is no longer desirable
 			var board1
 				, board2
 				, error

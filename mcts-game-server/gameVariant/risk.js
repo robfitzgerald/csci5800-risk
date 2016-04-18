@@ -58,7 +58,7 @@
 	}
 
 	/**
-	 * instantiates a new basic risk board
+	 * instantiates a new basic risk board. more accurate
 	 * @param  {String} variant        - valid gameVariant filename
 	 * @param  {Object[]} players      - array of player objects
 	 * @param  {String} players[].type - a player type such as AI, HUMAN

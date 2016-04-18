@@ -44,5 +44,22 @@
 				expect(_.isEqual(generalizedOne, generalizedTwo)).to.be.true;
 			})
 		})
+		describe('.play()', function () {
+			it('should return a board for \'placearmy\'', function () {
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'}]);
+				var action = {
+					name: 'placearmy',
+					params: ["Alaska"]
+				};
+
+				var totalFreeArmies = board.playerDetails[0].freeArmies;
+				var alaskaArmies = board.getCountryArmies("Alaska");
+
+				var result = Risk.play(board, action);
+
+				expect((totalFreeArmies - 1) === result.playerDetails[0].freeArmies).to.be.true;
+				expect(result.getCountryArmies("Alaska") === (alaskaArmies+1)).to.be.true;
+			})
+		})
 	})
 }

@@ -64,11 +64,30 @@
 	}
 
 	function play (board, action) {
-		console.log('risk.play() called with board, action:')
-		console.log(board)
-		console.log(action)
-		console.log('<call to CLIPS to play on this combination of board, action>')
-		return 'result of risk.play()'
+		// Create a duplicate of the board
+		var result = _.cloneDeep(board);
+
+		switch (action.name) {
+			case "placearmy":
+				// Increment the target country's armies
+				result.modifyCountryArmies(action.params[0], 1);
+
+				// Decrement the players availables armies
+				result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
+
+				// Check if the player is out of armies
+				if (result.playerDetails[board.Turn].freeArmies == 0) {
+					result.Phase = "attack";
+				}
+
+				break;
+			default:
+				console.log("Ya done broke sum'em");
+				console.log("Action does not exist: " + action.name);
+				break;
+		}
+
+		return result;
 	}
 
 	/**

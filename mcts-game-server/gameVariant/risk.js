@@ -68,4 +68,16 @@
 		var gameNumber = 0;  // go to database, increment gameCount, return incremented value
 		return new RiskBoard(gameNumber, variant, players)
 	}
+
+	function rootNode() {
+		return { 
+			index: 4242402646,
+  		createdAt: 1461002660279,
+		  rewards: 3,
+		  nonTerminal: true,
+		  board: '{"Turn":0,"Countries":{"Alaska":{"Player":0,"Armies":1},"NorthwestTerritory":{"Player":1,"Armies":1},"Greenland":{"Player":0,"Armies":1},"Alberta":{"Player":1,"Armies":1},"Ontario":{"Player":0,"Armies":1},"WesternUnitedStates":{"Player":1,"Armies":1},"EasternUnitedStates":{"Player":0,"Armies":1},"CentralAmerica":{"Player":1,"Armies":1},"Venezuela":{"Player":0,"Armies":1},"Peru":{"Player":1,"Armies":1},"Brazil":{"Player":0,"Armies":1},"Argentina":{"Player":1,"Armies":1}},"Phase":"start","Free":40,"Steps":1000,"Players":2}',
+		  visits: 7 
+		};
+	}
+
 }

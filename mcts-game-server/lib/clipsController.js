@@ -19,6 +19,7 @@
 		// console.log(move)
 		
 		deferred.resolve([mocks[currentMock]])
+		console.log('** currentMock: ' + currentMock)
 		currentMock = (currentMock + 1) % mocks.length;
 		return deferred.promise;
 	}
@@ -121,6 +122,57 @@
 		    {
 		        "name": "end-turn",
 		        "params": []
+		    }
+		  ]
+		},
+		{
+		  board: {
+		    "Players": 2,
+		    "Phase": "placement",
+		    "Free": 3,
+		    "Turn": 2,
+		    "Steps": 200,
+		    "Countries": [
+		        {
+		            "Name": "Alaska",
+		            "Player": 0,
+		            "Armies": 5
+		        },
+		        {
+		            "Name": "NorthwestTerritory",
+		            "Player": 0,
+		            "Armies": 5
+		        },
+		        {
+		            "Name": "Alberta",
+		            "Player": 1,
+		            "Armies": 10
+		        }
+		    ]
+		  },
+		  moves: [
+		    {
+		        "name": "attack",
+		        "params": [
+		        "Finlandia",
+		        "Alberta"
+		        ]
+		    },
+		    {
+		        "name": "attack",
+		        "params": [
+		        "Albertson's",
+		        "Alaska",
+		        "1"
+		        ]
+		    },
+		    {
+		        "name": "attack",
+		        "params": [
+		        "HomeDepot",
+		        "DunkinDonuts",
+		        "1"
+		        ]
 		    }
 		  ]
 		}

@@ -131,10 +131,47 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 						console.log(err)
 						done(err)
 					})
-			})		
+			})
+			it('getNode, btw, exists', function(done) {
+				kbase.getNode(4242402646)
+					.then(function(res) {
+						expect(res.board).to.exist;
+						console.log(res)
+						done();
+					})
+					.catch(function(err) {
+						done(new Error(JSON.stringify(err)))
+					})
+			})
+			it('mergeNode making a new node and calling expand on it', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+				generalizedParentBoard.Turn = 1000;
+				kbase.mergeNode(generalizedParentBoard)
+					.then(function(res) {
+						expect(res).to.exist;
+						console.log(res)
+						done();
+					})
+					.catch(function(err) {
+						done(new Error(JSON.stringify(err)))
+					})
+			})
+			it('treePolicy will descend tree at this point', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+				kbase.treePolicy(generalizedParentBoard)
+					.then(function(result) {
+						console.log('test: mcts success')
+						console.log(result)
+						done();
+					})
+					.catch(function(mctsErr) {
+						console.log('test: mcts error')
+						console.log(mctsErr)
+						return done(mctsErr);
+					})					
+			})
 		})		
 	})
-
 
 	// backup({state:'sloop'}, null, 1)
 	// 	.then(function(res){ console.log(JSON.stringify(res)); })
@@ -145,57 +182,5 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 	// 	.then(function(res) { console.log(JSON.stringify(res))})
 	// 	.catch(function(err) { console.log(err)})
 	// debugGenerateTestChildren(2, '55555');
-	
-
-	// ---TEST---
-	// createNewRoot('betsy', [{name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, {name:'flooves', params: []}, {name:'shuld be not takey', params: []}])
-	//  	.then(function(res) { 
-	//  		// console.log('createNewRoot.then()')
-	//  		// console.log(res)
-	//  		createChildren('betsy', {name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, 
-	//  			[
-	// 		 		{
-	// 		 			state: 'ronnie',
-	// 		 			moves: [{name:'asdf', params: ["asdf","sdfg","dfgh","fghj"]}],
-	// 		 			nonTerminal: true
-	// 		 		},{
-	// 		 			state: 'zuko',
-	// 		 			moves: [{name:'fghah', params: []}],
-	// 		 			nonTerminal: true
-	// 		 		}
-	// 	 		])
-	//  			.then(function(res2) {
-	//  				// console.log('createChildren.then()')
-	//  				// console.log(res2)
-	// 				treePolicy('betsy')
-	// 					.then(function(res) {
-	// 						// console.log('treePolicy success');
-	// 						// console.log(JSON.stringify(res))
-							// var i = 0
-							// 	, generate = 5
-							// 	, counter = Date.now();	
-							// async.whilst(function() { return i < generate }
-							// 	, function(callback) {
-							// 		i++;
-							// 		treePolicy('betsy')
-							// 			.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
-							// 			.catch(function(err) { callback(err)})
-							// 	},
-							// 	function(error, result) {
-							// 		console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
-							// 		console.log(result)
-							// 	})
-	// 					})
-	// 					.catch(function(err) {console.log('treePolicy error'); console.log(err)})
-	//  			})
-	//  			.catch(function(err2) {
-	//  				console.log('createChildren.catch()')
-	//  				console.log(err2)
-	//  			})
-	//  	}) // just in here for testing
-	//  	.catch(function(err) { 
-	// 		console.log('createNewRoot.catch()')
-	//  		console.log(err) 
-	//  	});
 
 }

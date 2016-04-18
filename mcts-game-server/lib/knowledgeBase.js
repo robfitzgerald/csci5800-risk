@@ -66,7 +66,7 @@
 	/**
 	 * gets or creates a board node object
 	 * @param  {Object} board  - generalized board object
-	 * @return {Object}        - neo4j BOARD object
+	 * @return {Object}        - treeNode object
 	 */
 	function mergeNode(board) {
 		var deferred = Q.defer()
@@ -266,9 +266,9 @@
 
 	/**
 	 * backup operation for Monte Carlo Tree Search
-	 * @param  {Object} child        - child board state we will backup from
-	 * @param  {String} root         - root board state, from variant.generate()
-	 * @param  {Integer} reward      - delta reward calculated by simulation.defaultPolicy()
+	 * @param  {Object} child        - child generalized board state we will backup from
+	 * @param  {String} root         - root generalized board state, from variant.generate()
+	 * @param  {1|0} reward      - delta reward calculated by simulation.defaultPolicy()
 	 * @return {Promise}             - string 'success' or error object if failed
 	 */
 	function backup(child, root, reward) {
@@ -305,15 +305,18 @@
 
 	/**
 	 * bestChild operation in Monte Carlo Tree Search, using UCT method. finds the bestChild of a parent board and returns it along with the move that creates the child
-	 * @param  {Object} parent - parent generalized board state object
+	 * @param  {Object} parent - generalized board object
 	 * @param  {Integer}    Cp - the coefficient used in UCT for the second term. See essay on MCTS methods.
 	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object; or, an error
 	 */
 	function bestChild(parent, Cp) {
 		var deferred = Q.defer()
-			, hashParentBoard = helper.hash(helper.serialize(parent))
-			, query = `
-					MATCH (p:BOARD {index:${hashParentBoard}}) -[r:CHILD]-> (c:BOARD)
+			, index = parent.index
+		if (!index) {
+			throw new Error('[knowledgeBase.bestChild()]: no index on incoming parent object: \n' + JSON.stringify(parent))
+		}
+		var query = `
+					MATCH (p:BOARD {index:${index}}) -[r:CHILD]-> (c:BOARD)
 					WITH collect(c) AS children, r AS moves, p AS parent
 					RETURN EXTRACT(child in children |
 							CASE 
@@ -356,7 +359,7 @@
 				// deferred.resolve(_.get(result, '[0]'))
 				var bestChild = _.get(_.head(result), 'board');
 				if (!bestChild) {
-					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(result) + '\n')
+					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n')
 				}
 				deferred.resolve(bestChild)
 			}
@@ -367,12 +370,11 @@
 
 	/**
 	 * treePolicy method as described in Monte Carlo Tree Search. searches for a best child board state to pass to our defaultPolicy for simulation.
-	 * @param  {Object} root - generalized board state for the root of this treePolicy search
+	 * @param  {Object} root - tree node for the root of this treePolicy search
 	 * @return {Promise}     - resolves to a board state object, rejects with any error messages.
 	 */
 	function treePolicy(root) {
 		var deferred = Q.defer()
-			, hashBoard = helper.hash(helper.serialize(root))
 			, v = root
 			, expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
@@ -394,9 +396,8 @@
 					callback(errors);
 				} else {
 					// grab first move. order guaranteed? not guaranteed? probs not.
-					// console.log('treePolicy result from finding possible moves:')
-					// console.log(JSON.stringify(body))
 					var move = _.get(body, 'results[0].data[0].row[0]')
+					console.log('should be falsey: ' + move)
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
 						CLIPS.expand(v, move)

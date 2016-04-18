@@ -54,7 +54,7 @@
 					, player1CountryCount = Math.floor(_.filter(board.Countries, c => c.Player === 1).length / 3);
 				board.endTurn();
 				expect(board.Turn).to.equal(1);
-				expect(board.Free).to.equal(player1CountryCount);
+				expect(board.playerDetails[1].freeArmies).to.equal(player1CountryCount);
 				expect(board.Phase).to.equal('placement');
 			})
 			it('should award 1 + 2 points for owning South America', function() {
@@ -69,7 +69,7 @@
 				board.setCountryPlayer('Argentina', 1)
 				board.endTurn();
 				expect(board.Turn).to.equal(1)
-				expect(board.Free).to.equal(3)
+				expect(board.playerDetails[1].freeArmies).to.equal(3)
 			})
 			it('should award 2 + 2 points for owning South America and 6 total countries', function() {
 				var board = new RiskBoard(1972, 'Risk', [{type:'AI'},{type:'AI'}])
@@ -85,7 +85,7 @@
 				board.setCountryPlayer('NorthwestTerritory', 1)
 				board.endTurn();
 				expect(board.Turn).to.equal(1)
-				expect(board.Free).to.equal(4)
+				expect(board.playerDetails[1].freeArmies).to.equal(4)
 			})			
 		})
 		describe('equals()', function() {

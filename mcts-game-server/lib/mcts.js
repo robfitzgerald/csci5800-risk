@@ -15,13 +15,13 @@
 	module.exports = function mcts (root, variant) {
 		var deferred = Q.defer();
 		// @todo: wrap this in a async.whilst() loop
-		console.log('[mcts]: starting with board: ')
-		console.log(root)
+		// console.log('[mcts]: starting with board: ')
+		// console.log(root)
 
 		// @todo: create or merge this board state into database
 		createRootNode(root)
 			.then(function(v0) {
-				console.log('v0 returned as: \n' + JSON.stringify(v0))
+				// console.log('v0 returned as: \n' + JSON.stringify(v0))
 				treePolicy(v0)
 					.then(function(res) {
 						console.log('[mcts.treePolicy]: success')

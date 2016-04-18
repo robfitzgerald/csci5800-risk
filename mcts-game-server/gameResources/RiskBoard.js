@@ -20,9 +20,13 @@
       super (gameNum, variant, players);
       this.Phase = 'start';
       this.Countries = assignCountries(this.Players);
-      this.Free = _.nth([null, null, 40, 35, 30, 25, 20], this.Players);
       this.Steps = config.get('clips.steps');
       this.rules = {};
+      var armiesForPlayers = _.nth([null, null, 40, 35, 30, 25, 20], this.Players);
+      _.forEach(this.playerDetails, function(player) {
+        player.freeArmies = armiesForPlayers;
+        player.subVariant = 'not implemented';
+      })
 
       /**
        * an object containing continents, their countries and army bonus values
@@ -136,6 +140,7 @@
       this.Free = this._countriesReward();
       this.Free += this._continentReward();
       this.Phase = 'placement';
+      this.moveCount++;
       return this;
     }
 

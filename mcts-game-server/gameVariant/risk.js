@@ -10,13 +10,22 @@
 	var RiskBoard = require('../gameResources/RiskBoard')
 		, _ = require('lodash')
 
+
 	/**
 	 * this array contains a list of the properties that should be found
-	 * on a board object.
-	 * @type {Array}
+	 * on a board object, for input validation of generalize();
+	 * @property {String[]} outSchema  - list of properties of a generalized board
 	 */
-	var schema = [
-			'Turn', 'Countries', 'Phase', 'Free', 'Steps', 'Players'
+	var inSchema = [
+			'Turn', 'Countries', 'Phase', 'Steps', 'Players'
+			]
+
+	/**
+	 * we add a new property after generalize. this is used by _.pick().
+	 * @property {String[]} outSchema  - list of properties of a generalized board
+	 */
+	var outSchema = [
+			'Turn', 'Countries', 'Phase', 'Steps', 'Players', 'PlayerArmies'
 			]
 
 	/**
@@ -35,17 +44,22 @@
 	 * @return {RiskBoard}       - reformatted for CLIPS and neo4j indexing
 	 */
 	function generalize (board) {
-		var schemaValidate = _.difference(schema, _.keys(board));
+		var schemaValidate = _.difference(inSchema, _.keys(board));
 		if (schemaValidate.length > 0) {
 			throw new TypeError('[risk.generalize]: board did not contain all properties required. missing: ' + schemaValidate)
 		} else {
 			var generalizedBoard = _.cloneDeep(board)
 				, distance = generalizedBoard.Turn
 				, numPlayers = generalizedBoard.Players
+			generalizedBoard.PlayerArmies = [];
 			_.forEach(generalizedBoard.Countries, function(country) {
 				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
 			});
-			return _.pick(generalizedBoard, schema);		
+			_.forEach(generalizedBoard.playerDetails, function(player) {
+				generalizedBoard.PlayerArmies.push(player.freeArmies);
+			})
+
+			return _.pick(generalizedBoard, outSchema);		
 		}
 	}
 

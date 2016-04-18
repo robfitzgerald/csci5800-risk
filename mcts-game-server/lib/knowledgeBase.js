@@ -248,8 +248,6 @@
 				if (errors) {
 					deferred.reject(errors);
 				} else {
-					console.log('createChildren body:')
-					console.log(JSON.stringify(body))
 					var result = []
 						, childCount = _.get(body, 'results.length')
 					for (var i = 0; i < childCount; ++i) {
@@ -355,9 +353,6 @@
 				result.sort(function(a,b) {
 					return b.board.uct - a.board.uct;
 				})
-				console.log('bestChild array result - return head?')
-				console.log(JSON.stringify(result))
-				console.log('end of bestChild result')
 				// deferred.resolve(_.get(result, '[0]'))
 				var bestChild = _.get(_.head(result), 'board');
 				if (!bestChild) {
@@ -378,7 +373,7 @@
 	function treePolicy(root) {
 		var deferred = Q.defer()
 			, hashBoard = helper.hash(helper.serialize(root))
-			, v = {index:hashBoard,nonTerminal:true, }
+			, v = root
 			, expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
 			var query = `
@@ -402,52 +397,32 @@
 					// console.log('treePolicy result from finding possible moves:')
 					// console.log(JSON.stringify(body))
 					var move = _.get(body, 'results[0].data[0].row[0]')
-					// console.log('move')
-					// console.log(JSON.stringify(move))
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
 						CLIPS.expand(v, move)
 							.then(function(children) {
-								console.log('going to call createChildren with:')
-								console.log(JSON.stringify(v))
-								console.log(JSON.stringify(move))
-								console.log(JSON.stringify(children))
 								createChildren(v, move, children)
 									.then(function(result) {
-										console.log('createChildren() result: ')
-										console.log(JSON.stringify(result))
 										// @TODO: confirm that we are always grabbing the result from createChildren.
 										// the neo4j response structure is always an array due to collect(c);
 										// but is it ever multiple arrays in multiple rows due to possible multiplicity
 										// of children generated?
 										v = _.head(_.head(result));
-										console.log('selected head in collection:')
-										console.log(v)
-										console.log('collection')
-										console.log(result)
 										if (!v) {
 											let len = _.get(children, 'length')
 											throw new Error('[knowledgeBase.treePolicy()]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey:\n' + JSON.stringify(v))
 										}
-										// console.log('[treePolicy] create new child result:')
-										// console.log(result)
 										callback(null) // doWhilst(): end this iteration
 									})
 									.catch(function(createError) {
-										// console.log('[treePolicy] error from createChild() call:' + createError)
 										callback(createError)
 									})
 							})
 					} else {
-						console.log('bestChild()')
-						console.log(v)
-						console.log(explorationParameter)
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
 								v = _.get(vBestChild, 'board')
 								if (v) {
-									console.log('bestChild() result aka "v": ')
-									console.log(v)
 									callback(null)
 								} else {
 									callback(new Error('[treePolicy]: could not look up board state string of bestChild() with v: ' + JSON.stringify(v) + ' from bestChild result: \n ' + JSON.stringify(vBestChild)))
@@ -462,7 +437,6 @@
 			})
 		},
 		function whileTest () { 
-			console.log('whileTest reached. reiterate? ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},
 		function result (error, result) {

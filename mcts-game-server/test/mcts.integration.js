@@ -43,15 +43,10 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 							, boardNode = {index: helper.hash(helper.serialize(generalizedParentBoard))}
 						kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
 							.then(function(root) {
-								console.log('done creating')
 								simulation.expand(generalizedParentBoard, {name:'test',params:[]})
 									.then(function(children) {
-										console.log('simulation.expand() result:')
-										console.log(children)
 										kbase.createChildren(boardNode, {name:'test',params:[]}, children)
 											.then(function(created) {
-												console.log('createChildren result')
-												console.log(created)
 												done();
 											})
 											.catch(function(err1) {
@@ -89,7 +84,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 					MATCH (b:BOARD {index: 2919900703})
 					WITH b
 					SET b.visits = 5, b.rewards = 2`,
-					`MATCH (c:BOARD {index: 4242402646})
+					`MATCH (c:BOARD {index: 3895442334})
 					WITH c
 					SET c.visits = 7, c.rewards = 3`,
 					`MATCH (d:BOARD {index: 344856511})
@@ -106,12 +101,10 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 					, cp = 0;
 				kbase.bestChild(generalizedParentBoard, cp)
 					.then(function(res) {
-						console.log('bestChild( '+cp+' ) result:')
 						expect(res.uct).to.equal(0.5)
 						done();
 					})
 					.catch(function(err) {
-						console.log(err)
 						done(err)
 					})
 			})	
@@ -121,22 +114,18 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 				kbase.bestChild(generalizedParentBoard, cp)
 					.then(function(res) {
 						var oneVal = ((1.0/2.0) + (cp * ((Math.sqrt((2.0 * Math.log(7)))) / 2.0)))
-						console.log('is this one of the values? ' + oneVal)
-						console.log('bestChild( '+cp+' ) result:')
-						console.log(res)
+						// console.log('is this one of the values? ' + oneVal)
 						expect(res.board).to.exist
 						done();
 					})
 					.catch(function(err) {
-						console.log(err)
 						done(err)
 					})
 			})
 			it('getNode, btw, exists', function(done) {
-				kbase.getNode(4242402646)
+				kbase.getNode(3895442334)
 					.then(function(res) {
 						expect(res.board).to.exist;
-						console.log(res)
 						done();
 					})
 					.catch(function(err) {
@@ -149,14 +138,13 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 				kbase.mergeNode(generalizedParentBoard)
 					.then(function(res) {
 						expect(res).to.exist;
-						console.log(res)
 						done();
 					})
 					.catch(function(err) {
 						done(new Error(JSON.stringify(err)))
 					})
 			})
-			it('treePolicy will descend tree at this point', function(done) {
+			it.skip('treePolicy will descend tree at this point', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
 				kbase.treePolicy(generalizedParentBoard)
 					.then(function(result) {

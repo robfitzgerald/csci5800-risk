@@ -19,7 +19,7 @@
 		// console.log(move)
 		
 		deferred.resolve([mocks[currentMock]])
-		console.log('** currentMock: ' + currentMock)
+		// console.log('** currentMock: ' + currentMock)
 		currentMock = (currentMock + 1) % mocks.length;
 		return deferred.promise;
 	}

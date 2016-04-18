@@ -5,6 +5,7 @@
 		, variant = require('../gameVariant/risk')
 		, board = variant.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
 		, kbase = require('../lib/knowledgeBase')
+		, simulation = require('../lib/clipsController')
 		, helper = require('../lib/knowledgeBase.helper.js')
 		, request = require('request')
 		, config = require('config')
@@ -16,69 +17,84 @@
 				Authorization: 'Basic ' + auth.toString('base64')
 			}})
 
-	describe('treePolicy()', function() {
-		it('start from simple', function(done) {
-			// neo4j({json: helper.constructQueryBody('MATCH (n)-[r]-() DELETE n,r')}, 
-			// 	function(err, response, body) {
-			// 		if (err) {
-			// 			done(err)
-			// 		}
+	describe('mcts integration testing (heads up - destructive!!)', function() {
+		this.timeout(10000); // set 10 second timeout on asynchronous tests
+		it('delete everything', function(done) {
+			neo4j({json:helper.constructQueryBody('MATCH (p)-[r]-() DELETE p,r')}, function(err) {
+				if (err) {
+					done(new Error(err))
+				}
+				done();
+			})
+		})
+		describe('create root, expand a move, create children', function() {
+			it('start from simple', function(done) {
+						var generalizedParentBoard = variant.generalize(board)
+							, boardNode = {index: helper.hash(helper.serialize(generalizedParentBoard))}
+						kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
+							.then(function(root) {
+								console.log('done creating')
+								simulation.expand(generalizedParentBoard, {name:'test',params:[]})
+									.then(function(children) {
+										console.log('simulation.expand() result:')
+										console.log(children)
+										kbase.createChildren(boardNode, {name:'test',params:[]}, children)
+											.then(function(created) {
+												console.log('createChildren result')
+												console.log(created)
+												done();
+											})
+											.catch(function(err1) {
+												done(new Error(JSON.stringify(err1)))
+											})
+									})
+									.catch(function(err2) {
+										done(new Error(JSON.stringify(err2)))
+									})
+							})
+							.catch(function(err3) {
+								done(new Error(JSON.stringify(err3)))
+							})
+			})
+		describe('mcts', function() {
+					it('run mcts', function(done) {
+						var generalizedParentBoard = variant.generalize(board)
+						mcts(generalizedParentBoard, variant)
+							.then(function(mctsDone) {
+								console.log('test: mcts success')
+								// mcts(generalizedParentBoard, variant)
+								// 	.then(function(shouldHaveThreeLayers) {
+								// 		done();
+								// 	})
+								// 	.catch(function(err) {
+								// 		done(new Error(err))
+								// 	})
+								done();
+							})
+							.catch(function(mctsErr) {
+								console.log('test: mcts error')
+								console.log(mctsErr)
+								return done(mctsErr);
+							})	
+					})
+				})
+				it.skip('bestChild on existing parent', function(done) {
 					var generalizedParentBoard = variant.generalize(board)
-					console.log(generalizedParentBoard)
-					kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
-						.then(function(root) {
-							console.log(root)
+					kbase.bestChild(board, 0)
+						.then(function(res) {
+							console.log('bestChild() result:')
+							console.log(res)
 							done();
 						})
 						.catch(function(err) {
 							console.log(err)
-							done(new Error(err))
+							done(err)
 						})
-				// })
+				})		
+			})		
 		})
-	})
 
-	describe.skip('mcts', function() {
 
-		this.timeout(10000); // set 10 second timeout on asynchronous tests
-
-		it.skip('create a new root then run mcts', function(done) {
-			var generalizedParentBoard = variant.generalize(board)
-			kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
-				.then(function(res) {
-					console.log('test: success')
-					console.log(res)
-					mcts(generalizedParentBoard)
-						.then(function(mctsDone) {
-							console.log('test: mcts success')
-							console.log(mctsDone)
-							done();
-						})
-						.catch(function(mctsErr) {
-							console.log('test: mcts error')
-							console.log(mctsErr)
-							return done(mctsErr);
-						})
-				})
-				.catch(function(err) {
-					console.log('test: create new root failure')
-					console.log(err)
-					return done(err);
-				})			
-		})
-	})
-	it.skip('bestChild on existing parent', function(done) {
-		kbase.bestChild(board, 0)
-			.then(function(res) {
-				console.log('bestChild() result:')
-				console.log(res)
-				done();
-			})
-			.catch(function(err) {
-				console.log(err)
-				done(err)
-			})
-	})
 
 	// backup({state:'sloop'}, null, 1)
 	// 	.then(function(res){ console.log(JSON.stringify(res)); })

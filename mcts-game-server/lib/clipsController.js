@@ -15,7 +15,7 @@
 		// console.log('[CLIPS.expand] called with parent, move:')
 		// console.log(parent)
 		// console.log(move)
-		deferred.resolve([mock1,mock2])
+		deferred.resolve([mock1, mock2])
 		return deferred.promise;
 	}
 
@@ -50,7 +50,7 @@
 	        }
 	    ]
 	  },
-	  actions: [
+	  moves: [
 	    {
 	        "name": "attack-all",
 	        "params": [
@@ -63,7 +63,7 @@
 	        "params": [
 	        "NorthwestTerritory",
 	        "Alaska",
-	        1
+	        "1"
 	        ]
 	    },
 	    {
@@ -98,9 +98,9 @@
 	        }
 	    ]
 	  },
-	  actions: [
+	  moves: [
 	    {
-	        "name": "attack-all",
+	        "name": "attack-norbert",
 	        "params": [
 	        "Alaska",
 	        "Alberta"
@@ -111,7 +111,7 @@
 	        "params": [
 	        "NorthwestTerritory",
 	        "Alaska",
-	        1
+	        "1"
 	        ]
 	    },
 	    {

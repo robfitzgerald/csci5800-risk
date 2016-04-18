@@ -7,20 +7,19 @@
 
 	/**
 	 * Monte Carlo Tree Search, as described in the Browne et.al. paper
-	 * @param  {Object} board              - game board JSON object
-	 * @param  {Object} variant            - singleton object with game-specific function implementation
+	 * @param  {Object} board              - variant.generalized game board JSON object
+	 * @param  {Object} variant            - ?singleton object with game-specific function implementation
 	 * @return {Promise}             			 - a best child, or, error
 	 */
-	module.exports = function mcts (rootNode) {
+	module.exports = function mcts (rootNode, variant) {
 		var deferred = Q.defer();
 		// @todo: wrap this in a async.whilst() loop
-		// this is a mock up 
-		let v0 = variant.generalize(rootNode)
 		console.log('[mcts]: starting with board: ')
-		console.log(board)
-		treePolicy(v0)
+		console.log(rootNode)
+		treePolicy(rootNode)
 			.then(function(res) {
 				console.log('[mcts.treePolicy]: success')
+				console.log(res)
 				console.log('run defaultPolicy (not implemented)')
 				deferred.resolve(res)
 

@@ -107,8 +107,8 @@
 	 */
 	function createChildren(parent, move, children) {
 		// TODO: input validation
-		if (!typeof parent === 'object') {
-			deferred.reject('[knowledgeBase.createChildren()]: parent (arg1) should be an object');
+		if (!typeof parent === 'object' && !parent.hasOwnProperty('index')) {
+			deferred.reject('[knowledgeBase.createChildren()]: parent (arg1) should be an object with an index property, got: ' + JSON.stringify(parent));
 			return deferred.promise;
 		} else if (!typeof move === 'object') {
 			deferred.reject('[knowledgeBase.createChildren()]: move (arg2) should be an object');
@@ -120,15 +120,15 @@
 			var deferred = Q.defer()
 				, statements = []
 				, parameters = []
-				, hashParentBoard = helper.hash(parent);
+				, hashParentBoard = parent.index;
 
 			_.forEach(children, function(child) {
 				let thisBoard = _.get(child, 'board');
-				if (!!thisBoard) {
+				if (!thisBoard) {
 					throw new Error('[knowledgeBase.createChildren()]: a child in children is missing board property: \n' + JSON.stringify(child));
 				}
 				let serializedBoard = helper.serialize(child.board)
-	  			, hashChildBoard = helper.hash(child.board)
+	  			, hashChildBoard = helper.hash(serializedBoard)
 	  			, params = {
 						child: {
 							nonTerminal: child.nonTerminal,
@@ -152,7 +152,7 @@
 							WITH c, p
 							CREATE (p) -[cr:CHILD {move}]-> (c)
 							CREATE (c) -[pr:PARENT {move}]-> (p)
-							RETURN c`
+							RETURN collect(c) AS result`
 				statements.push(query);
 				parameters.push(params);
 			})
@@ -165,13 +165,14 @@
 			parameters.push({move: move})
 
 			var payload = helper.constructQueryBody(statements, parameters)
-			// console.log(JSON.stringify(payload))
 			neo4j({json:payload}, function(err, response, body) {
 				var neo4jError = _.get(body, 'errors')
 					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 				if (errors) {
 					deferred.reject(errors);
 				} else {
+					console.log('createChildren body:')
+					console.log(JSON.stringify(body))
 					var result = []
 						, childCount = _.get(body, 'results.length')
 					for (var i = 0; i < childCount; ++i) {
@@ -292,9 +293,8 @@
 	 */
 	function treePolicy(root) {
 		var deferred = Q.defer()
-			, serializedRoot = helper.serialize(root)
-			, indexRoot = helper.hash(serializedRoot)
-			, v = {index:indexRoot,nonTerminal:true}
+			, hashBoard = helper.hash(helper.serialize(root))
+			, v = {index:hashBoard,nonTerminal:true}
 			, expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
 			var query = `
@@ -315,6 +315,8 @@
 					callback(errors);
 				} else {
 					// grab first move. order guaranteed? not guaranteed? probs not.
+					// console.log('treePolicy result from finding possible moves:')
+					// console.log(JSON.stringify(body))
 					var move = _.get(body, 'results[0].data[0].row[0]')
 					// console.log('move')
 					// console.log(JSON.stringify(move))
@@ -322,18 +324,20 @@
 						expandableMoveNotFound = false;
 						CLIPS.expand(v, move)
 							.then(function(children) {
-								// console.log('[treePolicy] CLIPS.expand() result: ')
-								// console.log(children)
+								console.log('going to call createChildren with:')
+								console.log(JSON.stringify(v))
+								console.log(JSON.stringify(move))
+								console.log(JSON.stringify(children))
 								createChildren(v, move, children)
 									.then(function(result) {
-										// console.log('createChildren() result: ')
-										// console.log(result)
+										console.log('createChildren() result: ')
+										console.log(JSON.stringify(result))
 										// console.log('[treePolicy]: picking the first createdChild in order to '
 											// + 'provide defaultPolicy() with only one board to simulate.')
 										v = _.head(result);
 										if (!v) {
 											let len = _.get(children, 'length')
-											throw new Error('[knowledgeBase.treePolicy()]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey.')
+											throw new Error('[knowledgeBase.treePolicy()]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey:\n' + JSON.stringify(v))
 										}
 										// console.log('[treePolicy] create new child result:')
 										// console.log(result)
@@ -345,15 +349,15 @@
 									})
 							})
 					} else {
-						// console.log('bestChild()')
-						// console.log(v)
-						// console.log(explorationParameter)
+						console.log('bestChild()')
+						console.log(v)
+						console.log(explorationParameter)
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
 								v = _.get(vBestChild, 'board')
 								if (v) {
-									// console.log('bestChild() result aka "v": ')
-									// console.log(v)
+									console.log('bestChild() result aka "v": ')
+									console.log(v)
 									callback(null)
 								} else {
 									callback(new Error('[treePolicy]: could not look up board state string of bestChild() with v: ' + JSON.stringify(v) + ' from bestChild result: \n ' + JSON.stringify(vBestChild)))

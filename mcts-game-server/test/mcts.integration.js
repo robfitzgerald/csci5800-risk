@@ -1,6 +1,6 @@
 'use strict';
 {
-	var expect = require('chai')
+	var expect = require('chai').expect
 		, mcts = require('../lib/mcts')
 		, variant = require('../gameVariant/risk')
 		, board = variant.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
@@ -16,6 +16,16 @@
 			headers: {
 				Authorization: 'Basic ' + auth.toString('base64')
 			}})
+
+
+
+/*
+note for group:
+due to neo4j's limitations, we will have to make the params array on an action object contain members all of the same type: 
+`{"code":"Neo.ClientError.Statement.InvalidType","message":"Collections containing mixed types can not be stored in properties."}`
+so, that's in reference to the example where actions[1].params = ["NorthwestTerritorty","Alberta",1].  the 1 will need to be a "1".  we can leverage (1 === Number.parseInt("1"))
+ */
+
 
 	describe('mcts integration testing (heads up - destructive!!)', function() {
 		this.timeout(10000); // set 10 second timeout on asynchronous tests
@@ -56,44 +66,74 @@
 								done(new Error(JSON.stringify(err3)))
 							})
 			})
-		describe('mcts', function() {
-					it('run mcts', function(done) {
-						var generalizedParentBoard = variant.generalize(board)
-						mcts(generalizedParentBoard, variant)
-							.then(function(mctsDone) {
-								console.log('test: mcts success')
-								// mcts(generalizedParentBoard, variant)
-								// 	.then(function(shouldHaveThreeLayers) {
-								// 		done();
-								// 	})
-								// 	.catch(function(err) {
-								// 		done(new Error(err))
-								// 	})
-								done();
-							})
-							.catch(function(mctsErr) {
-								console.log('test: mcts error')
-								console.log(mctsErr)
-								return done(mctsErr);
-							})	
-					})
-				})
-				it.skip('bestChild on existing parent', function(done) {
-					var generalizedParentBoard = variant.generalize(board)
-					kbase.bestChild(board, 0)
-						.then(function(res) {
-							console.log('bestChild() result:')
-							console.log(res)
-							done();
-						})
-						.catch(function(err) {
-							console.log(err)
-							done(err)
-						})
-				})		
-			})		
 		})
+		describe('mcts', function() {
+			it('run mcts', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+				mcts(generalizedParentBoard, variant)
+					.then(function(mctsDone) {
+						console.log('test: mcts success')
+						console.log(mctsDone)
+						expect(mctsDone.hasOwnProperty('board')).to.be.true;
+						done();
+					})
+					.catch(function(mctsErr) {
+						console.log('test: mcts error')
+						console.log(mctsErr)
+						return done(mctsErr);
+					})	
+			})
+			it('bestChild setup', function(done) {
+				// 2919900703
+				neo4j({json:helper.constructQueryBody([`
+					MATCH (b:BOARD {index: 2919900703})
+					WITH b
+					SET b.visits = 5, b.rewards = 2`,
+					`MATCH (c:BOARD {index: 4242402646})
+					WITH c
+					SET c.visits = 7, c.rewards = 3`,
+					`MATCH (d:BOARD {index: 344856511})
+					WITH d
+					SET d.visits = 2, d.rewards = 1
+					`],[{},{},{}])}, function(err, response, body) {
+						expect(err).to.not.exist;
+						done();
+				})					
+			})
+			it('bestChild on existing parent, cp=0', function(done) {
 
+				var generalizedParentBoard = variant.generalize(board)
+					, cp = 0;
+				kbase.bestChild(generalizedParentBoard, cp)
+					.then(function(res) {
+						console.log('bestChild( '+cp+' ) result:')
+						expect(res.uct).to.equal(0.5)
+						done();
+					})
+					.catch(function(err) {
+						console.log(err)
+						done(err)
+					})
+			})	
+			it('bestChild on existing parent, cp=1/sqrt(2)', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+					, cp = config.get('mcts.explorationParameter')
+				kbase.bestChild(generalizedParentBoard, cp)
+					.then(function(res) {
+						var oneVal = ((1.0/2.0) + (cp * ((Math.sqrt((2.0 * Math.log(7)))) / 2.0)))
+						console.log('is this one of the values? ' + oneVal)
+						console.log('bestChild( '+cp+' ) result:')
+						console.log(res)
+						expect(res.board).to.exist
+						done();
+					})
+					.catch(function(err) {
+						console.log(err)
+						done(err)
+					})
+			})		
+		})		
+	})
 
 
 	// backup({state:'sloop'}, null, 1)

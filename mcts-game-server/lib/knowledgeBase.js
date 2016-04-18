@@ -97,13 +97,14 @@
 
 	/**
 	 * creates children of a parent node by way of the move that generated them.  called after simulation.expand()
-	 * @param  {TreeNode} parent                - parent node
-	 * @param  {Object} move                    - a valid move object (see wiki for example)
-	 * @param  {Object[]} children              - generalized board objects, the result of simulation.expand()
-	 * @param  {String} children[].board        - child board state
-	 * @param  {Object[]} children[].moves      - valid moves from the child state
-	 * @param  {Boolean} children[].nonTerminal - flag indicating it is an end of game configuration
-	 * @return {Promise}                        - resolves to 'success', else it will reject 
+	 * @param  {TreeNode} parent                 - parent node (a BOARD properties object)
+	 * @param  {Number}   parent.index           - hash value of existing parent object in database
+	 * @param  {Object}   move                   - a valid move object (see wiki for example)
+	 * @param  {Object[]} children               - generalized board objects, the result of simulation.expand()
+	 * @param  {String}   children[].board       - child board state
+	 * @param  {Object[]} children[].moves       - valid moves from the child state
+	 * @param  {Boolean}  children[].nonTerminal - flag indicating it is an end of game configuration
+	 * @return {Promise}                         - resolves to 'success', else it will reject 
 	 */
 	function createChildren(parent, move, children) {
 		// TODO: input validation
@@ -165,6 +166,8 @@
 			parameters.push({move: move})
 
 			var payload = helper.constructQueryBody(statements, parameters)
+			// debug
+			// deferred.reject(new Error('createChildren payload: ' + JSON.stringify(payload)))
 			neo4j({json:payload}, function(err, response, body) {
 				var neo4jError = _.get(body, 'errors')
 					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
@@ -238,22 +241,22 @@
 		var deferred = Q.defer()
 			, hashParentBoard = helper.hash(helper.serialize(parent))
 			, query = `
-					MATCH (p:BOARD {index:${hashParentBoard}}) -[r:CHILD]-> (child:BOARD)
-					WITH collect(child) AS children, r AS moves, p AS parent
-					RETURN EXTRACT(board in children |
+					MATCH (p:BOARD {index:${hashParentBoard}}) -[r:CHILD]-> (c:BOARD)
+					WITH collect(c) AS children, r AS moves, p AS parent
+					RETURN EXTRACT(child in children |
 							CASE 
-							WHEN board.visits = 0
-							THEN {state:board.state, nonTerminal: board.nonTerminal, uct: ${infinity}}						
+							WHEN child.visits = 0
+							THEN {board:child.board, nonTerminal: child.nonTerminal, uct: ${infinity}}						
 							ELSE {
-					      state: board.state, 
-					      nonTerminal: board.nonTerminal,
+					      board: child.board, 
+					      nonTerminal: child.nonTerminal,
 					      uct: 
 					      	((toFloat
-					      			(board.rewards) / board.visits)
+					      			(child.rewards) / child.visits)
 					       		+ ${Cp}
 					       			* SQRT(
-					        			(toFloat(2 * LOG(parent.visits)))
-					        		/ board.visits)
+					        			(2.0 * LOG(parent.visits))
+					        		/ child.visits)
 					       		)
 					    }
 				  	END)
@@ -278,8 +281,15 @@
 				result.sort(function(a,b) {
 					return b.board.uct - a.board.uct;
 				})
+				console.log('bestChild array result - return head?')
+				console.log(JSON.stringify(result))
+				console.log('end of bestChild result')
 				// deferred.resolve(_.get(result, '[0]'))
-				deferred.resolve(result)
+				var bestChild = _.get(_.head(result), 'board');
+				if (!bestChild) {
+					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(result) + '\n')
+				}
+				deferred.resolve(bestChild)
 			}
 		})
 		return deferred.promise;
@@ -321,7 +331,7 @@
 					// console.log('move')
 					// console.log(JSON.stringify(move))
 					if (move) {
-						expandableMoveNotFound = false;
+						expandableMoveNotFound = false;  // end async.whilst() loop
 						CLIPS.expand(v, move)
 							.then(function(children) {
 								console.log('going to call createChildren with:')
@@ -332,9 +342,15 @@
 									.then(function(result) {
 										console.log('createChildren() result: ')
 										console.log(JSON.stringify(result))
-										// console.log('[treePolicy]: picking the first createdChild in order to '
-											// + 'provide defaultPolicy() with only one board to simulate.')
-										v = _.head(result);
+										// @TODO: confirm that we are always grabbing the result from createChildren.
+										// the neo4j response structure is always an array due to collect(c);
+										// but is it ever multiple arrays in multiple rows due to possible multiplicity
+										// of children generated?
+										v = _.head(_.head(result));
+										console.log('selected head in collection:')
+										console.log(v)
+										console.log('collection')
+										console.log(result)
 										if (!v) {
 											let len = _.get(children, 'length')
 											throw new Error('[knowledgeBase.treePolicy()]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey:\n' + JSON.stringify(v))
@@ -371,7 +387,10 @@
 				}
 			})
 		},
-		function whileTest () { return expandableMoveNotFound && v.nonTerminal;},
+		function whileTest () { 
+			console.log('whileTest reached. reiterate? ' + (expandableMoveNotFound && v.nonTerminal))
+			return (expandableMoveNotFound && v.nonTerminal);
+		},
 		function result (error, result) {
 			if (error) {
 				deferred.reject(error);

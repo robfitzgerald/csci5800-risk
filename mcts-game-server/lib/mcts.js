@@ -19,10 +19,7 @@
 		treePolicy(rootNode)
 			.then(function(res) {
 				console.log('[mcts.treePolicy]: success')
-				console.log(res)
-				console.log('run defaultPolicy (not implemented)')
 				deferred.resolve(res)
-
 			})
 			.catch(function(err) {
 				console.log('[mcts.treePolicy]: failure')

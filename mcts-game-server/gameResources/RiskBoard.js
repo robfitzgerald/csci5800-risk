@@ -18,7 +18,7 @@
   module.exports = class RiskBoard extends BoardObject {
     constructor (gameNum, variant, players) {
       super (gameNum, variant, players);
-      this.Phase = 'attack';
+      this.Phase = 'start';
       this.Countries = assignCountries(this.Players);
       this.Free = _.nth([null, null, 40, 35, 30, 25, 20], this.Players);
       this.Steps = config.get('clips.steps');

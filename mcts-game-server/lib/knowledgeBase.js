@@ -72,12 +72,12 @@
 					},
 					possibleMoves: moves
 				}
+				// @TODO: check if already exists, and just return it.
 				, statement = `
-						CREATE (p:BOARD {boardParams})
-						WITH p
+						MERGE (p:BOARD {index:${hashBoard}})
+						ON CREATE SET p.nonTerminal = true, p.rewards = 0, p.visits = 0, p.createdAt = timestamp(), p.board = '${serializedBoard}'
 						FOREACH (move in {possibleMoves} | 
-							CREATE (n:UNEXPLORED {index: ${hashBoard}})
-				 		  CREATE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
+			 		  	MERGE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n:UNEXPLORED {index: ${hashBoard}}))
 				 		RETURN p`
 				, payload = helper.constructQueryBody(statement, params)
 			neo4j({json:payload}, function(err, res, body) {

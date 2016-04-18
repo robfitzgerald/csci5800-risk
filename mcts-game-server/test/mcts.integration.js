@@ -16,8 +16,8 @@
 				Authorization: 'Basic ' + auth.toString('base64')
 			}})
 
-	describe.skip('treePolicy()', function() {
-		it('start from simple', function() {
+	describe('treePolicy()', function() {
+		it('start from simple', function(done) {
 			// neo4j({json: helper.constructQueryBody('MATCH (n)-[r]-() DELETE n,r')}, 
 			// 	function(err, response, body) {
 			// 		if (err) {
@@ -27,12 +27,12 @@
 					console.log(generalizedParentBoard)
 					kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
 						.then(function(root) {
-							console.log('fresh roots')
 							console.log(root)
 							done();
 						})
-						.catch(function() {
-							done(new Error('createNewRoot failed'))
+						.catch(function(err) {
+							console.log(err)
+							done(new Error(err))
 						})
 				// })
 		})

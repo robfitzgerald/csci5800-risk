@@ -3,7 +3,6 @@
 	module.exports = {
 		maxPlayers,
 		generalize,
-		deGeneralize,  // TODO: rewrite mapping to cyclical if you want to start using this again.
 		play,
 		generate,
 	}
@@ -11,13 +10,22 @@
 	var RiskBoard = require('../gameResources/RiskBoard')
 		, _ = require('lodash')
 
+
 	/**
 	 * this array contains a list of the properties that should be found
-	 * on a board object.
-	 * @type {Array}
+	 * on a board object, for input validation of generalize();
+	 * @property {String[]} outSchema  - list of properties of a generalized board
 	 */
-	var schema = [
-			'Turn', 'Countries', 'Phase', 'Free', 'Steps', 'Players'
+	var inSchema = [
+			'Turn', 'Countries', 'Phase', 'Steps', 'Players'
+			]
+
+	/**
+	 * we add a new property after generalize. this is used by _.pick().
+	 * @property {String[]} outSchema  - list of properties of a generalized board
+	 */
+	var outSchema = [
+			'Turn', 'Countries', 'Phase', 'Steps', 'Players', 'PlayerArmies'
 			]
 
 	/**
@@ -36,55 +44,22 @@
 	 * @return {RiskBoard}       - reformatted for CLIPS and neo4j indexing
 	 */
 	function generalize (board) {
-		var schemaValidate = _.difference(schema, _.keys(board));
+		var schemaValidate = _.difference(inSchema, _.keys(board));
 		if (schemaValidate.length > 0) {
 			throw new TypeError('[risk.generalize]: board did not contain all properties required. missing: ' + schemaValidate)
 		} else {
 			var generalizedBoard = _.cloneDeep(board)
 				, distance = generalizedBoard.Turn
 				, numPlayers = generalizedBoard.Players
+			generalizedBoard.PlayerArmies = [];
 			_.forEach(generalizedBoard.Countries, function(country) {
 				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
 			});
-			return _.pick(generalizedBoard, schema);		
-		}
-	}
-
-	/**
-	 * re-assigns the correct details for this board 
-	 * @param  {RiskBoard} board               - CLIPS-formatted RiskBoard object
-	 * @param  {Number} currentPlayerNumber    - the current player's actual player number
-	 * @param  {Object} decoratingObject       - any properties will be copied into this RiskBoard as long as they do not overwrite any properties on board
-	 * @deprecated                             - generalization is now a 1-way trip to neo4j and that's all. right?
-	 * @return {RiskBoard}                     - reformatted for play
-	 */
-	function deGeneralize (board, currentPlayerNumber, decoratingObject) {
-		var intersection = _.intersection(_.keys(board), _.keys(decoratingObject))
-			, schemaValidate = _.difference(schema, _.keys(board));
-		if (schemaValidate.length > 0) {
-			throw new TypeError('[risk.deGeneralize]: board did not contain all properties required. missing: ' + schemaValidate)
-		} else if (typeof currentPlayerNumber !== 'number') {
-			throw new TypeError('[risk.deGeneralize]: currentPlayerNumber is not a number, got ' + JSON.stringify(currentPlayerNumber))
-		} else if (!_.isObjectLike(decoratingObject)) {
-			throw new TypeError('[risk.deGeneralize]: decoratingObject is not object-like; it\'s type is ' + typeof decoratingObject)
-		} else if (intersection.length > 0) {
-			throw new TypeError('[risk.deGeneralize]: decoratingObject contains properties that will overwrite properties in board: ' + intersection)
-		} else {
-			var deGeneralizedBoard = _.cloneDeep(board)
-				, playerMap = []; // array that acts as a mapping function for player numbers
-			Object.assign(deGeneralizedBoard, decoratingObject)
-			playerMap.push(currentPlayerNumber); // index 0 
-			for (var i = 1, j = 0; i < deGeneralizedBoard.Players; ++i, ++j) {
-				if (i <= currentPlayerNumber) 
-					playerMap[i] = j;
-				else
-					playerMap[i] = i;
-			}
-			
-			deGeneralizedBoard.Countries.forEach(function(country) {
-				country.Player = playerMap[country.Player];
+			_.forEach(generalizedBoard.playerDetails, function(player) {
+				generalizedBoard.PlayerArmies.push(player.freeArmies);
 			})
-			return deGeneralizedBoard;
+
+			return _.pick(generalizedBoard, outSchema);		
 		}
 	}
 
@@ -97,7 +72,7 @@
 	}
 
 	/**
-	 * instantiates a new basic risk board
+	 * instantiates a new basic risk board. more accurate
 	 * @param  {String} variant        - valid gameVariant filename
 	 * @param  {Object[]} players      - array of player objects
 	 * @param  {String} players[].type - a player type such as AI, HUMAN
@@ -107,4 +82,16 @@
 		var gameNumber = 0;  // go to database, increment gameCount, return incremented value
 		return new RiskBoard(gameNumber, variant, players)
 	}
+
+	function rootNode() {
+		return { 
+			index: 4242402646,
+  		createdAt: 1461002660279,
+		  rewards: 3,
+		  nonTerminal: true,
+		  board: '{"Turn":0,"Countries":{"Alaska":{"Player":0,"Armies":1},"NorthwestTerritory":{"Player":1,"Armies":1},"Greenland":{"Player":0,"Armies":1},"Alberta":{"Player":1,"Armies":1},"Ontario":{"Player":0,"Armies":1},"WesternUnitedStates":{"Player":1,"Armies":1},"EasternUnitedStates":{"Player":0,"Armies":1},"CentralAmerica":{"Player":1,"Armies":1},"Venezuela":{"Player":0,"Armies":1},"Peru":{"Player":1,"Armies":1},"Brazil":{"Player":0,"Armies":1},"Argentina":{"Player":1,"Armies":1}},"Phase":"start","Free":40,"Steps":1000,"Players":2}',
+		  visits: 7 
+		};
+	}
+
 }

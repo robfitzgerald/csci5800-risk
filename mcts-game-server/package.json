@@ -38,7 +38,8 @@
     "lodash": "^4.6.1",
     "neo4j-parser": "^2.0.4",
     "q": "^1.4.1",
-    "request": "^2.69.0"
+    "request": "^2.69.0",
+    "string-hash": "^1.1.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",

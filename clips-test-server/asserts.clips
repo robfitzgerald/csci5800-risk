@@ -1,0 +1,18 @@
+(deffacts state
+    (players 2)
+    (phase (current placement))
+    (free-armies (player 0) (num 3))
+    (free-armies (player 1) (num 0))
+    (starting-player 0)
+    (turn 0)
+    (steps 100000000)
+
+    (controls (country Alaska) (player 0))
+    (armies (country Alaska) (num 5))
+
+    (controls (country NorthwestTerritory) (player 0))
+    (armies (country NorthwestTerritory) (num 5))
+
+    (controls (country Alberta) (player 1))
+    (armies (country Alberta) (num 10)))
+

@@ -6,29 +6,27 @@
 		, Q = require('q')
 
 	/**
-	 * Monte Carlo Tree Search
+	 * Monte Carlo Tree Search, as described in the Browne et.al. paper
 	 * @param  {Object} board              - game board JSON object
-	 * @param  {String}	board.gameVariant  - game variant name
 	 * @param  {Object} variant            - singleton object with game-specific function implementation
-	 * @return {[type]}             [description]
+	 * @return {Promise}             			 - a best child, or, error
 	 */
-	module.exports = function mcts (board, variant) {
+	module.exports = function mcts (rootNode) {
 		var deferred = Q.defer();
-		// perform mcts loop
-		// this is a mock up from the Browne et.al. paper
+		// @todo: wrap this in a async.whilst() loop
+		// this is a mock up 
+		let v0 = variant.generalize(rootNode)
 		console.log('[mcts]: starting with board: ')
 		console.log(board)
-		let rootString = variant.generalize(variant.generate(board.gameVariant, board.playerDetails))
-		console.log('rootString generated from provided board')
-		console.log(rootString)
-		treePolicy()
+		treePolicy(v0)
 			.then(function(res) {
-				console.log('[mcts>treePolicy]: success')
+				console.log('[mcts.treePolicy]: success')
+				console.log('run defaultPolicy (not implemented)')
 				deferred.resolve(res)
 
 			})
 			.catch(function(err) {
-				console.log('[mcts>treePolicy]: failure')
+				console.log('[mcts.treePolicy]: failure')
 				deferred.reject(err)
 			})
 		// var delta = defaultPolicy(vt);

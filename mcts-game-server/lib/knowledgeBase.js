@@ -10,6 +10,17 @@
 		treePolicy
 	}
 
+	/**
+	 * JSON representation of neo4j tree objects
+	 * @property {Object} TreeNode               - neo4j board state tree node object
+	 * @param {Number}    TreeNode.index         - hashed board value
+	 * @param {String}    TreeNode.board         - stringified, generalized RiskBoard object
+	 * @param {Boolean}   TreeNode.nonTerminal   - is this board a game over state?
+	 * @param {Number}    TreeNode.rewards 		   - non-negative value increased by 1 for every winning outcome simulated by nodes in this branch
+	 * @param {Number}    TreeNode.visits	       - how many times a simulation has been run on this node or any of its children
+	 * @param {Number}    TreeNode.createdAt     - Epoch time date representation when this node was generated
+	 */
+
 	var config = require('config')
 		, auth = new Buffer(config.get('neo4j.username') + ':' + config.get('neo4j.password'))
 		, request = require('request')
@@ -31,24 +42,30 @@
 
 	/**
 	 * creates a root node in the knowledge base
-	 * @param  {Object[]} moves     - array of valid moves     from state
-	 * @param  {String} boardString - game boardString name - becomes root state name
+	 * @param  {Object[]} moves     - array of valid moves from state
+	 * @param  {TreeNode} board     - game board object (should be generated via variant.generate())
 	 * @return {Promise}            - Promise that returns the created root node on success
 	 */
-	function createNewRoot(boardString, moves) {
+	function createNewRoot(board, moves) {
 		var deferred = Q.defer();
-	  if (!typeof boardString === 'string') {
-	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 1 ("boardString") should be a string, got ' + JSON.stringify(boardString));
-	  	return deferred.promise;
-	  } else if (!Array.isArray(moves)) {
-	  	deferred.reject('[knowledgeBase.createNewRoot]: arg 2 ("moves") should be an array')
+		// @todo: validate board instanceof BoardObject.  likely a function attached to variant.
+		// in order to do this, variant would need to be a singleton and shared to all
+		// node code.  :-(
+		if (!typeof board === 'object') {
+			deferred.reject(new Error('[knowledgeBase.createNewRoot()]: board (arg1) should be an object'));
+			return deferred.promise;
+		} else 
+	  if (!Array.isArray(moves)) {
+	  	deferred.reject(new Error('[knowledgeBase.createNewRoot()]: arg 2 ("moves") should be an array'));
 	  	return deferred.promise;
 	  } else {
-	  	var serializedBoard = helper.serialize(boardString)
+	  	var serializedBoard = helper.serialize(board)
+	  		, hashBoard = helper.hash(serializedBoard)
 				, params = {
 					boardParams: {
 						nonTerminal: true,
-						state: serializedBoard,
+						index: hashBoard,
+						board: serializedBoard,
 						rewards: 0,
 						visits: 0,
 						createdAt: Date.now()
@@ -59,7 +76,7 @@
 						CREATE (p:BOARD {boardParams})
 						WITH p
 						FOREACH (move in {possibleMoves} | 
-							CREATE (n:UNEXPLORED {state: '${serializedBoard}'})
+							CREATE (n:UNEXPLORED {index: ${hashBoard}})
 				 		  CREATE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
 				 		RETURN p`
 				, payload = helper.constructQueryBody(statement, params)
@@ -79,35 +96,44 @@
 	}
 
 	/**
-	 * creates children of a parent node by way of the move that generated them
-	 * @param  {String} parent                  - serialized parent board
+	 * creates children of a parent node by way of the move that generated them.  called after simulation.expand()
+	 * @param  {TreeNode} parent                - parent node
 	 * @param  {Object} move                    - a valid move object (see wiki for example)
-	 * @param  {Object[]} children              - contains data used to create each child board object
-	 * @param  {String} children[].state        - child board state
+	 * @param  {Object[]} children              - generalized board objects, the result of simulation.expand()
+	 * @param  {String} children[].board        - child board state
 	 * @param  {Object[]} children[].moves      - valid moves from the child state
 	 * @param  {Boolean} children[].nonTerminal - flag indicating it is an end of game configuration
 	 * @return {Promise}                        - resolves to 'success', else it will reject 
 	 */
 	function createChildren(parent, move, children) {
 		// TODO: input validation
-		if (!typeof parent === 'string') {
-			deferred.reject('[knowledgeBase.createChild] error: parent (arg1) should be a string');
+		if (!typeof parent === 'object') {
+			deferred.reject('[knowledgeBase.createChildren()]: parent (arg1) should be an object');
 			return deferred.promise;
 		} else if (!typeof move === 'object') {
-			deferred.reject('[knowledgeBase.createChild] error: move (arg2) should be an object');
+			deferred.reject('[knowledgeBase.createChildren()]: move (arg2) should be an object');
 			return deferred.promise;
 		} else if (!Array.isArray(children)) {
-			deferred.reject('[knowledgeBase.createChild] error: children (arg3) should be an array');
+			deferred.reject('[knowledgeBase.createChildren()]: children (arg3) should be an array');
 			return deferred.promise;
 		} else {
 			var deferred = Q.defer()
 				, statements = []
-				, parameters = [];
+				, parameters = []
+				, hashParentBoard = helper.hash(parent);
+
 			_.forEach(children, function(child) {
-				let params = {
+				let thisBoard = _.get(child, 'board');
+				if (!!thisBoard) {
+					throw new Error('[knowledgeBase.createChildren()]: a child in children is missing board property: \n' + JSON.stringify(child));
+				}
+				let serializedBoard = helper.serialize(child.board)
+	  			, hashChildBoard = helper.hash(child.board)
+	  			, params = {
 						child: {
 							nonTerminal: child.nonTerminal,
-							state: child.state,
+							index: hashChildBoard,
+							board: serializedBoard,
 							rewards: 0,
 							visits: 0,
 							createdAt: Date.now()
@@ -119,10 +145,10 @@
 							CREATE (c:BOARD {child})
 							WITH c
 							FOREACH (move in {possibleMoves} | 
-								CREATE (n:UNEXPLORED {state: '${child.state}'})
+								CREATE (n:UNEXPLORED {index: ${hashChildBoard}})
 					 		  CREATE (c) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
 				 		  WITH c
-							MATCH (p:BOARD {state: '${parent}'})
+							MATCH (p:BOARD {index: ${hashParentBoard}})
 							WITH c, p
 							CREATE (p) -[cr:CHILD {move}]-> (c)
 							CREATE (c) -[pr:PARENT {move}]-> (p)
@@ -133,7 +159,7 @@
 			// delete 'possible' relation associated with this 'create' call
 			statements.push(`
 				WITH {move} AS m
-				MATCH (p:BOARD {state: '${parent}'}) -[r {name: m.name}]- (u:UNEXPLORED {state:'${parent}'})
+				MATCH (p:BOARD {index: ${hashParentBoard}}) -[r {name: m.name}]- (u:UNEXPLORED {index:${hashParentBoard}})
 				DELETE r, u
 			`)		
 			parameters.push({move: move})
@@ -164,24 +190,24 @@
 
 	/**
 	 * backup operation for Monte Carlo Tree Search
-	 * @param  {String} child        - child board string we will backup from
-	 * @param  {String} root         - root board string (board state before game begins)
-	 * @param  {Integer} reward      - delta reward calculated by defaultPolicy
-	 * @return {'success' | Object}  - error object if failed
+	 * @param  {Object} child        - child board state we will backup from
+	 * @param  {String} root         - root board state, from variant.generate()
+	 * @param  {Integer} reward      - delta reward calculated by simulation.defaultPolicy()
+	 * @return {Promise}             - string 'success' or error object if failed
 	 */
 	function backup(child, root, reward) {
 		var deferred = Q.defer()
 		if (typeof reward !== 'number') {
-			deferred.reject('[knowledgeBase.backup] error: reward ' + reward + ' is not a number');
+			deferred.reject(new Error('[knowledgeBase.backup]: reward ' + reward + ' is not a number'));
 			return deferred.promise;
-		} else if (typeof child !== 'string' || typeof root !== 'string') {
-			deferred.reject('[knowledgeBase.backup] error: child state string: "' + child + '", root state string: "' + root + '". both should exist.')
+		} else if (typeof child !== 'object' || typeof root !== 'object') {
+			deferred.reject(new Error('[knowledgeBase.backup]: child state: "' + (typeof child) + '", root state: "' + (typeof root) + '". both should be objects.'))
 			return deferred.promise;
 		} else {
-			var serializedChild = helper.serialize(child)
-				, serializedRoot = helper.serialize(child)
+			var hashChildBoard = helper.hash(helper.serialize(child))
+				, hashRootBoard = helper.hash(helper.serialize(root))
 				, query = `
-						MATCH (child:BOARD{state: '${serializedChild}'}),(root:BOARD {state: '${serializedRoot}'}),
+						MATCH (child:BOARD{index: ${hashChildBoard}}),(root:BOARD {index: ${hashRootBoard}}),
 						path = (child) -[:PARENT*]-> (root)
 						WITH nodes(path) AS pathNodes UNWIND pathNodes as node
 						WITH DISTINCT node
@@ -203,14 +229,15 @@
 
 	/**
 	 * bestChild operation in Monte Carlo Tree Search, using UCT method. finds the bestChild of a parent board and returns it along with the move that creates the child
-	 * @param  {String} parent - parent board state string
+	 * @param  {Object} parent - parent board state object
 	 * @param  {Integer}    Cp - the coefficient used in UCT for the second term. See essay on MCTS methods.
-	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object
+	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object; or, an error
 	 */
 	function bestChild(parent, Cp) {
 		var deferred = Q.defer()
+			, hashParentBoard = helper.hash(helper.serialize(parent))
 			, query = `
-					MATCH (p:BOARD {state:'${parent}'}) -[r:CHILD]-> (child:BOARD)
+					MATCH (p:BOARD {index:${hashParentBoard}}) -[r:CHILD]-> (child:BOARD)
 					WITH collect(child) AS children, r AS moves, p AS parent
 					RETURN EXTRACT(board in children |
 							CASE 
@@ -250,7 +277,8 @@
 				result.sort(function(a,b) {
 					return b.board.uct - a.board.uct;
 				})
-				deferred.resolve(_.get(result, '[0]'))
+				// deferred.resolve(_.get(result, '[0]'))
+				deferred.resolve(result)
 			}
 		})
 		return deferred.promise;
@@ -259,17 +287,18 @@
 
 	/**
 	 * treePolicy method as described in Monte Carlo Tree Search. searches for a best child board state to pass to our defaultPolicy for simulation.
-	 * @param  {String} root - root state string for the tree we are exploring
+	 * @param  {Object} root - root state string for the tree we are exploring
 	 * @return {Promise}     - resolves to a board state object, rejects with any error messages.
 	 */
 	function treePolicy(root) {
 		var deferred = Q.defer()
 			, serializedRoot = helper.serialize(root)
-			, v = {state:serializedRoot,nonTerminal:true}
+			, indexRoot = helper.hash(serializedRoot)
+			, v = {index:indexRoot,nonTerminal:true}
 			, expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
 			var query = `
-				MATCH (b:BOARD {state:'${v.state}'}) -[r:POSSIBLE]-> ()
+				MATCH (b:BOARD {index:${v.index}}) -[r:POSSIBLE]-> ()
 				WITH r, count(*) as possibleMoveCount
 				RETURN
 				CASE possibleMoveCount > 0
@@ -277,8 +306,7 @@
 				THEN r
 				WHEN false 
 				THEN false
-				END AS expand
-			`
+				END AS expand`
 			, payload = helper.constructQueryBody(query)
 			neo4j({json:payload}, function(err, _res, body) {
 				var neo4jError = _.get(body, 'errors')
@@ -292,20 +320,24 @@
 					// console.log(JSON.stringify(move))
 					if (move) {
 						expandableMoveNotFound = false;
-						CLIPS.expand(v.state, move)
+						CLIPS.expand(v, move)
 							.then(function(children) {
 								// console.log('[treePolicy] CLIPS.expand() result: ')
 								// console.log(children)
-								createChildren(v.state, move, children)
+								createChildren(v, move, children)
 									.then(function(result) {
 										// console.log('createChildren() result: ')
 										// console.log(result)
 										// console.log('[treePolicy]: picking the first createdChild in order to '
 											// + 'provide defaultPolicy() with only one board to simulate.')
-										v = result[0];
+										v = _.head(result);
+										if (!v) {
+											let len = _.get(children, 'length')
+											throw new Error('[knowledgeBase.treePolicy()]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey.')
+										}
 										// console.log('[treePolicy] create new child result:')
 										// console.log(result)
-										callback(null)
+										callback(null) // doWhilst(): end this iteration
 									})
 									.catch(function(createError) {
 										// console.log('[treePolicy] error from createChild() call:' + createError)
@@ -316,17 +348,15 @@
 						// console.log('bestChild()')
 						// console.log(v)
 						// console.log(explorationParameter)
-						bestChild(v.state, explorationParameter)
+						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
 								v = _.get(vBestChild, 'board')
-								// console.log('v is now ' + v.state + ', nonTerminal = ' + v.nonTerminal);
-								// console.log(v)
 								if (v) {
 									// console.log('bestChild() result aka "v": ')
 									// console.log(v)
 									callback(null)
 								} else {
-									callback('[treePolicy]: could not look up board state string of bestChild().')
+									callback(new Error('[treePolicy]: could not look up board state string of bestChild() with v: ' + JSON.stringify(v) + ' from bestChild result: \n ' + JSON.stringify(vBestChild)))
 								}		
 							})
 							.catch(function(bestChildError) {
@@ -346,72 +376,5 @@
 			}
 		})
   	return deferred.promise;
-	}
-
-
-
-	// backup({state:'sloop'}, null, 1)
-	// 	.then(function(res){ console.log(JSON.stringify(res)); })
-	// 	.catch(function(err) { console.log(err) })
-	// console.log(helper.deserializeBoard('puppies'))
-	// console.log(helper.serializeBoard('sloop'))
-	// bestChild('betsy', 0)
-	// 	.then(function(res) { console.log(JSON.stringify(res))})
-	// 	.catch(function(err) { console.log(err)})
-	// debugGenerateTestChildren(2, '55555');
-	
-
-	// ---TEST---
-	// createNewRoot('betsy', [{name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, {name:'flooves', params: []}, {name:'shuld be not takey', params: []}])
-	//  	.then(function(res) { 
-	//  		// console.log('createNewRoot.then()')
-	//  		// console.log(res)
-	//  		createChildren('betsy', {name:'moves', params: ["asdf","sdfg","dfgh","fghj"]}, 
-	//  			[
-	// 		 		{
-	// 		 			state: 'ronnie',
-	// 		 			moves: [{name:'asdf', params: ["asdf","sdfg","dfgh","fghj"]}],
-	// 		 			nonTerminal: true
-	// 		 		},{
-	// 		 			state: 'zuko',
-	// 		 			moves: [{name:'fghah', params: []}],
-	// 		 			nonTerminal: true
-	// 		 		}
-	// 	 		])
-	//  			.then(function(res2) {
-	//  				// console.log('createChildren.then()')
-	//  				// console.log(res2)
-	// 				treePolicy('betsy')
-	// 					.then(function(res) {
-	// 						// console.log('treePolicy success');
-	// 						// console.log(JSON.stringify(res))
-							// var i = 0
-							// 	, generate = 5
-							// 	, counter = Date.now();	
-							// async.whilst(function() { return i < generate }
-							// 	, function(callback) {
-							// 		i++;
-							// 		treePolicy('betsy')
-							// 			.then(function(res) { console.log('treePolicy result: '); console.log(res); callback(null, res)})
-							// 			.catch(function(err) { callback(err)})
-							// 	},
-							// 	function(error, result) {
-							// 		console.log(generate + ' done in ' + (Date.now() - counter) + ' ms')
-							// 		console.log(result)
-							// 	})
-	// 					})
-	// 					.catch(function(err) {console.log('treePolicy error'); console.log(err)})
-	//  			})
-	//  			.catch(function(err2) {
-	//  				console.log('createChildren.catch()')
-	//  				console.log(err2)
-	//  			})
-	//  	}) // just in here for testing
-	//  	.catch(function(err) { 
-	// 		console.log('createNewRoot.catch()')
-	//  		console.log(err) 
-	//  	});
-	
-
-	  	
+	}	  	
 }

@@ -3,21 +3,29 @@
 	module.exports = {
 		serialize,
 		deserialize,
+		hash,
 		constructQueryBody
 	}
 
 	var _ = require('lodash')
+		, stringHash = require('string-hash')
 
 	function serialize(board) {
-		// var output = new Buffer(JSON.stringify(board))
-		// return output.toString('base64');
-		return JSON.stringify(board)
+		return JSON.stringify(board);
 	}
 
 	function deserialize(board) {
-		// var output = new Buffer(board, 'base64')
-		// return output.toString('utf8')
-		return JSON.parse(board)
+		return JSON.parse(board);
+	}
+
+	function hash(s) {
+		var result;
+		try {
+			result = stringHash(s);
+		} catch (e) {
+			throw new Error('[knowledgeBase.helper.hash()]: was unable to hash input of type ' + typeof s + '.')
+		}
+		return result;
 	}
 
 	function constructQueryBody(statements, parameters) {

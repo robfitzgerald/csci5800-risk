@@ -3,7 +3,6 @@
 	module.exports = {
 		maxPlayers,
 		generalize,
-		deGeneralize,  // TODO: rewrite mapping to cyclical if you want to start using this again.
 		play,
 		generate,
 	}
@@ -47,44 +46,6 @@
 				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
 			});
 			return _.pick(generalizedBoard, schema);		
-		}
-	}
-
-	/**
-	 * re-assigns the correct details for this board 
-	 * @param  {RiskBoard} board               - CLIPS-formatted RiskBoard object
-	 * @param  {Number} currentPlayerNumber    - the current player's actual player number
-	 * @param  {Object} decoratingObject       - any properties will be copied into this RiskBoard as long as they do not overwrite any properties on board
-	 * @deprecated                             - generalization is now a 1-way trip to neo4j and that's all. right?
-	 * @return {RiskBoard}                     - reformatted for play
-	 */
-	function deGeneralize (board, currentPlayerNumber, decoratingObject) {
-		var intersection = _.intersection(_.keys(board), _.keys(decoratingObject))
-			, schemaValidate = _.difference(schema, _.keys(board));
-		if (schemaValidate.length > 0) {
-			throw new TypeError('[risk.deGeneralize]: board did not contain all properties required. missing: ' + schemaValidate)
-		} else if (typeof currentPlayerNumber !== 'number') {
-			throw new TypeError('[risk.deGeneralize]: currentPlayerNumber is not a number, got ' + JSON.stringify(currentPlayerNumber))
-		} else if (!_.isObjectLike(decoratingObject)) {
-			throw new TypeError('[risk.deGeneralize]: decoratingObject is not object-like; it\'s type is ' + typeof decoratingObject)
-		} else if (intersection.length > 0) {
-			throw new TypeError('[risk.deGeneralize]: decoratingObject contains properties that will overwrite properties in board: ' + intersection)
-		} else {
-			var deGeneralizedBoard = _.cloneDeep(board)
-				, playerMap = []; // array that acts as a mapping function for player numbers
-			Object.assign(deGeneralizedBoard, decoratingObject)
-			playerMap.push(currentPlayerNumber); // index 0 
-			for (var i = 1, j = 0; i < deGeneralizedBoard.Players; ++i, ++j) {
-				if (i <= currentPlayerNumber) 
-					playerMap[i] = j;
-				else
-					playerMap[i] = i;
-			}
-			
-			deGeneralizedBoard.Countries.forEach(function(country) {
-				country.Player = playerMap[country.Player];
-			})
-			return deGeneralizedBoard;
 		}
 	}
 

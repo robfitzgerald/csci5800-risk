@@ -1,14 +1,18 @@
 'use strict';
+
 {
 	module.exports = {
 		maxPlayers,
 		generalize,
 		play,
 		generate,
+		expand,
 	}
 
 	var RiskBoard = require('../gameResources/RiskBoard')
 		, _ = require('lodash')
+		, Q = require('q')
+		, expandFunctions = require('../gameResources/expand')
 
 
 	/**
@@ -69,6 +73,24 @@
 		console.log(action)
 		console.log('<call to CLIPS to play on this combination of board, action>')
 		return 'result of risk.play()'
+	}
+
+	function expand (generalizedBoard, action) {
+		var deferred = Q.defer();
+
+		var func = expandFunctions[action.name];
+
+		if (!!func) {
+			func(generalizedBoard, action).then(function (value) {
+				deferred.resolve(value);
+			});
+		} else {
+			console.log("Ya done broke sum'em");
+			console.log("Expand() -- Action does not exist: " + action.name);
+			deferred.reject("Ya done broke sum'em");
+		}
+
+		return deferred.promise;
 	}
 
 	/**

@@ -33,6 +33,7 @@
   "dependencies": {
     "async": "^1.5.2",
     "body-parser": "^1.15.0",
+    "clips-module": "file:../clips-module/",
     "config": "^1.19.0",
     "express": "^4.13.4",
     "lodash": "^4.6.1",

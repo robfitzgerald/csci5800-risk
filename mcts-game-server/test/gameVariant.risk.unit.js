@@ -44,5 +44,33 @@
 				expect(_.isEqual(generalizedOne, generalizedTwo)).to.be.true;
 			})
 		})
+		describe('.expand()', function () {
+			it('should return an array', function (done) {
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'}]);
+				board = Risk.generalize(board);
+				var action = {
+					name: 'placearmy',
+					params: ["Alaska"]
+				};
+
+				Risk.expand(board, action).then(function (value) {
+					expect(Array.isArray(value)).to.be.true;
+					done();
+				});
+			})
+			it('should create a single entry from \'placearmy\'', function (done) {
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'}]);
+				board = Risk.generalize(board);
+				var action = {
+					name: 'placearmy',
+					params: ["Alaska"]
+				};
+
+				Risk.expand(board, action).then(function (value) {
+					expect(value.length === 1).to.be.true;
+					done();
+				});
+			})
+		})
 	})
 }

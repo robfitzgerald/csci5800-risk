@@ -206,7 +206,7 @@
 	  			, hashChildBoard = helper.hash(serializedBoard)
 	  			, params = {
 						child: {
-							nonTerminal: child.nonTerminal,
+							nonTerminal: (child.moves.length > 0),
 							index: hashChildBoard,
 							board: serializedBoard,
 							rewards: 0,
@@ -267,21 +267,21 @@
 	/**
 	 * backup operation for Monte Carlo Tree Search
 	 * @param  {Object} child        - child generalized board state we will backup from
-	 * @param  {String} root         - root generalized board state, from variant.generate()
-	 * @param  {1|0} reward      - delta reward calculated by simulation.defaultPolicy()
+	 * @param  {Number} rootIndex    - root index, from variant.rootIndex()
+	 * @param  {1|0} reward          - delta reward calculated by simulation.defaultPolicy()
 	 * @return {Promise}             - string 'success' or error object if failed
 	 */
-	function backup(child, root, reward) {
+	function backup(child, rootIndex, reward) {
 		var deferred = Q.defer()
 		if (typeof reward !== 'number') {
-			deferred.reject(new Error('[knowledgeBase.backup]: reward ' + reward + ' is not a number'));
-			return deferred.promise;
-		} else if (typeof child !== 'object' || typeof root !== 'object') {
-			deferred.reject(new Error('[knowledgeBase.backup]: child state: "' + (typeof child) + '", root state: "' + (typeof root) + '". both should be objects.'))
-			return deferred.promise;
+			deferred.reject(new Error('[knowledgeBase.backup]: reward ' + JSON.stringify(reward) + ' is not a number'));
+		} else if (typeof child !== 'object') {
+			deferred.reject(new Error('[knowledgeBase.backup]: child state: "' + (typeof child) + '" should be an object.'))
+		} else if (typeof rootIndex !== 'number') {
+			deferred.reject(new Error('[knowledgeBase.backup]: root state: "' + (typeof rootIndex) + '" should be an object.'))
 		} else {
 			var hashChildBoard = helper.hash(helper.serialize(child))
-				, hashRootBoard = helper.hash(helper.serialize(root))
+				, hashRootBoard = rootIndex
 				, query = `
 						MATCH (child:BOARD{index: ${hashChildBoard}}),(root:BOARD {index: ${hashRootBoard}}),
 						path = (child) -[:PARENT*]-> (root)
@@ -294,13 +294,13 @@
 				var neo4jError = _.get(body, 'errors')
 					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 				if (errors) {
-					deferred.reject(errors);
+					deferred.reject(JSON.stringify(errors));
 				} else {
 					deferred.resolve('success')
 				}
 			})
-			return deferred.promise;
 		}
+		return deferred.promise;
 	}
 
 	/**
@@ -397,7 +397,7 @@
 				} else {
 					// grab first move. order guaranteed? not guaranteed? probs not.
 					var move = _.get(body, 'results[0].data[0].row[0]')
-					console.log('should be falsey: ' + move)
+					// console.log('should be falsey: ' + move)
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
 						CLIPS.expand(v, move)
@@ -422,7 +422,7 @@
 					} else {
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
-								v = _.get(vBestChild, 'board')
+								v = JSON.parse(_.get(vBestChild, 'board'))
 								if (v) {
 									callback(null)
 								} else {
@@ -438,6 +438,9 @@
 			})
 		},
 		function whileTest () { 
+			// console.log('v')
+			// console.log(v)
+			// console.log('whileTest: ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},
 		function result (error, result) {

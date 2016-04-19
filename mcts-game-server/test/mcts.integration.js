@@ -65,17 +65,12 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 		describe('mcts', function() {
 			it('run mcts', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
-				mcts(generalizedParentBoard, variant)
+				mcts.innerMcts(generalizedParentBoard, variant)
 					.then(function(mctsDone) {
-						console.log('test: mcts success')
-						console.log(mctsDone)
-						expect(mctsDone.hasOwnProperty('board')).to.be.true;
 						done();
 					})
 					.catch(function(mctsErr) {
-						console.log('test: mcts error')
-						console.log(mctsErr)
-						return done(mctsErr);
+						return done(new Error(JSON.stringify(mctsErr)));
 					})	
 			})
 			it('bestChild setup', function(done) {
@@ -156,18 +151,29 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 			})
 			it('treePolicy will descend tree at this point', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
-				mcts(generalizedParentBoard, variant)
+				mcts.innerMcts(generalizedParentBoard, variant)
 					.then(function(result) {
 						console.log('test: mcts success')
 						console.log(result)
 						done();
 					})
 					.catch(function(mctsErr) {
-						// console.log('test: mcts error')
-						return done(new Error(JSON.stringify(mctsErr)));
+						done(new Error(JSON.stringify(mctsErr)));
 					})					
 			})
-		})		
+			it('finally, let us test the while-wrapped version', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+				mcts.mcts(generalizedParentBoard, variant, 4000)
+					.then(function(result) {
+						console.log('test: mcts success')
+						console.log(result)
+						done();
+					})
+					.catch(function(mctsErr) {
+						done(new Error(JSON.stringify(mctsErr)));
+					})				
+			})
+		})	
 	})
 
 	// backup({state:'sloop'}, null, 1)

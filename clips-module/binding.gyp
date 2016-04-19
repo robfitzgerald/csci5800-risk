@@ -15,11 +15,13 @@
             ]
         },
         "cflags!" : [
-            "-fno-exceptions"
+            "-fno-exceptions",
+	    "-std=c++11"
         ],
         "cflags_cc!": [
-            "-fno-exceptions"
-        ]
+            "-fno-exceptions",
+	    "-std=c++11" 
+       ]
     }
   ]
 }

@@ -137,8 +137,7 @@
      */
     endTurn () {
       this.Turn = ((this.Turn + 1) % this.Players);
-      this.Free = this._countriesReward();
-      this.Free += this._continentReward();
+      this.playerDetails[this.Turn].freeArmies = this._countriesReward() + this._continentReward();
       this.Phase = 'placement';
       this.moveCount++;
       return this;

@@ -68,11 +68,11 @@
 		var result = _.cloneDeep(board);
 
 		switch (action.name) {
-			case "placearmy":
+			case "placearmy":		// Places a single army at the target country
 				// Increment the target country's armies
 				result.modifyCountryArmies(action.params[0], 1);
 
-				// Decrement the players availables armies
+				// Decrement the players available armies
 				result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
 
 				// Check if the player is out of armies
@@ -80,6 +80,122 @@
 					result.Phase = "attack";
 				}
 
+				break;
+			case "startplace":		// Places a single army at the target country and changes to the next players turn
+				break;
+			case "attackall":		// Attacks from country 1 to country 2 with all available armies
+				while(board.Countries[action.params[1]].Armies > 0 && board.Countries[action.params[0]].Armies > 1) {
+					// Roll
+					if(board.Countries[action.params[0]].Armies > 2){
+						var attackerDice = [0, 0, 0];
+					}else {
+						var attackerDice = [0, 0];
+					}
+					if(board.Countries[action.params[1]].Armies > 1) {
+						var defenderDice = [0, 0];
+					}else {
+						var defenderDice = [0];
+					}
+
+					for (var d in attackerDice) {
+						attackerDice[d] = Math.round(Math.random()*6);
+					}
+					attackerDice.sort();
+
+
+					for (var d in defenderDice) {
+						defenderDice[d] = Math.round(Math.random()*6);
+					}
+					defenderDice.sort();
+
+					// Compare first opposing pair of dice, then remove both
+					if(Math.max(attackerDice) > Math.max(defenderDice)) {
+						// Decrement an army from defender
+						result.modifyCountryArmies(action.params[1], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+						// Decrement an army from attacker
+						result.modifyCountryArmies(action.params[0], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					}
+
+					// Compare second opposing pair of dice, then remove both
+					if(Math.max(attackerDice) > Math.max(defenderDice)) {
+						// Decrement an army from defender
+						result.modifyCountryArmies(action.params[1], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+						// Decrement an army from attacker
+						result.modifyCountryArmies(action.params[0], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					}
+				}
+				result.Phase = "fortify";
+				break;
+			case "attackhalf":		// Attacks from country 1 to country 2 with half available armies
+				while(board.Countries[action.params[1]].Armies > 0 && board.Countries[action.params[0]].Armies > board.Countries[action.params[0]].Armies/2) {
+					// Roll
+					if(board.Countries[action.params[0]].Armies > 2){
+						var attackerDice = [0, 0, 0];
+					}else {
+						var attackerDice = [0, 0];
+					}
+					if(board.Countries[action.params[1]].Armies > 1) {
+						var defenderDice = [0, 0];
+					}else {
+						var defenderDice = [0];
+					}
+
+					for (var d in attackerDice) {
+						attackerDice[d] = Math.round(Math.random()*6);
+					}
+					attackerDice.sort();
+
+
+					for (var d in defenderDice) {
+						defenderDice[d] = Math.round(Math.random()*6);
+					}
+					defenderDice.sort();
+
+					// Compare first opposing pair of dice, then remove both
+					if(Math.max(attackerDice) > Math.max(defenderDice)) {
+						// Decrement an army from defender
+						result.modifyCountryArmies(action.params[1], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+						// Decrement an army from attacker
+						result.modifyCountryArmies(action.params[0], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					}
+
+					// Compare second opposing pair of dice, then remove both
+					if(Math.max(attackerDice) > Math.max(defenderDice)) {
+						// Decrement an army from defender
+						result.modifyCountryArmies(action.params[1], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+						// Decrement an army from attacker
+						result.modifyCountryArmies(action.params[0], -1);
+						attackerDice.pop();
+						defenderDice.pop();
+					}
+				}
+				result.Phase = "fortify";
+				break;
+			case "fortify":		// Moves all armies except 1 from country a to country b
+				result.modifyCountryArmies(action.params[1], board.Countries[action.params[0]].Armies - 1);
+				result.modifyCountryArmies(action.params[0], (board.Countries[action.params[0]].Armies - 1) * -1);
+				result.Phase = "endturn";
+				break;
+			case "endturn":
+				result.endTurn();
 				break;
 			default:
 				console.log("Ya done broke sum'em");

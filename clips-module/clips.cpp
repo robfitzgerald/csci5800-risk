@@ -28,7 +28,8 @@ namespace clipslib {
 
     void runSimulation(const FunctionCallbackInfo<Value>& args) {
         void* env = CreateEnvironment();
-        EnvLoad(env, "risk.clips");
+        EnvLoad(env, "sim.clips");
+
         EnvReset(env);
 
         v8::String::Utf8Value attrs(args[0]->ToString());
@@ -48,8 +49,10 @@ namespace clipslib {
     }
 
     void generateActions(const FunctionCallbackInfo<Value>& args) {
+        Isolate *isolate = args.GetIsolate();
+
         void* env = CreateEnvironment();
-        EnvLoad(env, "risk.clips");
+        EnvLoad(env, "actions.clips");
         EnvReset(env);
 
         v8::String::Utf8Value attrs(args[0]->ToString());
@@ -66,7 +69,11 @@ namespace clipslib {
         AgendaParser ap;
         ap.parseString(agenda);
 
-        std::cout << ap.withFacts(fp) << std::endl;
+        // std::cout << ap.withFacts(fp) << std::endl;
+
+        std::string str = ap.withFacts(fp);
+        args.GetReturnValue().Set(v8::String::NewFromUtf8(isolate, ap.withFacts(fp).c_str()));
+
     }
 
     void Init(Local<Object> exports) {

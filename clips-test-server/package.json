@@ -6,12 +6,12 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "express": "^4.13.3",
-    "serve-favicon": "^2.3.0",
-    "morgan": "^1.6.1",
-    "cookie-parser": "^1.3.3",
     "body-parser": "^1.13.3",
+    "clips-module": "file:../clips-module/",
+    "cookie-parser": "^1.3.3",
+    "express": "^4.13.3",
     "jade": "^1.11.0",
-    "clips-module": "file:../clips-module/"
+    "morgan": "^1.6.1",
+    "serve-favicon": "^2.3.0"
   }
 }

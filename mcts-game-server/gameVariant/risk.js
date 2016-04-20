@@ -140,7 +140,7 @@
 				//result.Phase = "fortify";
 				break;
 			case "attackhalf":		// Attacks from country 1 to country 2 with half available armies
-// Roll
+				// Roll
 				// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
 				var attackerDice, defenderDice;
 
@@ -162,7 +162,7 @@
 				}
 
 				for (var ad=0; ad<attackerDice.length; ad++) {
-					attackerDice[d] = Math.round(Math.random()*6);
+					attackerDice[ad] = Math.round(Math.random()*6);
 				}
 				attackerDice.sort();
 

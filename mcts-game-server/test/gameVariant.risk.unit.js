@@ -74,8 +74,11 @@
 
 				var result = Risk.play(board, action);
 
-				expect((result.getCountryArmies("Alaska") == 0 && result.getCountryArmies("NorthwestTerritory") > 1) ||
-					(result.getCountryArmies("Alaska") > 1 && result.getCountryArmies("NorthwestTerritory") == 0)).to.be.true;
+				expect((result.getCountryArmies("Alaska") == alaskaArmies-2 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-2)).to.be.true;
 			})
 		})
 		describe('.play(), fortify action', function () {

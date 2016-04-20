@@ -105,13 +105,13 @@
 					defenderDice = [0];
 				}
 
-				for (var ad=0; ad<attackerDice.length(); ad++) {
-					attackerDice[d] = Math.round(Math.random()*6);
+				for (var ad=0; ad<attackerDice.length; ad++) {
+					attackerDice[ad] = Math.round(Math.random()*6);
 				}
 				attackerDice.sort();
 
 
-				for (var dd=0; dd<defenderDice.length(); dd++) {
+				for (var dd=0; dd<defenderDice.length; dd++) {
 					defenderDice[dd] = Math.round(Math.random()*6);
 				}
 				defenderDice.sort();
@@ -161,13 +161,13 @@
 					defenderDice = [0];
 				}
 
-				for (var ad=0; ad<attackerDice.length(); ad++) {
+				for (var ad=0; ad<attackerDice.length; ad++) {
 					attackerDice[d] = Math.round(Math.random()*6);
 				}
 				attackerDice.sort();
 
 
-				for (var dd=0; dd<defenderDice.length(); dd++) {
+				for (var dd=0; dd<defenderDice.length; dd++) {
 					defenderDice[dd] = Math.round(Math.random()*6);
 				}
 				defenderDice.sort();

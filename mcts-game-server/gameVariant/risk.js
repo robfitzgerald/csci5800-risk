@@ -81,9 +81,19 @@
 				}
 
 				break;
-			case "startplace":		// Places a single army at the target country and changes to the next players turn
+            case "startplace":		// Places a single army at the target country and changes to the next players turn
+                // Increment the target country's armies
+				result.modifyCountryArmies(action.params[0], 1);
+
+				// Decrement the player's available armies
+				result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
+
+				// Change to next player's turn
+                result.Turn = ((board.Turn + 1) % board.Players);
+
+                // TODO: Change phase?
 				break;
-			case "attackall":		// Attacks from country 1 to country 2 with all available armies
+            case "attackall":		// Attacks from country 1 to country 2 with all available armies
 				// Roll
 				// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
 				var attackerDice, defenderDice;
@@ -137,7 +147,7 @@
 					// Decrement an army from attacker
 					result.modifyCountryArmies(action.params[0], -1);
 				}
-				//result.Phase = "fortify";
+				// TODO: result.Phase = "fortify";
 				break;
 			case "attackhalf":		// Attacks from country 1 to country 2 with half available armies
 				// Roll
@@ -193,7 +203,7 @@
 					// Decrement an army from attacker
 					result.modifyCountryArmies(action.params[0], -1);
 				}
-			//result.Phase = "fortify";
+			// TODO: result.Phase = "fortify";
 				break;
 			case "fortify":		// Moves all armies except 1 from country a to country b
 				result.modifyCountryArmies(action.params[1], board.Countries[action.params[0]].Armies - 1);

@@ -64,11 +64,152 @@
 	}
 
 	function play (board, action) {
-		console.log('risk.play() called with board, action:')
-		console.log(board)
-		console.log(action)
-		console.log('<call to CLIPS to play on this combination of board, action>')
-		return 'result of risk.play()'
+		// Create a duplicate of the board
+		var result = _.cloneDeep(board);
+
+		switch (action.name) {
+			case "placearmy":		// Places a single army at the target country
+				// Increment the target country's armies
+				result.modifyCountryArmies(action.params[0], 1);
+
+				// Decrement the players available armies
+				result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
+
+				// Check if the player is out of armies
+				if (result.playerDetails[board.Turn].freeArmies == 0) {
+					result.Phase = "attack";
+				}
+
+				break;
+			case "startplace":		// Places a single army at the target country and changes to the next players turn
+				break;
+			case "attackall":		// Attacks from country 1 to country 2 with all available armies
+				// Roll
+				// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
+				var attackerDice, defenderDice;
+
+				if(board.Countries[action.params[0]].Armies > 2){
+					attackerDice = [0, 0, 0];
+				}else if (board.Countries[action.params[0]].Armies == 2) {
+					attackerDice = [0, 0];
+				}else if (board.Countries[action.params[0]].Armies == 1) {
+					attackerDice = [0];
+				}else {
+					console.log('not enough armies for attack');
+					break;
+				}
+				// Defender rolls 2 dice or 1, depending on the number of defending armies available
+				if(board.Countries[action.params[1]].Armies > 1) {
+					defenderDice = [0, 0];
+				}else {
+					defenderDice = [0];
+				}
+
+				for (var ad=0; ad<attackerDice.length; ad++) {
+					attackerDice[ad] = Math.round(Math.random()*6);
+				}
+				attackerDice.sort();
+
+
+				for (var dd=0; dd<defenderDice.length; dd++) {
+					defenderDice[dd] = Math.round(Math.random()*6);
+				}
+				defenderDice.sort();
+
+				// Compare first opposing pair of dice, then remove both
+				if(Math.max(attackerDice) > Math.max(defenderDice)) {
+					// Decrement an army from defender
+					result.modifyCountryArmies(action.params[1], -1);
+					attackerDice.pop();
+					defenderDice.pop();
+				} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+					// Decrement an army from attacker
+					result.modifyCountryArmies(action.params[0], -1);
+					attackerDice.pop();
+					defenderDice.pop();
+				}
+
+				// Compare second opposing pair of dice
+				if(Math.max(attackerDice) > Math.max(defenderDice)) {
+					// Decrement an army from defender
+					result.modifyCountryArmies(action.params[1], -1);
+				} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+					// Decrement an army from attacker
+					result.modifyCountryArmies(action.params[0], -1);
+				}
+				//result.Phase = "fortify";
+				break;
+			case "attackhalf":		// Attacks from country 1 to country 2 with half available armies
+				// Roll
+				// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
+				var attackerDice, defenderDice;
+
+				if(board.Countries[action.params[0]].Armies > 2){
+					attackerDice = [0, 0, 0];
+				}else if (board.Countries[action.params[0]].Armies == 2) {
+					attackerDice = [0, 0];
+				}else if (board.Countries[action.params[0]].Armies == 1) {
+					attackerDice = [0];
+				}else {
+					console.log('not enough armies for attack');
+					break;
+				}
+				// Defender rolls 2 dice or 1, depending on the number of defending armies available
+				if(board.Countries[action.params[1]].Armies > 1) {
+					defenderDice = [0, 0];
+				}else {
+					defenderDice = [0];
+				}
+
+				for (var ad=0; ad<attackerDice.length; ad++) {
+					attackerDice[ad] = Math.round(Math.random()*6);
+				}
+				attackerDice.sort();
+
+
+				for (var dd=0; dd<defenderDice.length; dd++) {
+					defenderDice[dd] = Math.round(Math.random()*6);
+				}
+				defenderDice.sort();
+
+				// Compare first opposing pair of dice, then remove both
+				if(Math.max(attackerDice) > Math.max(defenderDice)) {
+					// Decrement an army from defender
+					result.modifyCountryArmies(action.params[1], -1);
+					attackerDice.pop();
+					defenderDice.pop();
+				} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+					// Decrement an army from attacker
+					result.modifyCountryArmies(action.params[0], -1);
+					attackerDice.pop();
+					defenderDice.pop();
+				}
+
+				// Compare second opposing pair of dice
+				if(Math.max(attackerDice) > Math.max(defenderDice)) {
+					// Decrement an army from defender
+					result.modifyCountryArmies(action.params[1], -1);
+				} else if(Math.max(attackerDice) <= Math.max(defenderDice)) {
+					// Decrement an army from attacker
+					result.modifyCountryArmies(action.params[0], -1);
+				}
+			//result.Phase = "fortify";
+				break;
+			case "fortify":		// Moves all armies except 1 from country a to country b
+				result.modifyCountryArmies(action.params[1], board.Countries[action.params[0]].Armies - 1);
+				result.modifyCountryArmies(action.params[0], (board.Countries[action.params[0]].Armies - 1) * -1);
+				result.Phase = "endturn";
+				break;
+			case "endturn":
+				result.endTurn();
+				break;
+			default:
+				console.log("Ya done broke sum'em");
+				console.log("Action does not exist: " + action.name);
+				break;
+		}
+
+		return result;
 	}
 
 	/**

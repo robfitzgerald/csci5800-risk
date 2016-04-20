@@ -44,5 +44,79 @@
 				expect(_.isEqual(generalizedOne, generalizedTwo)).to.be.true;
 			})
 		})
+		describe('.play(), placearmy action', function () {
+			it('should return a board for \'placearmy\'', function () {
+				var board = Risk.generate('Risk', [{type:'AI'},{type:'HUMAN'}]);
+				var action = {
+					name: 'placearmy',
+					params: ["Alaska"]
+				};
+
+				var totalFreeArmies = board.playerDetails[0].freeArmies;
+				var alaskaArmies = board.getCountryArmies("Alaska");
+
+				var result = Risk.play(board, action);
+
+				expect((totalFreeArmies - 1) === result.playerDetails[0].freeArmies).to.be.true;
+				expect(result.getCountryArmies("Alaska") === (alaskaArmies+1)).to.be.true;
+			})
+		})
+		describe('.play(), attackall action', function () {
+			it('should return a board for \'attackall\'', function () {
+				var board = Risk.generate('Risk', [{type:'AI'}, {type:'HUMAN'}]);
+				var action = {
+					name: 'attackall',
+					params: ["Alaska", "NorthwestTerritory"]
+				};
+
+				var alaskaArmies = board.getCountryArmies("Alaska");
+				var northwestTerritoryArmies = board.getCountryArmies("NorthwestTerritory");
+
+				var result = Risk.play(board, action);
+
+				expect((result.getCountryArmies("Alaska") == alaskaArmies-2 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-2)).to.be.true;
+			})
+		})
+		describe('.play(), attackhalf action', function () {
+			it('should return a board for \'attackhalf\'', function () {
+				var board = Risk.generate('Risk', [{type:'AI'}, {type:'HUMAN'}]);
+				var action = {
+					name: 'attackhalf',
+					params: ["Alaska", "NorthwestTerritory"]
+				};
+
+				var alaskaArmies = board.getCountryArmies("Alaska");
+				var northwestTerritoryArmies = board.getCountryArmies("NorthwestTerritory");
+
+				var result = Risk.play(board, action);
+
+				expect((result.getCountryArmies("Alaska") == alaskaArmies-2 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies-1 && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
+					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-2)).to.be.true;
+			})
+		})
+		describe('.play(), fortify action', function () {
+			it('should return a board for \'fortify\'', function () {
+				var board = Risk.generate('Risk', [{type:'AI'}, {type:'HUMAN'}]);
+				var action = {
+					name: 'fortify',
+					params: ["Alaska", "NorthwestTerritory"]
+				};
+
+				var alaskaArmies = board.getCountryArmies("Alaska");
+				var northwestTerritoryArmies = board.getCountryArmies("NorthwestTerritory");
+
+				var result = Risk.play(board, action);
+
+				expect((result.getCountryArmies("Alaska") === 1) &&
+					(result.getCountryArmies("NorthwestTerritory") === (alaskaArmies - 1 + northwestTerritoryArmies))).to.be.true;
+			})
+		})
 	})
 }

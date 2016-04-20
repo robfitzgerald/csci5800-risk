@@ -1,29 +1,49 @@
 'use strict';
 {
     module.exports = {
-        placearmy
+        fortifymove,
+        placearmy,
+        startplace
     }
 
     var _ = require('lodash')
+        , applyAction = require('./applyAction')
         , async = require('async')
         , clips = require('clips-module')
         , Q = require('q')
+
+    function fortifymove (generalizedBoard, action) {
+        var deferred = Q.defer();
+
+        var temp = applyAction.fortifymove(generalizedBoard, action.params);
+
+        clips.generateChildren(temp).then(function (value) {
+            var arr = [value];
+            deferred.resolve(arr);
+        });
+
+        return deferred.promise;
+    }
+
+    function startplace (generalizedBoard, action) {
+        var deferred = Q.defer();
+
+        var temp = applyAction.startplace(generalizedBoard, action.params);
+
+        clips.generateChildren(temp).then(function (value) {
+            var arr = [value];
+            deferred.resolve(arr);
+        });
+
+        return deferred.promise;
+    }
+
 
     function placearmy (generalizedBoard, action) {
         var deferred = Q.defer();
 
         // Modify the board
-        var temp = _.cloneDeep(generalizedBoard);
-
-        _.update(temp, 'Countries[' + action.params[0] + '].armies', function (value) {
-            return value + 1;
-        });
-        _.update(temp, 'PlayerArmies[0]', function (value) {
-            return value - 1;
-        });
-        if (temp.PlayerArmies[generalizedBoard.Turn] == 0) {
-            _.set(temp, 'Phase', 'attack');
-        }
+        var temp = applyAction.placearmy(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
             var arr = [value];

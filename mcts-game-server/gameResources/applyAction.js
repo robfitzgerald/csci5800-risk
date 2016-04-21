@@ -2,6 +2,7 @@
 {
     module.exports = {
         attackall,
+        attackhalf,
         fortifymove,
         placearmy,
         startplace
@@ -112,7 +113,7 @@
     }
 
     function fortifymove (board, params) {
-        var temp = _.cloneDeep(temp);
+        var temp = _.cloneDeep(board);
 
         var amount = temp.Countries[params[0]].Armies - 1;
 

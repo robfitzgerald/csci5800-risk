@@ -7,7 +7,7 @@
 	}
 
 	var treePolicy = require('./knowledgeBase').treePolicy
-		, defaultPolicy = require('./clipsController').defaultPolicy
+		, defaultPolicy = require('clips-module').simulate
 		, createRootNode = require('./knowledgeBase').mergeNode
 		, backup = require('./knowledgeBase').backup
 		, Q = require('q')
@@ -69,7 +69,7 @@
 
 		createRootNode(root)
 			.then(function(v0) {
-				treePolicy(v0)
+				treePolicy(v0, variant.expand)
 					.then(function(generalizedBoard) {
 						defaultPolicy(generalizedBoard)
 							.then(function(reward) {

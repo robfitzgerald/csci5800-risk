@@ -38,23 +38,23 @@
 			}
 			// MCTS loop
 
-				// MCTS here.
-				// member functions on variant exist to perform operations on a board
-				// such as variant.countries, variant.current, or whatever
-				// and the various steps in mcts are included as modules:
-				// treePolicy, defaultPolicy, backup, bestChild
-				// 
-				// @TODO: make it so!
-				mcts(board, variant)
-					.then(function(result) {
-						res.locals.board = board;
-						res.locals.action = bestChild();
-						next();
-					})
-					.catch(function(err) {
-						next(new Error('mcts failed with this error:\n' + JSON.stringify(err)))
-					})
-			}
+			// MCTS here.
+			// member functions on variant exist to perform operations on a board
+			// such as variant.countries, variant.current, or whatever
+			// and the various steps in mcts are included as modules:
+			// treePolicy, defaultPolicy, backup, bestChild
+			// 
+			// @TODO: make it so!
+			mcts(board, variant)
+				.then(function(result) {
+					res.locals.board = board;
+					res.locals.action = bestChild();
+					next();
+				})
+				.catch(function(err) {
+					next(new Error('mcts failed with this error:\n' + JSON.stringify(err)))
+				})
+		}
 			// in the end, we want to pass the board along with the action to try.
 			// we can't modify req.body, so, we set the board and the chosen
 			// action on res.locals for game.js to find.
@@ -62,6 +62,5 @@
 			
 			// done.
 		
-		}
 	}
 }

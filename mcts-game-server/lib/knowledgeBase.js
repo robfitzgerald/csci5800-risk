@@ -373,7 +373,7 @@
 	 * @param  {Object} root - tree node for the root of this treePolicy search
 	 * @return {Promise}     - resolves to a board state object, rejects with any error messages.
 	 */
-	function treePolicy(root) {
+	function treePolicy(root, expand) {
 		var deferred = Q.defer()
 			, v = root
 			, expandableMoveNotFound = true;
@@ -400,7 +400,7 @@
 					// console.log('should be falsey: ' + move)
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
-						CLIPS.expand(v, move)
+						expand(v, move)
 							.then(function(children) {
 								createChildren(v, move, children)
 									.then(function(result) {

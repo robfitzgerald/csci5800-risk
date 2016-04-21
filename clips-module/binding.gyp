@@ -16,15 +16,9 @@
         },
         "cflags!" : [
             "-fno-exceptions",
-<<<<<<< HEAD
-	    "-std=c++11"
-=======
-            "-std=c++11"
->>>>>>> develop
         ],
         "cflags_cc!": [
-            "-fno-exceptions",
-	    "-std=c++11" 
+            "-fno-exceptions"
        ]
     }
   ]

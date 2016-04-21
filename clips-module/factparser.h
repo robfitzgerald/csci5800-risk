@@ -2,7 +2,7 @@
 #define CLIPSLIB_FACTPARSER_H
 
 #include <string>
-#include <unordered_map>
+#include <map>
 
 namespace clipslib {
     class FactParser {
@@ -13,7 +13,7 @@ namespace clipslib {
             void parseString(std::string& str);
             std::string getFact(int index);
         protected:
-            std::unordered_map<int, std::string> map;
+            std::map<int, std::string> map;
 
             int getFactIndexFromRawLine(char* fact);
             std::string getFactFromRawLine(char* fact);

@@ -10,6 +10,7 @@
 	var request = require('request')
 		, config = require('config')
 		, Q = require('q')
+		, uuid = require('node-uuid')
 		//, CLIPS = require('../../clips-module')¡
 
 	function expand(parent, move) {
@@ -17,16 +18,22 @@
 		// console.log('[CLIPS.expand] called with parent, move:')
 		// console.log(parent)
 		// console.log(move)
+		var thisMock = [mocks[currentMock]]
+
+		// tried and failed to set up each call to expand() to be unique.. this is junk.
 		
-		deferred.resolve([mocks[currentMock]])
+		setTimeout(function() {		
+			thisMock[0].board.Free = uuid.v4();
+			currentMock = (currentMock + 1) % mocks.length;
+			deferred.resolve(thisMock)
+		}, 1001)
 		// console.log('** currentMock: ' + currentMock)
-		currentMock = (currentMock + 1) % mocks.length;
 		return deferred.promise;
 	}
 
 	function defaultPolicy (state) {
 		var deferred = Q.defer();
-		deferred.resolve(Math.round(Math.random()))
+		deferred.resolve(1)
 		return deferred.promise;
 	}
 
@@ -128,7 +135,7 @@
 		{
 		  board: {
 		    "Players": 2,
-		    "Phase": "placement",
+		    "Phase": "i should be terminal",
 		    "Free": 3,
 		    "Turn": 2,
 		    "Steps": 200,
@@ -150,31 +157,7 @@
 		        }
 		    ]
 		  },
-		  moves: [
-		    {
-		        "name": "attack",
-		        "params": [
-		        "Finlandia",
-		        "Alberta"
-		        ]
-		    },
-		    {
-		        "name": "attack",
-		        "params": [
-		        "Albertson's",
-		        "Alaska",
-		        "1"
-		        ]
-		    },
-		    {
-		        "name": "attack",
-		        "params": [
-		        "HomeDepot",
-		        "DunkinDonuts",
-		        "1"
-		        ]
-		    }
-		  ]
+		  moves: []
 		}
 	];
 }

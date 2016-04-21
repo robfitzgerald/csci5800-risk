@@ -9,6 +9,7 @@
 		expand,
 	}
 
+	var applyAction = require('./applyAction');
 	var RiskBoard = require('../gameResources/RiskBoard')
 		, _ = require('lodash')
 		, Q = require('q')
@@ -67,9 +68,92 @@
 		}
 	}
 
+	/**
+	 * returns wins and losses for each player: 0, 1 or 2
+	 * @param board
+	 * @param action
+     */
+	function diceRoll(board, action) {
+		var result = {
+			attackerWin: 0,
+			defenderWin: 0
+		};
+
+		// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
+		var attackerDice, defenderDice;
+
+		if (board.Countries[action.params[0]].Armies > 3) {
+			attackerDice = [0, 0, 0];
+		} else if (board.Countries[action.params[0]].Armies > 2) {
+			attackerDice = [0, 0];
+		} else if (board.Countries[action.params[0]].Armies > 1) {
+			attackerDice = [0];
+		} else {
+			console.log('not enough armies for attack');
+			return;
+		}
+		// Defender rolls 2 dice or 1, depending on the number of defending armies available
+		if (board.Countries[action.params[1]].Armies > 1) {
+			defenderDice = [0, 0];
+		} else {
+			defenderDice = [0];
+		}
+
+		for (var ad = 0; ad < attackerDice.length; ad++) {
+			attackerDice[ad] = Math.round(Math.random() * 6);
+		}
+		attackerDice.sort();
+
+
+		for (var dd = 0; dd < defenderDice.length; dd++) {
+			defenderDice[dd] = Math.round(Math.random() * 6);
+		}
+		defenderDice.sort();
+
+		// Compare first opposing pair of dice, then remove both
+		if (Math.max(attackerDice) > Math.max(defenderDice)) {
+			// Increment attackerWin
+			result.attackerWin = result.attackerWin + 1;
+			attackerDice.pop();
+			defenderDice.pop();
+		} else if (Math.max(attackerDice) <= Math.max(defenderDice)) {
+			// Increment defenderWin
+			result.defenderWin = result.defenderWin + 1;
+			attackerDice.pop();
+			defenderDice.pop();
+		}
+
+		// Compare second opposing pair of dice
+		if (Math.max(attackerDice) > Math.max(defenderDice)) {
+			// Increment attackerWin
+			result.attackerWin = result.attackerWin + 1;
+
+		} else if (Math.max(attackerDice) <= Math.max(defenderDice)) {
+			// Increment defenderWin
+			result.defenderWin = result.defenderWin + 1;
+		}
+		return result;
+	}
+
+
 	function play (board, action) {
 		// Create a duplicate of the board
 		var result = _.cloneDeep(board);
+		/**
+         * var applyFunc = applyAction[action.name];
+		 * 	if !applyFunc
+		 * 	  does not exist
+		 * if action.Name == "attackall" || "attackhalf" // if signature has 4 args
+		 *   this needs dicevolley()
+		 * return applyFunc(board, action.params);
+		 */
+		var applyFunc = applyAction[action.name];
+
+		if(!applyFunc) {
+			console.log("That action does not exist, son: " + action.name);
+			return;
+		}
+
 
 		switch (action.name) {
 			case "placearmy":		// Places a single army at the target country

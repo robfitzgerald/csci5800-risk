@@ -65,17 +65,12 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 		describe('mcts', function() {
 			it('run mcts', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
-				mcts(generalizedParentBoard, variant)
+				mcts.innerMcts(generalizedParentBoard, variant)
 					.then(function(mctsDone) {
-						console.log('test: mcts success')
-						console.log(mctsDone)
-						expect(mctsDone.hasOwnProperty('board')).to.be.true;
 						done();
 					})
 					.catch(function(mctsErr) {
-						console.log('test: mcts error')
-						console.log(mctsErr)
-						return done(mctsErr);
+						return done(new Error(JSON.stringify(mctsErr)));
 					})	
 			})
 			it('bestChild setup', function(done) {
@@ -95,38 +90,48 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 						done();
 				})					
 			})
-			it('bestChild on existing parent, cp=0', function(done) {
-
-				var generalizedParentBoard = variant.generalize(board)
-					, cp = 0;
-				kbase.bestChild(generalizedParentBoard, cp)
-					.then(function(res) {
-						expect(res.uct).to.equal(0.5)
-						done();
-					})
-					.catch(function(err) {
-						done(err)
-					})
-			})	
-			it('bestChild on existing parent, cp=1/sqrt(2)', function(done) {
-				var generalizedParentBoard = variant.generalize(board)
-					, cp = config.get('mcts.explorationParameter')
-				kbase.bestChild(generalizedParentBoard, cp)
-					.then(function(res) {
-						var oneVal = ((1.0/2.0) + (cp * ((Math.sqrt((2.0 * Math.log(7)))) / 2.0)))
-						// console.log('is this one of the values? ' + oneVal)
-						expect(res.board).to.exist
-						done();
-					})
-					.catch(function(err) {
-						done(err)
-					})
-			})
 			it('getNode, btw, exists', function(done) {
 				kbase.getNode(3895442334)
 					.then(function(res) {
 						expect(res.board).to.exist;
 						done();
+					})
+					.catch(function(err) {
+						done(new Error(JSON.stringify(err)))
+					})
+			})
+			it('bestChild on existing parent, cp=0', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+					, cp = 0;
+				kbase.getNode(3895442334)
+									.then(function(treeNode) {
+										kbase.bestChild(treeNode, cp)
+											.then(function(result) {
+												expect(result.uct).to.equal(0.5)
+												done();
+											})
+											.catch(function(err) {
+												done(err)
+											})
+									})
+									.catch(function(err) {
+										done(new Error(JSON.stringify(err)))
+									})
+			})	
+			it('bestChild on existing parent, cp=1/sqrt(2)', function(done) {
+				var cp = config.get('mcts.explorationParameter')
+				kbase.getNode(3895442334)
+					.then(function(treeNode) {
+						kbase.bestChild(treeNode, cp)
+							.then(function(result) {
+								var oneVal = ((1.0/2.0) + (cp * ((Math.sqrt((2.0 * Math.log(7)))) / 2.0)))
+								// console.log('is this one of the values? ' + oneVal)
+								expect(result.board).to.exist
+								done();
+							})
+							.catch(function(err) {
+								done(err)
+							})
 					})
 					.catch(function(err) {
 						done(new Error(JSON.stringify(err)))
@@ -144,21 +149,31 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 						done(new Error(JSON.stringify(err)))
 					})
 			})
-			it.skip('treePolicy will descend tree at this point', function(done) {
+			it('treePolicy will descend tree at this point', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
-				kbase.treePolicy(generalizedParentBoard)
+				mcts.innerMcts(generalizedParentBoard, variant)
 					.then(function(result) {
 						console.log('test: mcts success')
 						console.log(result)
 						done();
 					})
 					.catch(function(mctsErr) {
-						console.log('test: mcts error')
-						console.log(mctsErr)
-						return done(mctsErr);
+						done(new Error(JSON.stringify(mctsErr)));
 					})					
 			})
-		})		
+			it('finally, let us test the while-wrapped version', function(done) {
+				var generalizedParentBoard = variant.generalize(board)
+				mcts.mcts(generalizedParentBoard, variant, 4000)
+					.then(function(result) {
+						console.log('test: mcts success')
+						console.log(result)
+						done();
+					})
+					.catch(function(mctsErr) {
+						done(new Error(JSON.stringify(mctsErr)));
+					})				
+			})
+		})	
 	})
 
 	// backup({state:'sloop'}, null, 1)

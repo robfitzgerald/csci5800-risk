@@ -86,7 +86,7 @@
 
 			// post-test
 			expect(board.Turn).to.equal(1)
-			expect(board.Free).to.equal(4)
+			expect(board.playerDetails[1].freeArmies).to.equal(4)
 		})	
 		it('should identify that the game is over when player 1 owns the board', function() {
 			// setup

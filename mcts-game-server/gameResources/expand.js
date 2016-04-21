@@ -36,7 +36,7 @@
         var rolls = Math.max(aRolls, dRolls);
         var results = [];
         var arr = [];
-        for (int i = 0; i < rolls; ++i) {
+        for (var i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 
@@ -76,7 +76,7 @@
         var rolls = Math.max(aRolls, dRolls);
         var results = [];
         var arr = [];
-        for (int i = 0; i < rolls; ++i) {
+        for (var i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 

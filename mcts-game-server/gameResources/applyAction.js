@@ -1,6 +1,6 @@
 'use strict';
 {
-    module.exports{
+    module.exports = {
         attackall,
         fortifymove,
         placearmy,
@@ -151,28 +151,26 @@
 
     var continents = { 
         "NorthAmerica": {
-          "countries": [
-            { "Name": "Alaska" },
-            { "Name": "NorthwestTerritory" },
-            { "Name": "Greenland" },
-            { "Name": "Alberta" },
-            { "Name": "Ontario" },
-            { "Name": "WesternUnitedStates" },
-            { "Name": "EasternUnitedStates" },
-            { "Name": "CentralAmerica" }
-          ],
-          "bonus": 5
+            "countries": [
+                { "Name": "Alaska" },
+                { "Name": "NorthwestTerritory" },
+                { "Name": "Greenland" },
+                { "Name": "Alberta" },
+                { "Name": "Ontario" },
+                { "Name": "WesternUnitedStates" },
+                { "Name": "EasternUnitedStates" },
+                { "Name": "CentralAmerica" }
+            ],
+            "bonus": 5
         },
         "SouthAmerica": {
-          "countries": [
-            { "Name": "Venezuela" },
-            { "Name": "Peru" },
-            { "Name": "Brazil" },
-            { "Name": "Argentina" }
-          ],
-          "bonus": 2
+            "countries": [
+                { "Name": "Venezuela" },
+                { "Name": "Peru" },
+                { "Name": "Brazil" },
+                { "Name": "Argentina" }
+            ],
+            "bonus": 2
         }
-      }
-    } 
-
-}
+    };
+} 

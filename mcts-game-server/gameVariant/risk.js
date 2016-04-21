@@ -82,31 +82,38 @@
 
 				break;
             case "startplace":		// Places a single army at the target country and changes to the next players turn
-                // Increment the target country's armies
-				result.modifyCountryArmies(action.params[0], 1);
+                if(board.Phase != "start"){
+					console.log('This is not the time');
+					break;
+				}
+				// Check that armies are available
+				if(board.playerDetails[board.Turn].freeArmies != 0) {
+					// Increment the target country's armies
+					result.modifyCountryArmies(action.params[0], 1);
 
-				// Decrement the player's available armies
-				result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
-
+					// Decrement the player's available armies
+					result.playerDetails[board.Turn].freeArmies = board.playerDetails[board.Turn].freeArmies - 1;
+				}
 				// Change to next player's turn
                 result.Turn = ((board.Turn + 1) % board.Players);
 
                 // TODO: Change phase?
 				break;
             case "attackall":		// Attacks from country 1 to country 2 with all available armies
-				// Roll
+
 				// Attacker rolls 1, 2, or 3 dice, depending on the number of attacking armies available
 				var attackerDice, defenderDice;
 
-				if(board.Countries[action.params[0]].Armies > 2){
+				if(board.Countries[action.params[0]].Armies > 3){
 					attackerDice = [0, 0, 0];
-				}else if (board.Countries[action.params[0]].Armies == 2) {
+				}else if (board.Countries[action.params[0]].Armies > 2) {
 					attackerDice = [0, 0];
-				}else if (board.Countries[action.params[0]].Armies == 1) {
+				}else if (board.Countries[action.params[0]].Armies > 1) {
 					attackerDice = [0];
 				}else {
 					console.log('not enough armies for attack');
-					break;
+					result.Phase = "fortify";
+                    break;
 				}
 				// Defender rolls 2 dice or 1, depending on the number of defending armies available
 				if(board.Countries[action.params[1]].Armies > 1) {
@@ -147,7 +154,11 @@
 					// Decrement an army from attacker
 					result.modifyCountryArmies(action.params[0], -1);
 				}
-				// TODO: result.Phase = "fortify";
+
+                if (result.Countries[action.params[1]].Armies == 0) {
+                    result.Phase = "fortify";
+                }
+
 				break;
 			case "attackhalf":		// Attacks from country 1 to country 2 with half available armies
 				// Roll

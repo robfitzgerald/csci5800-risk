@@ -29,7 +29,6 @@
 		, _ = require('lodash')
 		, Q = require('q')
 		, async = require('async')
-		, CLIPS = require('../lib/clipsController.js')
 		, neo4jParser = require('neo4j-parser')
 		, neo4j = request.defaults({
 			method: 'POST',
@@ -66,7 +65,7 @@
 	/**
 	 * gets or creates a board node object
 	 * @param  {Object} board  - generalized board object
-	 * @return {Object}        - treeNode object
+	 * @return {Promise}       - resolves to a treeNode object, or error
 	 */
 	function mergeNode(board) {
 		var deferred = Q.defer()
@@ -79,7 +78,7 @@
 						RETURN p
 					`,
 					`
-						MATCH (p:BOARD {index:${hashBoard}}) - [a:CHILD]- ()
+						MATCH (p:BOARD {index:${hashBoard}}) -[a:POSSIBLE]- ()
 						RETURN a
 					`]
 
@@ -89,28 +88,34 @@
 				var neo4jError = _.get(body, 'errors')
 					, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 				if (errors) {
+					console.log('errors')
 					deferred.reject(errors);
 				} else {
-					var board = _.get(body, 'results[0].data[0].row[0]')
-						, actionData = _.get(body, 'results[1].data')
-						, actions = []
-					_.forEach(actionData, function(d) {
-						var	thisAction = _.get(d, 'row[0]')
-						if (thisAction) {
-							actions.push(thisAction)
-						}
-					})
-					var needToExpand = (actions.length > 0 ? false : true);
-					if (needToExpand) {
+					var resultBoard = _.get(body, 'results[0].data[0].row[0]')
+
+					// TODO: implement branch that handles the case that we are at some board state which does not yet exist in the knowledge base
+						// , actionData = _.get(body, 'results[1].data')
+						// , actions = []
+					// console.log('returned from neo4j with results, board, actiondata')
+					// console.log(actionData)
+					// _.forEach(actionData, function(d) {
+					// 	console.log('d')
+					// 	console.log(d)
+					// 	var	thisAction = _.get(d, 'row[0]')
+					// 	if (thisAction) {
+					// 		actions.push(thisAction)
+					// 	}
+					// })
+					// var needToExpand = (actions.length > 0 ? false : true);
+					// if (needToExpand) {
 						// @todo: if actions.length > 0, expand().then(function(){ createChildren().then(function() { deferred.resolve() }) })
 						// this is how we deal with the situation where a new node is created. it will not yet have
 						// any possibleMoves.  we need to expand it and then create it's children then finally return
 						// the board.
-					}
-					deferred.resolve(board)  // @todo: all entities in boards[] should be identical. check by _.uniq()?
+					// }
+					deferred.resolve(resultBoard)  // @todo: all entities in boards[] should be identical. check by _.uniq()?
 				}
 			})
-
 		return deferred.promise;
 	}
 
@@ -133,6 +138,13 @@
 	  	deferred.reject(new Error('[knowledgeBase.createNewRoot()]: arg 2 ("moves") should be an array'));
 	  	return deferred.promise;
 	  } else {
+	  	var possibleMoves = [];
+	  	_.forEach(moves, function(move) {
+	  		var moveData = {};
+	  		moveData.move = move;
+	  		moveData.unexploredIndex = helper.serializeAction(move);
+	  		possibleMoves.push(moveData)
+	  	})
 	  	var serializedBoard = helper.serialize(board)
 	  		, hashBoard = helper.hash(serializedBoard)
 				, params = {
@@ -144,14 +156,15 @@
 						visits: 0,
 						createdAt: Date.now()
 					},
-					possibleMoves: moves
+					possibleMoves: possibleMoves,
+
 				}
 				// @TODO: check if already exists, and just return it.
 				, statement = `
 						MERGE (p:BOARD {index:${hashBoard}})
 						ON CREATE SET p.nonTerminal = true, p.rewards = 0, p.visits = 0, p.createdAt = timestamp(), p.board = '${serializedBoard}'
-						FOREACH (move in {possibleMoves} | 
-			 		  	MERGE (p) -[:POSSIBLE {name: move.name, params: move.params}]-> (n:UNEXPLORED {index: ${hashBoard}}))
+						FOREACH (moveData in {possibleMoves} | 
+			 		  	MERGE (p) -[:POSSIBLE {name: moveData.move.name, params: moveData.move.params}]-> (n:UNEXPLORED {index: moveData.unexploredIndex}))
 				 		RETURN p`
 				, payload = helper.constructQueryBody(statement, params)
 			neo4j({json:payload}, function(err, res, body) {
@@ -171,7 +184,7 @@
 
 	/**
 	 * creates children of a parent node by way of the move that generated them.  called after simulation.expand()
-	 * @param  {TreeNode} parent                 - parent node (a BOARD properties object)
+	 * @param  {TreeNode} parent                 - parent node (a BOARD properties object, aka TreeNode)
 	 * @param  {Number}   parent.index           - hash value of existing parent object in database
 	 * @param  {Object}   move                   - a valid move object (see wiki for example)
 	 * @param  {Object[]} children               - generalized board objects, the result of simulation.expand()
@@ -202,26 +215,33 @@
 				if (!thisBoard) {
 					throw new Error('[knowledgeBase.createChildren()]: a child in children is missing board property: \n' + JSON.stringify(child));
 				}
+				var possibleMoves = [];
+		  	_.forEach(child.actions, function(move) {
+		  		var moveData = {};
+		  		moveData.move = move;
+		  		moveData.unexploredIndex = helper.serializeAction(move);
+		  		possibleMoves.push(moveData)
+		  	})
 				let serializedBoard = helper.serialize(child.board)
 	  			, hashChildBoard = helper.hash(serializedBoard)
 	  			, params = {
 						child: {
-							nonTerminal: (child.moves.length > 0),
+							nonTerminal: (child.actions.length > 0),
 							index: hashChildBoard,
 							board: serializedBoard,
 							rewards: 0,
 							visits: 0,
 							createdAt: Date.now()
 						},
-						possibleMoves: child.moves,
+						possibleMoves: possibleMoves,
 						move: move
 					}
 					, query = `
 							CREATE (c:BOARD {child})
 							WITH c
-							FOREACH (move in {possibleMoves} | 
-								CREATE (n:UNEXPLORED {index: ${hashChildBoard}})
-					 		  CREATE (c) -[:POSSIBLE {name: move.name, params: move.params}]-> (n))
+							FOREACH (moveData in {possibleMoves} | 
+								CREATE (n:UNEXPLORED {index: moveData.unexploredIndex})
+					 		  CREATE (c) -[:POSSIBLE {name: moveData.move.name, params: moveData.move.params}]-> (n))
 				 		  WITH c
 							MATCH (p:BOARD {index: ${hashParentBoard}})
 							WITH c, p
@@ -234,10 +254,15 @@
 			// delete 'possible' relation associated with this 'create' call
 			statements.push(`
 				WITH {move} AS m
-				MATCH (p:BOARD {index: ${hashParentBoard}}) -[r {name: m.name}]- (u:UNEXPLORED {index:${hashParentBoard}})
+				MATCH (p:BOARD {index: ${hashParentBoard}}) -[r {name: m.object.name}]- (u:UNEXPLORED {index: m.index})
 				DELETE r, u
 			`)		
-			parameters.push({move: move})
+			parameters.push({
+				move: {
+					object: move, 
+					index: helper.serializeAction(move)
+				}
+			})
 
 			var payload = helper.constructQueryBody(statements, parameters)
 			// debug
@@ -273,7 +298,7 @@
 	 */
 	function backup(child, rootIndex, reward) {
 		var deferred = Q.defer()
-		if (typeof reward !== 'number') {
+		if ((typeof (Number.parseInt(reward))) !== 'number') {
 			deferred.reject(new Error('[knowledgeBase.backup]: reward ' + JSON.stringify(reward) + ' is not a number'));
 		} else if (typeof child !== 'object') {
 			deferred.reject(new Error('[knowledgeBase.backup]: child state: "' + (typeof child) + '" should be an object.'))
@@ -305,7 +330,7 @@
 
 	/**
 	 * bestChild operation in Monte Carlo Tree Search, using UCT method. finds the bestChild of a parent board and returns it along with the move that creates the child
-	 * @param  {Object} parent - generalized board object
+	 * @param  {Object} parent - TreeNode of parent
 	 * @param  {Integer}    Cp - the coefficient used in UCT for the second term. See essay on MCTS methods.
 	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object; or, an error
 	 */
@@ -321,10 +346,11 @@
 					RETURN EXTRACT(child in children |
 							CASE 
 							WHEN child.visits = 0
-							THEN {board:child.board, nonTerminal: child.nonTerminal, uct: ${infinity}}						
+							THEN {board:child.board, nonTerminal: child.nonTerminal, index: child.index, uct: ${infinity}}						
 							ELSE {
 					      board: child.board, 
 					      nonTerminal: child.nonTerminal,
+					      index: child.index,
 					      uct: 
 					      	((toFloat
 					      			(child.rewards) / child.visits)
@@ -342,7 +368,7 @@
 			var neo4jError = _.get(body, 'errors')
 				, errors = err || ((neo4jError.length > 0) ? neo4jError : null);
 			if (errors) {
-				deferred.reject(errors);
+				deferred.reject(body);
 			} else {
 				var result = []
 					, childCount = _.get(body, 'results[0].data.length')
@@ -356,7 +382,6 @@
 				result.sort(function(a,b) {
 					return b.board.uct - a.board.uct;
 				})
-				// deferred.resolve(_.get(result, '[0]'))
 				var bestChild = _.get(_.head(result), 'board');
 				if (!bestChild) {
 					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n')
@@ -370,10 +395,15 @@
 
 	/**
 	 * treePolicy method as described in Monte Carlo Tree Search. searches for a best child board state to pass to our defaultPolicy for simulation.
-	 * @param  {Object} root - tree node for the root of this treePolicy search
-	 * @return {Promise}     - resolves to a board state object, rejects with any error messages.
+	 * @param  {Object}  root           - tree node for the root of this treePolicy search
+	 * @param {Object}   variant        - game variant
+	 * @param {Function} variant.expand - returns the list of possible child board states and their possible moves
+	 * @return {Promise}                - resolves to a board state object, rejects with any error messages.
 	 */
-	function treePolicy(root) {
+	function treePolicy(root, variant) {
+		if (!_.has(variant, 'expand')) {
+			throw new Error('[treePolicy]: variant (arg2) is missing an expand property');
+		}
 		var deferred = Q.defer()
 			, v = root
 			, expandableMoveNotFound = true;
@@ -400,7 +430,8 @@
 					// console.log('should be falsey: ' + move)
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
-						CLIPS.expand(v, move)
+						var parentBoardToExpand = JSON.parse(v.board);
+						variant.expand(parentBoardToExpand, move)
 							.then(function(children) {
 								createChildren(v, move, children)
 									.then(function(result) {
@@ -422,7 +453,7 @@
 					} else {
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
-								v = JSON.parse(_.get(vBestChild, 'board'))
+								v = vBestChild;
 								if (v) {
 									callback(null)
 								} else {
@@ -438,16 +469,13 @@
 			})
 		},
 		function whileTest () { 
-			// console.log('v')
-			// console.log(v)
-			// console.log('whileTest: ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},
 		function result (error, result) {
 			if (error) {
 				deferred.reject(error);
 			} else {
-				deferred.resolve(v)
+				deferred.resolve(helper.deserialize(v.board))
 			}
 		})
   	return deferred.promise;

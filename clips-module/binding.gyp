@@ -10,8 +10,7 @@
         "include_dirs": [],
         "link_settings": {
             "libraries": [
-                "/usr/local/lib/libclips++.a",
-                "-lclips"
+                "/usr/local/lib/libclips++.a"
             ]
         },
         "cflags!" : [

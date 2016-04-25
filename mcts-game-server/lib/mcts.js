@@ -7,11 +7,12 @@
 	}
 
 	var treePolicy = require('./knowledgeBase').treePolicy
-		, defaultPolicy = require('./clipsController').defaultPolicy
-		, createRootNode = require('./knowledgeBase').mergeNode
+		, defaultPolicy = require('clips-module').simulate
+		, mergeNode = require('./knowledgeBase').mergeNode
 		, backup = require('./knowledgeBase').backup
 		, Q = require('q')
 		, async = require('async')
+		, _ = require('lodash')
 
 	/**
 	 * asynchronous while loop of mcts. runs mcts function until computational budget is reached.
@@ -36,7 +37,7 @@
 			
 			innerMcts(board, variant)
 				.then(function(result) {
-					// console.log(result)
+					console.log('completed innerMcts loop. occurence # ' + mctsIterations + '.')
 					++mctsIterations;
 					callback(null);
 				})
@@ -49,7 +50,7 @@
 		},
 		function result(error, result) {
 			if (error) {
-				deferred.reject('[mcts]: ' + JSON.stringify(error))
+				deferred.reject('[mcts]: error at iteration ' + mctsIterations + ': ' + JSON.stringify(error))
 			} else {
 				deferred.resolve('[mcts]: success. ran ' + mctsIterations + ' times.')
 			}
@@ -65,15 +66,18 @@
 	 */
 	function innerMcts (root, variant) {
 		var deferred = Q.defer()
-			, rootIndex = 3895442334; // @todo: put in variant.rootIndex() 
 
-		createRootNode(root)
+		// console.log('starting innerMcts loop with root, variant:')
+		// console.log(root)
+		// console.log(variant)
+
+		mergeNode(root)
 			.then(function(v0) {
-				treePolicy(v0)
+				treePolicy(v0, variant)
 					.then(function(generalizedBoard) {
 						defaultPolicy(generalizedBoard)
 							.then(function(reward) {
-								backup(generalizedBoard, rootIndex, reward)
+								backup(generalizedBoard, _.get(v0, 'index'), reward)
 									.then(function(finished) {
 										var tuple = {
 											selected: generalizedBoard,
@@ -93,8 +97,8 @@
 						deferred.reject(JSON.stringify(err))
 					})
 			})
-			.catch(function(createRootNodeErr) {
-				deferred.reject(createRootNodeErr)
+			.catch(function(mergeNodeError) {
+				deferred.reject(mergeNodeError)
 			})
 		return deferred.promise;
 	}

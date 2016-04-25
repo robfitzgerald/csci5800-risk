@@ -3,6 +3,8 @@
 	module.exports = {
 		serialize,
 		deserialize,
+		serializeAction,
+		deserializeAction,
 		hash,
 		constructQueryBody
 	}
@@ -16,6 +18,25 @@
 
 	function deserialize(board) {
 		return JSON.parse(board);
+	}
+
+	function serializeAction(a) {
+		return a.name + ':' + _.join(a.params, ',');
+	}
+
+	function deserializeAction(serializedA) {
+		var action = {}
+			, splitString = _.split(serializedA, ':')
+		action.name = splitString[0]
+		// _.split() will place an empty string at splitString[1] if there is nothing
+		// beyond the :.  if it is not empty, then there must be params.  if not, 
+		// !!splitString[1] should be false.
+		if (!!splitString[1]) {
+			action.params = _.split(splitString[1], ',');
+		} else {
+			action.params = [];
+		}
+		return action;
 	}
 
 	function hash(s) {

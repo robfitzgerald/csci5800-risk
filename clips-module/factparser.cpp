@@ -1,5 +1,6 @@
 #include <sstream>
 #include <cstring>
+#include <cstdio>
 
 #include "factparser.h"
 
@@ -38,7 +39,10 @@ namespace clipslib {
 
         index[index_length - 2] = '\0';
 
-        return std::stoi(index);
+        int i;
+        //return std::stoi(index);
+        sscanf(index, "%d", &i);
+        return i;
     }
 
     std::string FactParser::getFactFromRawLine(char* fact) {

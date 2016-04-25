@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cstdio>
 
 namespace clipslib {
     AgendaParser::AgendaParser() {
@@ -64,7 +65,9 @@ namespace clipslib {
             std::strncpy(num_c, new_facts, end);
             std::strcpy(facts, &(new_facts[end]));
 
-            result.push_back(std::stoi(num_c));
+            int i;
+            sscanf(num_c, "%d", &i);
+            result.push_back(i);
         }
 
         return result;

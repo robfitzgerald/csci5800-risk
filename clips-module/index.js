@@ -9,7 +9,7 @@ var _ = require('lodash');
 
     var simulate = function (state) {
         var deferred = Q.defer();
-
+        
         runClipsSim(state, function (err, result) {
             deferred.resolve('' + result);
         });

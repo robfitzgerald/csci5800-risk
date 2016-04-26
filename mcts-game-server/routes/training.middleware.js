@@ -41,13 +41,15 @@
 				mcts.loop(generalized,variant,computationalBudget)
 					.then(function(bestChild) {
 						board = variant.play(board,bestChild.move);
+						generalized = variant.generalize(board);
+						console.log('[training.middleware]: player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move))
 						callback();
 					})
 					.catch(function(mctsLoopError) {
 						callback(mctsLoopError)
 					})
 			},
-			function() { return board.gameOver(); },
+			function() { return !board.gameOver(); },
 			function(error, result) {
 				if (error) {
 					next(error);

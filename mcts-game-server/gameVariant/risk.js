@@ -58,9 +58,9 @@
 				, distance = generalizedBoard.Turn
 				, numPlayers = generalizedBoard.Players
 			generalizedBoard.PlayerArmies = [];
-			_.forEach(generalizedBoard.Countries, function(country) {
-				country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
-			});
+			// _.forEach(generalizedBoard.Countries, function(country) {
+			// 	country.Player = (((country.Player + numPlayers) - distance) % numPlayers);
+			// });
 			_.forEach(generalizedBoard.playerDetails, function(player) {
 				generalizedBoard.PlayerArmies.push(player.freeArmies);
 			})

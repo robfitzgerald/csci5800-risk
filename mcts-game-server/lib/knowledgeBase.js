@@ -225,20 +225,17 @@
 				let serializedBoard = helper.serialize(child.board)
 	  			, hashChildBoard = helper.hash(serializedBoard)
 	  			, params = {
-						child: {
 							nonTerminal: (child.actions.length > 0),
 							index: hashChildBoard,
-							board: serializedBoard,
-							rewards: 0,
-							visits: 0,
-							createdAt: Date.now()
-						},
-						possibleMoves: possibleMoves,
-						move: move
+							possibleMoves: possibleMoves,
+							move: move
 					}
+					, nonTerminal = (possibleMoves > 0)
 					, query = `
-							CREATE (c:BOARD {child})
+							MERGE (c:BOARD {index: {index}})
+							ON CREATE SET c.nonTerminal = {nonTerminal}, c.rewards = 0, c.visits = 0, c.createdAt = timestamp(), c.board = '${serializedBoard}'
 							WITH c
+							WHERE NOT (c)-[:UNEXPLORED|CHILD]-()
 							FOREACH (moveData in {possibleMoves} | 
 								CREATE (n:UNEXPLORED {index: moveData.unexploredIndex})
 					 		  CREATE (c) -[:POSSIBLE {name: moveData.move.name, params: moveData.move.params}]-> (n))
@@ -312,8 +309,7 @@
 						path = (child) -[:PARENT*]-> (root)
 						WITH nodes(path) AS pathNodes UNWIND pathNodes as node
 						WITH DISTINCT node
-						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}
-						RETURN collect(node)`
+						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}`
 				, payload = helper.constructQueryBody(query)
 			neo4j({json:payload}, function(err, response, body) {
 				var neo4jError = _.get(body, 'errors')

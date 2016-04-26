@@ -1,6 +1,7 @@
-'use strict';
+	'use strict';
 {
 	var _ = require('lodash')
+		, async = require('async')
 		, config = require('config')
 
 	var mcts = require('../lib/mcts')
@@ -32,23 +33,29 @@
 				}
 				board = variant.generate(variantName,players);
 				var generalized = variant.generalize(board);
-
-				console.log('computationalBudget is ' + computationalBudget)
-				mcts.loop(generalized,variant,computationalBudget)
-					.then(function(move) {
-						console.log('[training.middleware]: mcts.loop() completed with successful response:')
-						console.log(move)
-						res.locals = move;
-						next();
-					})
-					.catch(function(error) {
-						console.log('[training.middleware]: catching error at end of mcts.loop()')
-						next(error);
-					})
-				
 			} catch (e) {
 				next(e);
-			}		
+			}	
+
+			async.doWhilst(function(callback) {
+				mcts.loop(generalized,variant,computationalBudget)
+					.then(function(bestChild) {
+						board = variant.play(board,bestChild.move);
+						callback();
+					})
+					.catch(function(mctsLoopError) {
+						callback(mctsLoopError)
+					})
+			},
+			function() { return board.gameOver(); },
+			function(error, result) {
+				if (error) {
+					next(error);
+				} else {
+					res.locals = board;
+					next();
+				}
+			})	
 		}
 	}
 }

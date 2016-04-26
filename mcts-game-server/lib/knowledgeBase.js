@@ -382,7 +382,7 @@
 				result.sort(function(a,b) {
 					return b.board.uct - a.board.uct;
 				})
-				var bestChild = _.get(_.head(result), 'board');
+				var bestChild = _.head(result);
 				if (!bestChild) {
 					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n')
 				}
@@ -453,7 +453,7 @@
 					} else {
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
-								v = vBestChild;
+								v = vBestChild.board;
 								if (v) {
 									callback(null)
 								} else {

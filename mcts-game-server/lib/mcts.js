@@ -49,29 +49,19 @@
 				})
 		},
 		function whileTest() {
-			console.log('Date.now() vs stopTime: ' + Date.now() + ', ' + stopTime)
-			console.log('can we repeat? whiletest: ' + (Date.now() < stopTime))
 			return (Date.now() < stopTime);
 		},
 		function result(error, result) {
 			if (error) {
 				deferred.reject('[mcts.loop]: error at iteration ' + mctsIterations + ': ' + JSON.stringify(error))
 			} else {
-				console.log('[mcts.loop]: completed whilst loop, result:')
-				console.log(result)
-				// mergeNode(board)
-					// .then(function(v0) {
-						bestChild(result, 0)
-							.then(function(tuple) {
-								deferred.resolve(tuple);
-							})
-							.catch(function(bestChildError) {
-								deferred.reject('[mcts.loop]: failed bestChild in loop result section. ' + JSON.stringify(bestChildError))
-							})
-					// })
-					// .catch(function(err) {
-						// deferred.reject('[mcts.loop]: failed mergeNode when attempting to set up for bestChild ' + JSON.stringify(err))
-					// })
+				bestChild(result, 0)
+					.then(function(tuple) {
+						deferred.resolve(tuple);
+					})
+					.catch(function(bestChildError) {
+						deferred.reject('[mcts.loop]: failed bestChild in loop result section. ' + JSON.stringify(bestChildError))
+					})
 			}
 		});
 		return deferred.promise;	

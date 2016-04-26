@@ -27,13 +27,14 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 
 
 	describe('mcts integration testing', function() {
-		this.timeout(0); // 20000 = 20sec, 60000 = 60sec, 0 = no timeout..
+		this.timeout(3610000);   // 1 hour plus 10,000ms of wiggle room
+		// 20000 = 20sec, 60000 = 60sec, 0 = no timeout..
 		var rootData;
 		before(function(done) {
 			rootData = variant.rootNodeData();
 			done();
 		})
-		it('delete everything (heads up - destructive!!)', function(done) {
+		it.skip('delete everything (heads up - destructive!!)', function(done) {
 			neo4j({json:helper.constructQueryBody(['MATCH (p)-[r]-() DELETE p,r','MATCH (p) DELETE p'],[{},{}])}, function(err) {
 				if (err) {
 					done(new Error(err))
@@ -41,7 +42,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 				done();
 			})
 		})
-		it('create root', function(done) {
+		it.skip('create root', function(done) {
 			kbase.createNewRoot(rootData.board, rootData.moves)
 				.then(function(result) {
 					expect(result).to.have.property('root')
@@ -75,7 +76,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 				})
 		})
 		it('mcts loop for 40 seconds', function(done) {
-			mcts.mcts(rootData.board, variant, 40000)
+			mcts.loop(rootData.board, variant, 3600000)
 				.then(function(result) {
 					done();
 				})

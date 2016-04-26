@@ -2,7 +2,7 @@
 {
 
 	module.exports = {
-		mcts,
+		loop,
 		innerMcts
 	}
 
@@ -10,6 +10,7 @@
 		, defaultPolicy = require('clips-module').simulate
 		, mergeNode = require('./knowledgeBase').mergeNode
 		, backup = require('./knowledgeBase').backup
+		, bestChild = require('./knowledgeBase').bestChild
 		, Q = require('q')
 		, async = require('async')
 		, _ = require('lodash')
@@ -21,9 +22,11 @@
 	 * @param  {Number} computationalBudget - time in ms. to run computation
 	 * @return {Promise}                    - resolves and rejects with info string
 	 */
-	function mcts(board, variant, computationalBudget) {
+	function loop(board, variant, computationalBudget) {
+		console.log('mcts.loop: computationalBudget=' + computationalBudget)
+
 		var deferred = Q.defer()
-			, stopTime = Date.now() + computationalBudget
+			, stopTime = Number.parseInt(Date.now()) + computationalBudget
 			, mctsIterations = 0;
 		async.doWhilst(function(callback) {
 
@@ -39,20 +42,36 @@
 				.then(function(result) {
 					console.log('completed innerMcts loop. occurence # ' + mctsIterations + '.')
 					++mctsIterations;
-					callback(null);
+					callback(null, result);
 				})
 				.catch(function(error) {
 					callback(error)
 				})
 		},
 		function whileTest() {
+			console.log('Date.now() vs stopTime: ' + Date.now() + ', ' + stopTime)
+			console.log('can we repeat? whiletest: ' + (Date.now() < stopTime))
 			return (Date.now() < stopTime);
 		},
 		function result(error, result) {
 			if (error) {
-				deferred.reject('[mcts]: error at iteration ' + mctsIterations + ': ' + JSON.stringify(error))
+				deferred.reject('[mcts.loop]: error at iteration ' + mctsIterations + ': ' + JSON.stringify(error))
 			} else {
-				deferred.resolve('[mcts]: success. ran ' + mctsIterations + ' times.')
+				console.log('[mcts.loop]: completed whilst loop, result:')
+				console.log(result)
+				// mergeNode(board)
+					// .then(function(v0) {
+						bestChild(result, 0)
+							.then(function(tuple) {
+								deferred.resolve(tuple);
+							})
+							.catch(function(bestChildError) {
+								deferred.reject('[mcts.loop]: failed bestChild in loop result section. ' + JSON.stringify(bestChildError))
+							})
+					// })
+					// .catch(function(err) {
+						// deferred.reject('[mcts.loop]: failed mergeNode when attempting to set up for bestChild ' + JSON.stringify(err))
+					// })
 			}
 		});
 		return deferred.promise;	
@@ -79,11 +98,7 @@
 							.then(function(reward) {
 								backup(generalizedBoard, _.get(v0, 'index'), reward)
 									.then(function(finished) {
-										var tuple = {
-											selected: generalizedBoard,
-											reward: reward
-										}
-										deferred.resolve(tuple);
+										deferred.resolve(v0);
 									})
 									.catch(function(backupErr) {
 										deferred.reject(new Error(JSON.stringify(backupErr)))

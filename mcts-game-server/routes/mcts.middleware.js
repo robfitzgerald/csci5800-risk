@@ -54,7 +54,7 @@
 					.catch(function(err) {
 						next(new Error('mcts failed with this error:\n' + JSON.stringify(err)))
 					})
-			}
+			
 			// in the end, we want to pass the board along with the action to try.
 			// we can't modify req.body, so, we set the board and the chosen
 			// action on res.locals for game.js to find.

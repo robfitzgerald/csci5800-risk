@@ -3,7 +3,7 @@
 	var _ = require('lodash');
 	
 	var boards = require('../lib/boards')
-		, game = require('../lib/game');
+		// , game = require('../lib/game');
 
 	module.exports = function(req, res, next) {
 		var variantName = _.get(req.params, 'variant')
@@ -26,7 +26,7 @@
 			// 
 			// @TODO: make it so!
 			var variant = boards[variantName];
-			res.locals.result = game(board, action, variant);
+			// res.locals.result = game(board, action, variant);
 			next();
 		}
 	}

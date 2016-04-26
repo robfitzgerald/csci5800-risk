@@ -38,7 +38,8 @@
 		// so, a different response, which would look for analytics on the
 		// training that occured such as # of games, time spent, number of turns, number of new
 		// nodes created, whatever.
-		res.json('some response');
+		// var result = _.get(res.locals, result);
+		res.json(res.locals);
 	}
 
 	function errorResponse (err, req, res, next) {

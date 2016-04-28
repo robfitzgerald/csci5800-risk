@@ -198,7 +198,7 @@
 					"Argentina":{"Player":1,"Armies":1}
 				},
 				"Phase":"start",
-				"Steps":1000,
+				"Steps":4000,
 				"Players":2,
 				"PlayerArmies": [ 40, 40 ]
 			},

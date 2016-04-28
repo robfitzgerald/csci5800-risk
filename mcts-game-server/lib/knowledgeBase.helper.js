@@ -6,6 +6,7 @@
 		serializeAction,
 		deserializeAction,
 		hash,
+		parseNeo4jError,
 		constructQueryBody
 	}
 
@@ -47,6 +48,18 @@
 			throw new Error('[knowledgeBase.helper.hash()]: was unable to hash input of type ' + typeof s + '.')
 		}
 		return result;
+	}
+
+	function parseNeo4jError(source, body) {
+		var errors = _.get(body, 'errors')
+			, output = '[' + source + ']: neo4j errors as follows in code/message pairs:\n';
+		_.forEach(errors, function(err) {
+			let thisCode = _.get(err, 'code') || '(no code)'
+				, thisMsg = _.get(err, 'message') || '(no message)'
+				, thisError = thisCode + '\n' + thisMsg + '\n'
+			output = output.concat(thisError)
+		})
+		return output;
 	}
 
 	function constructQueryBody(statements, parameters) {

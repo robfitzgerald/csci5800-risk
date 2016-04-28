@@ -37,12 +37,18 @@
 				next(e);
 			}	
 
+			// console.log('[training.middleware]: board state:')
+			// console.log(generalized)
+
+			let moveCount = 0;
 			async.doWhilst(function(callback) {
 				mcts.loop(generalized,variant,computationalBudget)
 					.then(function(bestChild) {
 						board = variant.play(board,bestChild.move);
 						generalized = variant.generalize(board);
-						console.log('[training.middleware]: player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move))
+						console.log('[training.middleware]: move ' + moveCount++ + ' player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move) + '.')
+						// console.log('[training.middleware]: board state:')
+						// console.log(generalized)
 						callback();
 					})
 					.catch(function(mctsLoopError) {

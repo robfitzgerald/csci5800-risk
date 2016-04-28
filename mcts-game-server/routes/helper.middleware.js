@@ -5,6 +5,7 @@
 	module.exports = {
 		skipMCTS,
 		gameResponse,
+		genericResponse,
 		trainingResponse,
 		errorResponse
 	}
@@ -24,13 +25,21 @@
 	}
 
 	function gameResponse(req, res) {
-		var result = _.get(res.locals, result);
+		var result = res.locals;
 		if (!result) {
-			res.status(500);
 			next('[gameResponse] missing result on res.locals.result');
 		} else {
-			res.json(res.locals.result);
+			res.json(result);
 		}	
+	}
+
+	function genericResponse(req, res) {
+		var result = res.locals;
+		if (!result) {
+			next('[genericResponse]: no result :-(')
+		} else {
+			res.json(result);
+		}
 	}
 
 	function trainingResponse (req, res) {
@@ -38,7 +47,8 @@
 		// so, a different response, which would look for analytics on the
 		// training that occured such as # of games, time spent, number of turns, number of new
 		// nodes created, whatever.
-		res.json('some response');
+		// var result = _.get(res.locals, result);
+		res.json(res.locals);
 	}
 
 	function errorResponse (err, req, res, next) {

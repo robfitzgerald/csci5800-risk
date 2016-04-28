@@ -65,7 +65,6 @@
 
     function startplace (board, params) {
         var temp = _.cloneDeep(board);
-
         ++temp.Countries[params[0]].Armies;
 
         var accum;

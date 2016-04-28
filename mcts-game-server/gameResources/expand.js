@@ -6,17 +6,17 @@
         startplace
     }
 
-    var _ = require('lodash')
+    let _ = require('lodash')
         , applyAction = require('./applyAction')
         , async = require('async')
         , clips = require('clips-module')
         , Q = require('q')
 
     function attackhalf (generalizedBoard, action) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
 
-        var aRolls;
-        var aArmies = Math.round(generalizedBoard.Countries[action.params[0]].Armies);
+        let aRolls;
+        let aArmies = Math.round(generalizedBoard.Countries[action.params[0]].Armies);
         if (aArmies > 3) {
             aRolls = 3;
         } else if (aArmies > 2) {
@@ -25,23 +25,23 @@
             aRolls = 1;
         }
 
-        var dRolls;
-        var dArmies = generalizedBoard.Countries[action.params[1]].Armies;
+        let dRolls;
+        let dArmies = generalizedBoard.Countries[action.params[1]].Armies;
         if (dArmies > 1) {
             dRolls = 2;
         } else {
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
-        var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        let rolls = Math.max(aRolls, dRolls);
+        let results = [];
+        let arr = [];
+        for (let i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 
         async.each(arr, function(wins, callback) {
-            var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
+            let temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
             });
@@ -53,10 +53,10 @@
     }
 
     function attackall (generalizedBoard, action) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
 
-        var aRolls;
-        var aArmies = generalizedBoard.Countries[action.params[0]].Armies;
+        let aRolls;
+        let aArmies = generalizedBoard.Countries[action.params[0]].Armies;
         if (aArmies > 3) {
             aRolls = 3;
         } else if (aArmies > 2) {
@@ -65,23 +65,23 @@
             aRolls = 1;
         }
 
-        var dRolls;
-        var dArmies = generalizedBoard.Countries[action.params[1]].Armies;
+        let dRolls;
+        let dArmies = generalizedBoard.Countries[action.params[1]].Armies;
         if (dArmies > 1) {
             dRolls = 2;
         } else {
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
-        var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        let rolls = Math.max(aRolls, dRolls);
+        let results = [];
+        let arr = [];
+        for (let i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 
         async.each(arr, function(wins, callback) {
-            var temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
+            let temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
             });
@@ -93,12 +93,12 @@
     }
 
     function fortifymove (generalizedBoard, action) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
 
-        var temp = applyAction.fortifymove(generalizedBoard, action.params);
+        let temp = applyAction.fortifymove(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            var arr = [value];
+            let arr = [value];
             deferred.resolve(arr);
         });
 
@@ -106,12 +106,12 @@
     }
 
     function startplace (generalizedBoard, action) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
 
-        var temp = applyAction.startplace(generalizedBoard, action.params);
+        let temp = applyAction.startplace(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            var arr = [value];
+            let arr = [value];
             deferred.resolve(arr);
         });
 
@@ -120,13 +120,13 @@
 
 
     function placearmy (generalizedBoard, action) {
-        var deferred = Q.defer();
+        let deferred = Q.defer();
 
         // Modify the board
-        var temp = applyAction.placearmy(generalizedBoard, action.params);
+        let temp = applyAction.placearmy(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            var arr = [value];
+            let arr = [value];
             deferred.resolve(arr);
         });
 

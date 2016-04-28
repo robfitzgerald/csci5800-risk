@@ -1,12 +1,13 @@
 #include <node.h>
-#include <json.hpp>
+// #include <json.hpp>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 
-#include <clips/clips.h>
+#include "clips/clips.h"
 
 #include "agendaparser.h"
 #include "factparser.h"
@@ -45,7 +46,9 @@ namespace clipslib {
         
         std::string str(global);
         str = split(global, ' ')[2];
-        args.GetReturnValue().Set(std::stoi(str));
+        int i;
+        sscanf(str.c_str(), "%d", &i);
+        args.GetReturnValue().Set(i);
     }
 
     void generateActions(const FunctionCallbackInfo<Value>& args) {

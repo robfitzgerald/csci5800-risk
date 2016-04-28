@@ -3,10 +3,9 @@
 	var expect = require('chai').expect
 		, mcts = require('../lib/mcts')
 		, variant = require('../gameVariant/risk')
-		, board = variant.generate('Risk', [{type:'AI'},{type:'HUMAN'}])
 		, kbase = require('../lib/knowledgeBase')
-		, simulation = require('../lib/clipsController')
 		, helper = require('../lib/knowledgeBase.helper.js')
+		, clipsModule = require('clips-module')
 		, request = require('request')
 		, config = require('config')
 		, auth = new Buffer(config.get('neo4j.username') + ':' + config.get('neo4j.password'))
@@ -27,23 +26,71 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
  */
 
 
-	describe('mcts integration testing (heads up - destructive!!)', function() {
-		this.timeout(10000); // set 10 second timeout on asynchronous tests
-		it('delete everything', function(done) {
-			neo4j({json:helper.constructQueryBody('MATCH (p)-[r]-() DELETE p,r')}, function(err) {
+	describe('mcts integration testing', function() {
+		this.timeout(20000);   // 1 hour plus 10,000ms of wiggle room
+		// 20000 = 20sec, 60000 = 60sec, 0 = no timeout..
+		var rootData;
+		before(function(done) {
+			rootData = variant.rootNodeData();
+			done();
+		})
+		it('delete everything (heads up - destructive!!)', function(done) {
+			neo4j({json:helper.constructQueryBody(['MATCH (p)-[r]-() DELETE p,r','MATCH (p) DELETE p'],[{},{}])}, function(err) {
 				if (err) {
 					done(new Error(err))
 				}
 				done();
 			})
 		})
-		describe('create root, expand a move, create children', function() {
+		it('create root', function(done) {
+			kbase.createNewRoot(rootData.board, rootData.moves)
+				.then(function(result) {
+					expect(result).to.have.property('root')
+					done();
+				})
+		})
+		it.skip('mergeNode on existing node', function(done) {
+			kbase.mergeNode(rootData.board)
+				.then(function(res) {
+					expect(res).to.exist;
+					done();
+				})
+				.catch(function(err) {
+					done(new Error(JSON.stringify(err)))
+				})
+		})
+		it.skip('defaultPolicy on existing board', function(done) {
+			clipsModule.simulate(rootData.board)
+				.then(function(reward) {
+					console.log('reward is ' + reward)
+					done()
+				})
+		})
+		it.skip('hand crank mcts', function(done) {
+			mcts.innerMcts(rootData.board, variant)
+				.then(function(result) {
+					done();
+				})
+				.catch(function(err) {
+					done(new Error(JSON.stringify(err)))
+				})
+		})
+		it.skip('mcts loop for 40 seconds', function(done) {
+			mcts.loop(rootData.board, variant, 4000)
+				.then(function(result) {
+					done();
+				})
+				.catch(function(mctsErr) {
+					done(new Error(JSON.stringify(mctsErr)));
+				})				
+		})
+	/*	describe.skip('create root, expand a move, create children', function() {
 			it('start from simple', function(done) {
 						var generalizedParentBoard = variant.generalize(board)
 							, boardNode = {index: helper.hash(helper.serialize(generalizedParentBoard))}
 						kbase.createNewRoot(generalizedParentBoard, [{name:'test',params:[]},{name:'test2',params:['param1']}])
 							.then(function(root) {
-								simulation.expand(generalizedParentBoard, {name:'test',params:[]})
+								variant.expand(generalizedParentBoard, {name:'test',params:[]})
 									.then(function(children) {
 										kbase.createChildren(boardNode, {name:'test',params:[]}, children)
 											.then(function(created) {
@@ -62,7 +109,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 							})
 			})
 		})
-		describe('mcts', function() {
+		describe.skip('mcts', function() {
 			it('run mcts', function(done) {
 				var generalizedParentBoard = variant.generalize(board)
 				mcts.innerMcts(generalizedParentBoard, variant)
@@ -173,7 +220,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
 						done(new Error(JSON.stringify(mctsErr)));
 					})				
 			})
-		})	
+		})	*/
 	})
 
 	// backup({state:'sloop'}, null, 1)

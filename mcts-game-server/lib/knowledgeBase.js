@@ -406,8 +406,12 @@
 				result.sort(function(a, b) {
 					return b.board.uct - a.board.uct;
 				});
-				// console.log('bestChild result with cp = ' + Cp + ':')
-				// console.log(result)
+
+				// if (Cp != 0) {
+				// 	console.log('bestChild result with cp = ' + Cp + ':')
+				// 	console.log(result)
+				// }
+
 				var bestChild = _.head(result);
 				if (!bestChild) {
 					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n');

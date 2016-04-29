@@ -190,7 +190,8 @@
 	function configureDatabase() {
 		var deferred = Q.defer() 
 		,	statements = [
-	 	 `CREATE INDEX ON :BOARD(index)`
+	 	 // `CREATE INDEX ON :BOARD(index)`
+	 	 `CREATE CONSTRAINT ON (b:BOARD) ASSERT b.index IS UNIQUE`
 		]
 		, params = [
 			{}
@@ -337,7 +338,7 @@
 						WITH DISTINCT node
 						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}`,
 				payload = helper.constructQueryBody(query);
-			console.log('[backup]: backing up from index ' + hashChildBoard + ' to root index ' + hashRootBoard + '.')
+			// console.log('[backup]: backing up from index ' + hashChildBoard + ' to root index ' + hashRootBoard + '.')
 			neo4j({json: payload}, function(err, response, body) {
 				var neo4jError = _.get(body, 'errors')
 					,	errors = err || ((neo4jError.length > 0) ? helper.parseNeo4jError('backup', body) : null);
@@ -405,6 +406,8 @@
 				result.sort(function(a, b) {
 					return b.board.uct - a.board.uct;
 				});
+				// console.log('bestChild result with cp = ' + Cp + ':')
+				// console.log(result)
 				var bestChild = _.head(result);
 				if (!bestChild) {
 					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n');
@@ -427,12 +430,12 @@
 		if (!_.has(variant, 'expand')) {
 			throw new Error('[treePolicy]: variant (arg2) is missing an expand property');
 		}
-		console.log('[treePolicy]: entering treePolicy.')
+		// console.log('[treePolicy]: entering treePolicy.')
 		var deferred = Q.defer() ,
 			v = root,
 			expandableMoveNotFound = true;
 		async.doWhilst(function(callback) {
-			console.log('[treePolicy]: top of doWhilst loop for index ' + v.index)
+			// console.log('[treePolicy]: top of doWhilst loop for index ' + v.index)
 			var query = `
 				MATCH(b:BOARD {index: ${v.index}}) - [r:POSSIBLE] - > ()
 				WITH r, count(*) as possibleMoveCount
@@ -468,8 +471,8 @@
 								_.forEach(children, function(child) {
 									_.unset(child, 'board.Steps');
 								})
-								console.log('expand result')
-								console.log(JSON.stringify(children))
+								// console.log('expand result')
+								// console.log(JSON.stringify(children))
 								// console.log('[treePolicy]: returned from expand(), calling createChildren()')
 								createChildren(v, move, children)
 									.then(function(result) {
@@ -512,7 +515,7 @@
 			});
 		},
 		function whileTest() {
-			console.log('[treePolicy]: whiteTest of doWhilst loop for index ' + v.index)
+			// console.log('[treePolicy]: whiteTest of doWhilst loop for index ' + v.index)
 			// console.log('[treePolicy]: whileTest is ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},

@@ -15,22 +15,23 @@
 				var variant = boards[variantName]
 					, rootNodeData = variant.rootNodeData();
 				knowledgeBase.createNewRoot(rootNodeData.board, rootNodeData.moves)
-					.then(function(result) {
-						res.locals = 'success';
+					.then(function(root) {
+						res.locals.root = root;
+						knowledgeBase.configureDatabase()
+							.then(function(configured) {
+								res.locals.configured = configured;  // nothing for now
+								next();
+							})
+							.catch(function(err) {
+								next(err);
+							})
 					})
 					.catch(function(err) {
-						throw new Error(err)
+						next(err)
 					})
 			} catch (e) {
 				next(e);
 			}
-			// game is where we run the action on the board using the game
-			// variant's 'play' member function.
-			// 
-			// @TODO: make it so!
-			var variant = boards[variantName];
-			// res.locals.result = game(board, action, variant);
-			next();
 		}
 	}
 }

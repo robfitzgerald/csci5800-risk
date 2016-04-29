@@ -10,10 +10,8 @@
 		"password": "neo4j"
 	},
 	"node": {
-
 	},
 	"clips": {
-		"baseUrl": "",
-		"steps": 1000
+		"Steps": 1000
 	}
 }

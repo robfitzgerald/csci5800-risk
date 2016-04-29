@@ -23,7 +23,7 @@
 	 * @property {String[]} outSchema  - list of properties of a generalized board
 	 */
 	var inSchema = [
-			'Turn', 'Countries', 'Phase', 'Steps', 'Players'
+			'Turn', 'Countries', 'Phase', 'Players'
 			]
 
 	/**
@@ -31,7 +31,7 @@
 	 * @property {String[]} outSchema  - list of properties of a generalized board
 	 */
 	var outSchema = [
-			'Turn', 'Countries', 'Phase', 'Steps', 'Players', 'PlayerArmies'
+			'Turn', 'Countries', 'Phase', 'Players', 'PlayerArmies'
 			]
 
 	/**
@@ -198,7 +198,6 @@
 					"Argentina":{"Player":1,"Armies":1}
 				},
 				"Phase":"start",
-				"Steps":4000,
 				"Players":2,
 				"PlayerArmies": [ 40, 40 ]
 			},

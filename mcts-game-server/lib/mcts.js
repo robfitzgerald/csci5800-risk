@@ -11,6 +11,7 @@
 		, mergeNode = require('./knowledgeBase').mergeNode
 		, backup = require('./knowledgeBase').backup
 		, bestChild = require('./knowledgeBase').bestChild
+		, config = require('config')
 		, Q = require('q')
 		, async = require('async')
 		, _ = require('lodash')
@@ -95,6 +96,7 @@
 				// console.log('[innerMcts]: mergeNode done in ' + debugMergeDur + ' ms.')
 				treePolicy(v0, variant)
 					.then(function(generalizedBoard) {
+						generalizedBoard.Steps = config.get('clips.Steps') || 0;
 						// let debugTreePolicyDur = (Date.now() - debugStartTime) - debugMergeDur;
 						// console.log('[innerMcts]: treePolicy done in ' + debugTreePolicyDur + ' ms.')
 						defaultPolicy(generalizedBoard)

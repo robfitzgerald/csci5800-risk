@@ -165,7 +165,7 @@
 
 (defrule start-place
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
+    
     ?turn-fact <- (turn ?player)
     ?phase-fact <- (phase (current start))
     ?free-armies-fact <- (free-armies (player ?player) (num ?free))
@@ -178,9 +178,7 @@
     (retract ?turn-fact)
     (assert (turn (mod (+ ?player 1) ?num)))
     (retract ?free-armies-fact)
-    (assert (free-armies (player ?player) (num (- ?free 1))))
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1))))
+    (assert (free-armies (player ?player) (num (- ?free 1)))))
 
 (defrule end-start-place
     ?phase-fact <- (phase (current start))
@@ -191,7 +189,6 @@
 
 (defrule place-army
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
     (turn ?player)
     ?phase-fact <- (phase (current placement))
     (controls (country ?country) (player ?player))
@@ -205,13 +202,10 @@
     (if (< (- ?free 1) 1) then
         (retract ?phase-fact)
         (assert (phase (current attack))))
-    (printout t ?steps " Action: Player " ?player " placed 1 army on " ?country crlf)
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1))))
+    (printout t "Action: Player " ?player " placed 1 army on " ?country crlf))
 
 (defrule attack-all
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
     (turn ?a-player)
     ?phase-fact <- (phase (current attack))
     (controls (country ?a-country) (player ?a-player))
@@ -234,15 +228,12 @@
             (assert (phase (current won-country)))
         else
             (retract ?d-army-fact)
-            (assert (armies (country ?d-country) (num (- ?d-army ?a))))
+            (assert (armies (country ?d-country) (num (- ?d-army ?a)))))
             
-    (printout t ?steps " Action: Player " ?a-player " attacked " ?d-player ":" ?d-country " from " ?a-country -- ?a-army "vs" ?d-army crlf)
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1)))))
+    (printout t "Action: Player " ?a-player " attacked " ?d-player ":" ?d-country " from " ?a-country -- ?a-army "vs" ?d-army crlf))
 
 (defrule attack-half
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
     (turn ?a-player)
     ?phase-fact <- (phase (current attack))
     (controls (country ?a-country) (player ?a-player))
@@ -267,9 +258,7 @@
             (retract ?d-army-fact)
             (assert (armies (country ?d-country) (num (- ?d-army ?a))))
             
-    (printout t ?steps " Action: Player " ?a-player " attacked " ?d-player ":" ?d-country " from " ?a-country -- ?a-army "vs" ?d-army crlf)
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1)))))
+    (printout t "Action: Player " ?a-player " attacked " ?d-player ":" ?d-country " from " ?a-country -- ?a-army "vs" ?d-army crlf)))
 
 (defrule take-country-all
     (declare (salience 10))
@@ -309,7 +298,6 @@
 
 (defrule fortify-move
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
     ?turn-fact <- (turn ?player)
     (players ?num)
     ?phase-fact <- (phase (current attack))
@@ -328,14 +316,11 @@
     (assert (free-armies (player (mod (+ ?player 1) ?num)) (num 5))) ; -----------------------------TEMPORARY
     (retract ?turn-fact)
     (assert (turn (mod (+ ?player 1) ?num)))
-    (printout t ?steps " Action: Player " ?player-a " fortified " ?country-b " from " ?country-a crlf)
-    (printout t "Action: Player " ?player-a " ends turn" crlf)
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1))))
+    (printout t "Action: Player " ?player-a " fortified " ?country-b " from " ?country-a crlf)
+    (printout t "Action: Player " ?player-a " ends turn" crlf))
 
 (defrule next-turn
     (declare (salience 10))
-    ?steps-fact <- (steps ?steps&:(> ?steps 0))
     (players ?num)
     ?turn-fact <- (turn ?player)
     ?phase-fact <- (phase (current attack))
@@ -345,6 +330,4 @@
     (assert (free-armies (player (mod (+ ?player 1) ?num)) (num 5))) ; -----------------------------TEMPORARY
     (retract ?turn-fact)
     (assert (turn (mod (+ ?player 1) ?num)))
-    (printout t ?steps " Action: Player " ?player " ends turn" crlf)
-    (retract ?steps-fact)
-    (assert (steps (- ?steps 1))))
+    (printout t "Action: Player " ?player " ends turn" crlf))

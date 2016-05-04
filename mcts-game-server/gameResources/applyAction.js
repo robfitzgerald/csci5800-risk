@@ -72,8 +72,16 @@
         var accum;
         if (!temp.PlayerArmies) {
             --temp.playerDetails[temp.Turn].freeArmies;
-            if (temp.playerDetails[temp.Turn].freeArmies == 0) {
-                temp.Phase = 'attack';
+
+            var finished = true;
+            for (var i = 0; i < temp.playerDetails.length; ++i) {
+                if (temp.playerDetails[i].freeArmies > 0) {
+                    finished = false;
+                }
+            }
+
+            if (finished) {
+                temp.Phase = 'fortify';
             }
 
             var accum = 0;

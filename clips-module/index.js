@@ -210,5 +210,6 @@ var _ = require('lodash');
 
     exports.simulate = simulate;
     exports.generateChildren = generateChildren;
+    exports.generateStateString = generateStateString;
 
 })();

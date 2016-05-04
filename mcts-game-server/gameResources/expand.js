@@ -113,7 +113,10 @@
         clips.generateChildren(temp).then(function (value) {
             var arr = [value];
             deferred.resolve(arr);
-        });
+        })
+        .catch(function(err) {
+            deferred.reject(err);
+        })
 
         return deferred.promise;
     }

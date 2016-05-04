@@ -2,6 +2,7 @@
 {
     module.exports = {
         attackall,
+        attackhalf,
         fortify,
         placearmy,
         startplace
@@ -64,7 +65,8 @@
 
     function startplace (board, params) {
         var temp = _.cloneDeep(board);
-
+        console.log('startplace with temp board:')
+        console.log(temp)
         ++temp.Countries[params[0]].Armies;
 
         var accum;

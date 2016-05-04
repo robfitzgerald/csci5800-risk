@@ -184,7 +184,7 @@
 
 (defrule end-start-place
     ?phase-fact <- (phase (current start))
-    (not (free-armies (player ?) (num ?free&:(> ?free 1))))
+    (not (free-armies (player ?) (num ?free&:(> ?free 0))))
     =>
     (retract ?phase-fact)
     (assert (phase (current placement))))

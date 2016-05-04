@@ -199,7 +199,7 @@ var _ = require('lodash');
 
         lines.forEach(function (value) {
             value = value.trim();
-            console.log(value);
+            // console.log(value);
             if (value.startsWith("(controls")) {
                 action.params.push(getControlsInfo(value).country);
             }

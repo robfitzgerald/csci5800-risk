@@ -131,7 +131,7 @@
     (do-for-all-facts
         ((?c controls))
         (eq ?c:player ?starting-player)
-        (bind ?inc-1 (+ ?inc-1 1)))
+        (bind ?inc-0 (+ ?inc-0 1)))
 
     (do-for-all-facts
         ((?c controls))
@@ -141,15 +141,6 @@
     (if (> ?inc-0 ?inc-1)
         then 1
         else 0))
-
-(defrule out-of-time
-    (declare (salience 9999))
-    (steps 0)
-    (starting-player ?starting-player)
-    =>
-    (bind ?*result* (calc-result ?starting-player))
-    (printout t "--- Ran out of time: " ?*result* crlf)
-    (halt))
 
 (defrule game-over
     (declare (salience 10000))

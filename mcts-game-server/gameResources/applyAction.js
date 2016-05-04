@@ -75,13 +75,15 @@
 
             var finished = true;
             for (var i = 0; i < temp.playerDetails.length; ++i) {
+                console.log('at i = ' + i + ', conditional is ' + (temp.playerDetails[i].freeArmies > 0))
                 if (temp.playerDetails[i].freeArmies > 0) {
                     finished = false;
                 }
             }
 
             if (finished) {
-                temp.Phase = 'fortify';
+                console.log('finished found to be true - changing to placement')
+                temp.Phase = 'placement';
             }
 
             var accum = 0;
@@ -89,30 +91,39 @@
                 accum += value.freeArmies;
             });
 
+            console.log('remaining free armies = ' + accum)
+
             temp.Turn = (temp.Turn + 1) % temp.Players;
 
+            console.log('new turn is ' + temp.Turn)
+
             if (accum == 0) {
+                console.log('no armies left on board. determining reward for new player')
                 var newArmies = countriesReward(temp);
                 newArmies += continentReward(temp);
 
+                console.log('new armies is ' + newArmies)
                 temp.playerDetails[temp.Turn].freeArmies += newArmies;
             }
 
         } else {
+            console.log('*** startplace for generalized board on expand()')
             --temp.PlayerArmies[temp.Turn];
-            if (temp.PlayerArmies[temp.Turn] == 0) {
-                temp.Phase = 'attack';
+            var remaining = _.reduce(temp.PlayerArmies, function(sum, a) { return sum + a;}, 0)
+            if (remaining == 0) {
+                temp.Phase = 'placement';
             }
-
-            temp.PlayerArmies.forEach(function (value) {
-                accum += value;
-            });
 
             temp.Turn = (temp.Turn + 1) % temp.Players;
 
-            if (accum == 0) {
+            console.log('remaining is now ' + remaining + ', phase is ' + temp.Phase + ', player turn is ' + temp.Turn)
+
+            if (remaining == 0) {
+                console.log('no armies left on board. determining reward for new player')
                 var newArmies = countriesReward(temp);
                 newArmies += continentReward(temp);
+
+                console.log('new armies is ' + newArmies)
 
                 temp.PlayerArmies[temp.Turn] += newArmies;
             }
@@ -134,7 +145,7 @@
 
 
     function countriesReward (board) {
-      return Math.floor(_.filter(board.Countries, c => c.Player === this.Turn).length / 3)
+      return Math.floor(_.filter(board.Countries, c => c.Player === board.Turn).length / 3)
     }
 
     function continentReward (board) {

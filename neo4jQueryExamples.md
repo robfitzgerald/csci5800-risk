@@ -12,15 +12,15 @@ CREATE CONSTRAINT ON (g:BOARD) ASSERT g.index IS UNIQUE
 ### nodes and relationships in the start phase
 ```MATCH (n:BOARD)-[r {name:'startplace'}]-() RETURN n, r LIMIT 500```
 
-```MATCH p=(n:BOARD {index: 3895442334})-[:CHILD*..]-(m:BOARD {}) WHERE m.rewards > 0 RETURN m```
+```MATCH p=(root : BOARD {index: 1004185000})-[:CHILD*..]-(m:BOARD {}) WHERE m.rewards > 0 RETURN m```
 
 ### all paths from the root node up to a depth of 4
-```MATCH p=(:BOARD{index: 3895442334})-[*..4]-() RETURN p```
+```MATCH p=(root : BOARD {index: 1004185000})-[*..4]-() RETURN p```
 
 
 #optomization
 PROFILE
-MATCH(child : BOARD{index: 3396432413}), (root : BOARD {index: 1004185000}),
+MATCH(child : BOARD{index: 3559653961}), (root : BOARD {index: 1004185000}),
             path = (child) - [:PARENT *] - > (root)
             WITH nodes(path) AS pathNodes UNWIND pathNodes as node
             WITH DISTINCT node

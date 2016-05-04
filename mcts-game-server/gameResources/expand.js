@@ -1,9 +1,11 @@
 'use strict';
 {
     module.exports = {
-        fortifymove,
+        fortify,
         placearmy,
-        startplace
+        startplace,
+        attackhalf,
+        attackall
     }
 
     var _ = require('lodash')
@@ -92,10 +94,10 @@
         return deferred.promise;
     }
 
-    function fortifymove (generalizedBoard, action) {
+    function fortify (generalizedBoard, action) {
         var deferred = Q.defer();
 
-        var temp = applyAction.fortifymove(generalizedBoard, action.params);
+        var temp = applyAction.fortify(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
             var arr = [value];

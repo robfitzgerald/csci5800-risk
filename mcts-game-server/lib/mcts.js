@@ -43,7 +43,7 @@
 			debugInnerLoopStart = Date.now();
 			innerMcts(board, rootBoard, variant)
 				.then(function(result) {
-					// console.log('[mcts.loop]: completed innerMcts loop. occurence # ' + mctsIterations + '.')
+					console.log('[mcts.loop]: completed innerMcts loop. occurence # ' + mctsIterations + '.')
 					++mctsIterations;
 					callback(null, result);
 				})
@@ -53,8 +53,8 @@
 		},
 		function whileTest() {
 			let debugInnerLoopDur = Date.now() - debugInnerLoopStart;
-			// console.log('[mcts.loop]: one loop completed in ' + debugInnerLoopDur + ' ms.')
-			// return (Date.now() < stopTime);
+			console.log('[mcts.loop]: one loop completed in ' + debugInnerLoopDur + ' ms.')
+			return (Date.now() < stopTime);
 		},
 		function result(error, result) {
 			if (error) {
@@ -64,7 +64,7 @@
 				bestChild(result, 0)
 					.then(function(tuple) {
 						let debugBestChildDur = Date.now() - debugBestChildStart;
-						// console.log('[mcts.loop]: final bestChild completed in ' + debugBestChildDur + ' ms.')
+						console.log('[mcts.loop]: final bestChild completed in ' + debugBestChildDur + ' ms.')
 						deferred.resolve(tuple);
 					})
 					.catch(function(bestChildError) {

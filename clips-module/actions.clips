@@ -292,8 +292,8 @@
     ?turn-fact <- (turn ?player)
     (players ?num)
     ?phase-fact <- (phase (current attack))
-    (controls (country ?country-a) (player ?player-a))
-    (controls (country ?country-b) (player ?player-b&:(= ?player-a ?player-b)))
+    (controls (country ?country-a) (player ?player))
+    (controls (country ?country-b) (player ?player-b&:(= ?player ?player-b)))
     (adjacent (one ?country-a) (two ?country-b))
     ?armies-a-fact <- (armies (country ?country-a) (num ?a&:(> ?a 1)))
     ?armies-b-fact <- (armies (country ?country-b) (num ?b))
@@ -307,8 +307,8 @@
     (assert (free-armies (player (mod (+ ?player 1) ?num)) (num 5))) ; -----------------------------TEMPORARY
     (retract ?turn-fact)
     (assert (turn (mod (+ ?player 1) ?num)))
-    (printout t "Action: Player " ?player-a " fortified " ?country-b " from " ?country-a crlf)
-    (printout t "Action: Player " ?player-a " ends turn" crlf))
+    (printout t "Action: Player " ?player " fortified " ?country-b " from " ?country-a crlf)
+    (printout t "Action: Player " ?player " ends turn" crlf))
 
 (defrule next-turn
     (declare (salience 10))

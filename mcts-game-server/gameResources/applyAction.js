@@ -5,7 +5,8 @@
         attackhalf,
         fortify,
         placearmy,
-        startplace
+        startplace,
+        endturn
     }
 
 
@@ -75,14 +76,12 @@
 
             var finished = true;
             for (var i = 0; i < temp.playerDetails.length; ++i) {
-                console.log('at i = ' + i + ', conditional is ' + (temp.playerDetails[i].freeArmies > 0))
                 if (temp.playerDetails[i].freeArmies > 0) {
                     finished = false;
                 }
             }
 
             if (finished) {
-                console.log('finished found to be true - changing to placement')
                 temp.Phase = 'placement';
             }
 
@@ -91,23 +90,16 @@
                 accum += value.freeArmies;
             });
 
-            console.log('remaining free armies = ' + accum)
-
             temp.Turn = (temp.Turn + 1) % temp.Players;
 
-            console.log('new turn is ' + temp.Turn)
-
             if (accum == 0) {
-                console.log('no armies left on board. determining reward for new player')
                 var newArmies = countriesReward(temp);
                 newArmies += continentReward(temp);
 
-                console.log('new armies is ' + newArmies)
                 temp.playerDetails[temp.Turn].freeArmies += newArmies;
             }
 
         } else {
-            console.log('*** startplace for generalized board on expand()')
             --temp.PlayerArmies[temp.Turn];
             var remaining = _.reduce(temp.PlayerArmies, function(sum, a) { return sum + a;}, 0)
             if (remaining == 0) {
@@ -116,14 +108,9 @@
 
             temp.Turn = (temp.Turn + 1) % temp.Players;
 
-            console.log('remaining is now ' + remaining + ', phase is ' + temp.Phase + ', player turn is ' + temp.Turn)
-
             if (remaining == 0) {
-                console.log('no armies left on board. determining reward for new player')
                 var newArmies = countriesReward(temp);
                 newArmies += continentReward(temp);
-
-                console.log('new armies is ' + newArmies)
 
                 temp.PlayerArmies[temp.Turn] += newArmies;
             }
@@ -133,12 +120,26 @@
     }
 
     function fortify (board, params) {
-        var temp = _.cloneDeep(temp);
+        var temp = _.cloneDeep(board);
 
         var amount = temp.Countries[params[0]].Armies - 1;
-
+        console.log('fortify with params: ' + JSON.stringify(params))
         temp.Countries[params[0]].Armies -= amount;
         temp.Countries[params[1]].Armies += amount;
+        return endturn(temp, params);
+    }
+
+    function endturn (board, params) {
+        var temp = _.cloneDeep(board)
+        temp.Turn = ((temp.Turn + 1) % temp.Players);
+        if (!temp.PlayerArmies) {
+            temp.playerDetails[temp.Turn].freeArmies = countriesReward(board) + continentReward(board);            
+            temp.moveCount++;
+        } else {
+            temp.PlayerArmies[temp.Turn] = countriesReward(board) + continentReward(board);
+        }
+        
+        temp.Phase = 'placement';
 
         return temp;
     }
@@ -167,6 +168,7 @@
               0);
       
     }
+
 
 
 

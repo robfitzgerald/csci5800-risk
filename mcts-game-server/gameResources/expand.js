@@ -5,7 +5,8 @@
         placearmy,
         startplace,
         attackhalf,
-        attackall
+        attackall,
+        endturn
     }
 
     var _ = require('lodash')
@@ -35,20 +36,24 @@
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
+        var rolls = Math.min(aRolls, dRolls);
+        var result = [];
         var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
+        console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
+
         async.each(arr, function(wins, callback) {
+            console.log('this wins value: ' + wins)
             var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
+                callback();
             });
         }, function (err) {
-            deferred.resolve(arr);
+            deferred.resolve(result);
         });
 
         return deferred.promise;
@@ -75,10 +80,10 @@
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
+        var rolls = Math.min(aRolls, dRolls);
+        var result = [];
         var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
@@ -86,9 +91,10 @@
             var temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
+                callback();
             });
         }, function (err) {
-            deferred.resolve(arr);
+            deferred.resolve(result);
         });
 
         return deferred.promise;
@@ -138,6 +144,17 @@
         return deferred.promise;
     }
 
+    function endturn (generalizedBoard, action) {
+        var deferred = Q.defer();
 
+        var temp = applyAction.endturn(generalizedBoard, action.params);
+
+        clips.generateChildren(temp).then(function (value) {
+            var arr = [value];
+            deferred.resolve(arr);
+        });
+
+        return deferred.promise;
+    }
 
 }

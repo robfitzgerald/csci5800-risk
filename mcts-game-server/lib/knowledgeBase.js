@@ -434,7 +434,7 @@
 		if (!_.has(variant, 'expand')) {
 			throw new Error('[treePolicy]: variant (arg2) is missing an expand property');
 		}
-		// console.log('[treePolicy]: entering treePolicy.')
+		console.log('[treePolicy]: entering treePolicy.')
 		var deferred = Q.defer() ,
 			v = root,
 			expandableMoveNotFound = true;
@@ -457,16 +457,16 @@
 				if (errors) {
 					callback(errors);
 				} else {
-					// console.log('[treePolicy]: in doWhilst, completed neo4j call to get possibleMoves|false:')
+					console.log('[treePolicy]: in doWhilst, completed neo4j call to get possibleMoves|false:')
 					// grab first move. order guaranteed? not guaranteed? probs not.
 					var move = _.get(body, 'results[0].data[0].row[0]');
-					// console.log(move)
+					console.log(move)
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
 						var parentBoardToExpand = JSON.parse(v.board);
-						// console.log('[treePolicy]: found a move.  calling expand above move on parentBoard, move:')
-						// console.log(parentBoardToExpand)
-						// console.log(move)
+						console.log('[treePolicy]: found a move.  calling expand above move on parentBoard, move:')
+						console.log(parentBoardToExpand)
+						console.log(move)
 						parentBoardToExpand.Steps = config.get('clips.Steps')  // required by clips.expand()
 						variant.expand(parentBoardToExpand, move)
 							.then(function(children) {
@@ -475,18 +475,18 @@
 								_.forEach(children, function(child) {
 									_.unset(child, 'board.Steps');
 								})
-								// console.log('expand result')
-								// console.log(JSON.stringify(children))
-								// console.log('[treePolicy]: returned from expand(), calling createChildren()')
+								console.log('expand result')
+								console.log(JSON.stringify(children))
+								console.log('[treePolicy]: returned from expand(), calling createChildren()')
 								createChildren(v, move, children)
 									.then(function(result) {
 										// @TODO: confirm that we are always grabbing the result from createChildren.
 										// the neo4j response structure is always an array due to collect(c);
 										// but is it ever multiple arrays in multiple rows due to possible multiplicity
 										// of children generated?
-										// console.log('[treePolicy]: returned from createChildren(). setting new "v" to:')
+										console.log('[treePolicy]: returned from createChildren(). setting new "v" to:')
 										v = _.head(_.head(result));
-										// console.log(v)
+										console.log(v)
 										if (!v) {
 											let len = _.get(children, 'length');
 											throw new Error('[treePolicy]: created children from ' + len + ' children but _.head() of result from createChildren() is falsey:\n' + JSON.stringify(v));
@@ -498,10 +498,10 @@
 									});
 							});
 					} else {
-						// console.log('[treePolicy]: didn\'t find a move. calling bestChild()')
+						console.log('[treePolicy]: didn\'t find a move. calling bestChild()')
 						bestChild(v, explorationParameter)
 							.then(function(vBestChild) {
-								// console.log('[treePolicy]: returned from bestChild(). setting new "v" to:')
+								console.log('[treePolicy]: returned from bestChild(). setting new "v" to:')
 								v = vBestChild.board;
 								// console.log(v)
 								if (v) {
@@ -519,16 +519,16 @@
 			});
 		},
 		function whileTest() {
-			// console.log('[treePolicy]: whiteTest of doWhilst loop for index ' + v.index)
-			// console.log('[treePolicy]: whileTest is ' + (expandableMoveNotFound && v.nonTerminal))
+			console.log('[treePolicy]: whiteTest of doWhilst loop for index ' + v.index)
+			console.log('[treePolicy]: whileTest is ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},
 		function result(error, result) {
 			if (error) {
 				deferred.reject(error);
 			} else {
-				// console.log('[treePolicy]: done with board:')
-				// console.log(helper.deserialize(v.board))
+				console.log('[treePolicy]: done with board:')
+				console.log(helper.deserialize(v.board))
 				deferred.resolve(helper.deserialize(v.board));
 			}
 		});

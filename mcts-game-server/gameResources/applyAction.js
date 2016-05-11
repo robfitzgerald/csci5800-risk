@@ -66,8 +66,8 @@
 
     function startplace (board, params) {
         var temp = _.cloneDeep(board);
-        console.log('startplace with temp board:')
-        console.log(temp)
+        // console.log('startplace with temp board:')
+        // console.log(temp)
         ++temp.Countries[params[0]].Armies;
 
         var accum;
@@ -123,7 +123,7 @@
         var temp = _.cloneDeep(board);
 
         var amount = temp.Countries[params[0]].Armies - 1;
-        console.log('fortify with params: ' + JSON.stringify(params))
+        // console.log('fortify with params: ' + JSON.stringify(params))
         temp.Countries[params[0]].Armies -= amount;
         temp.Countries[params[1]].Armies += amount;
         return endturn(temp, params);

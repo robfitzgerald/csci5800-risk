@@ -18,7 +18,7 @@ CREATE CONSTRAINT ON (g:BOARD) ASSERT g.index IS UNIQUE
 ```MATCH p=(root : BOARD {index: 1004185000})-[*..4]-() RETURN p```
 
 
-#optomization
+#optimization
 PROFILE
 MATCH(child : BOARD{index: 3559653961}), (root : BOARD {index: 1004185000}),
             path = (child) - [:PARENT *] - > (root)

@@ -65,3 +65,5 @@ curl -X POST -H "Content-Type: application/json" "http://localhost:3000/play/ris
 ```
 
 did that work?  hope so!  ;-)
+
+you may want to dive into the [Wiki](https://github.com/robfitzgerald/csci5800-risk/wiki) to learn more.

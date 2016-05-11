@@ -36,17 +36,16 @@
             dRolls = 1;
         }
 
-        var rolls = Math.min(aRolls, dRolls);
-        var result = [];
+        var rolls = Math.max(aRolls, dRolls);
+        var results = [];
         var arr = [];
-        for (var i = 0; i <= rolls; ++i) {
+        for (var i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 
         console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
 
         async.each(arr, function(wins, callback) {
-            console.log('this wins value: ' + wins)
             var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
@@ -80,10 +79,10 @@
             dRolls = 1;
         }
 
-        var rolls = Math.min(aRolls, dRolls);
-        var result = [];
+        var rolls = Math.max(aRolls, dRolls);
+        var results = [];
         var arr = [];
-        for (var i = 0; i <= rolls; ++i) {
+        for (var i = 0; i < rolls; ++i) {
             arr.push(i);
         }
 

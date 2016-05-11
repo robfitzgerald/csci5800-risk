@@ -20,7 +20,6 @@
       super (gameNum, variant, players);
       this.Phase = 'start';
       this.Countries = assignCountries(this.Players);
-      this.Steps = config.get('clips.steps');
       this.rules = {};
       var armiesForPlayers = _.nth([null, null, 40, 35, 30, 25, 20], this.Players);
       _.forEach(this.playerDetails, function(player) {

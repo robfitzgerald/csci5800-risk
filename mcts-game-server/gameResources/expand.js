@@ -1,22 +1,25 @@
 'use strict';
 {
     module.exports = {
-        fortifymove,
+        fortify,
         placearmy,
-        startplace
+        startplace,
+        attackhalf,
+        attackall,
+        endturn
     }
 
-    let _ = require('lodash')
+    var _ = require('lodash')
         , applyAction = require('./applyAction')
         , async = require('async')
         , clips = require('clips-module')
         , Q = require('q')
 
     function attackhalf (generalizedBoard, action) {
-        let deferred = Q.defer();
+        var deferred = Q.defer();
 
-        let aRolls;
-        let aArmies = Math.round(generalizedBoard.Countries[action.params[0]].Armies);
+        var aRolls;
+        var aArmies = Math.round(generalizedBoard.Countries[action.params[0]].Armies);
         if (aArmies > 3) {
             aRolls = 3;
         } else if (aArmies > 2) {
@@ -25,38 +28,42 @@
             aRolls = 1;
         }
 
-        let dRolls;
-        let dArmies = generalizedBoard.Countries[action.params[1]].Armies;
+        var dRolls;
+        var dArmies = generalizedBoard.Countries[action.params[1]].Armies;
         if (dArmies > 1) {
             dRolls = 2;
         } else {
             dRolls = 1;
         }
 
-        let rolls = Math.max(aRolls, dRolls);
-        let results = [];
-        let arr = [];
-        for (let i = 0; i < rolls; ++i) {
+        var rolls = Math.min(aRolls, dRolls);
+        var result = [];
+        var arr = [];
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
+        console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
+
         async.each(arr, function(wins, callback) {
-            let temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
+            console.log('this wins value: ' + wins)
+            var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
+                callback();
             });
         }, function (err) {
-            deferred.resolve(arr);
+            deferred.resolve(result);
         });
 
         return deferred.promise;
     }
 
     function attackall (generalizedBoard, action) {
-        let deferred = Q.defer();
+        var deferred = Q.defer();
 
-        let aRolls;
-        let aArmies = generalizedBoard.Countries[action.params[0]].Armies;
+        var aRolls;
+        var aArmies = generalizedBoard.Countries[action.params[0]].Armies;
         if (aArmies > 3) {
             aRolls = 3;
         } else if (aArmies > 2) {
@@ -65,40 +72,41 @@
             aRolls = 1;
         }
 
-        let dRolls;
-        let dArmies = generalizedBoard.Countries[action.params[1]].Armies;
+        var dRolls;
+        var dArmies = generalizedBoard.Countries[action.params[1]].Armies;
         if (dArmies > 1) {
             dRolls = 2;
         } else {
             dRolls = 1;
         }
 
-        let rolls = Math.max(aRolls, dRolls);
-        let results = [];
-        let arr = [];
-        for (let i = 0; i < rolls; ++i) {
+        var rolls = Math.min(aRolls, dRolls);
+        var result = [];
+        var arr = [];
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
         async.each(arr, function(wins, callback) {
-            let temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
+            var temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
             clips.generateChildren(temp).then(function (value) {
                 result.push(value);
+                callback();
             });
         }, function (err) {
-            deferred.resolve(arr);
+            deferred.resolve(result);
         });
 
         return deferred.promise;
     }
 
-    function fortifymove (generalizedBoard, action) {
-        let deferred = Q.defer();
+    function fortify (generalizedBoard, action) {
+        var deferred = Q.defer();
 
-        let temp = applyAction.fortifymove(generalizedBoard, action.params);
+        var temp = applyAction.fortify(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            let arr = [value];
+            var arr = [value];
             deferred.resolve(arr);
         });
 
@@ -106,33 +114,47 @@
     }
 
     function startplace (generalizedBoard, action) {
-        let deferred = Q.defer();
+        var deferred = Q.defer();
 
-        let temp = applyAction.startplace(generalizedBoard, action.params);
+        var temp = applyAction.startplace(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            let arr = [value];
+            var arr = [value];
             deferred.resolve(arr);
-        });
+        })
+        .catch(function(err) {
+            deferred.reject(err);
+        })
 
         return deferred.promise;
     }
 
 
     function placearmy (generalizedBoard, action) {
-        let deferred = Q.defer();
+        var deferred = Q.defer();
 
         // Modify the board
-        let temp = applyAction.placearmy(generalizedBoard, action.params);
+        var temp = applyAction.placearmy(generalizedBoard, action.params);
 
         clips.generateChildren(temp).then(function (value) {
-            let arr = [value];
+            var arr = [value];
             deferred.resolve(arr);
         });
 
         return deferred.promise;
     }
 
+    function endturn (generalizedBoard, action) {
+        var deferred = Q.defer();
 
+        var temp = applyAction.endturn(generalizedBoard, action.params);
+
+        clips.generateChildren(temp).then(function (value) {
+            var arr = [value];
+            deferred.resolve(arr);
+        });
+
+        return deferred.promise;
+    }
 
 }

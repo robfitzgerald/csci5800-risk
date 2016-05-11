@@ -3,9 +3,10 @@
     module.exports = {
         attackall,
         attackhalf,
-        fortifymove,
+        fortify,
         placearmy,
-        startplace
+        startplace,
+        endturn
     }
 
 
@@ -65,13 +66,23 @@
 
     function startplace (board, params) {
         var temp = _.cloneDeep(board);
+        // console.log('startplace with temp board:')
+        // console.log(temp)
         ++temp.Countries[params[0]].Armies;
 
         var accum;
         if (!temp.PlayerArmies) {
             --temp.playerDetails[temp.Turn].freeArmies;
-            if (temp.playerDetails[temp.Turn].freeArmies == 0) {
-                temp.Phase = 'attack';
+
+            var finished = true;
+            for (var i = 0; i < temp.playerDetails.length; ++i) {
+                if (temp.playerDetails[i].freeArmies > 0) {
+                    finished = false;
+                }
+            }
+
+            if (finished) {
+                temp.Phase = 'placement';
             }
 
             var accum = 0;
@@ -90,17 +101,14 @@
 
         } else {
             --temp.PlayerArmies[temp.Turn];
-            if (temp.PlayerArmies[temp.Turn] == 0) {
-                temp.Phase = 'attack';
+            var remaining = _.reduce(temp.PlayerArmies, function(sum, a) { return sum + a;}, 0)
+            if (remaining == 0) {
+                temp.Phase = 'placement';
             }
-
-            temp.PlayerArmies.forEach(function (value) {
-                accum += value;
-            });
 
             temp.Turn = (temp.Turn + 1) % temp.Players;
 
-            if (accum == 0) {
+            if (remaining == 0) {
                 var newArmies = countriesReward(temp);
                 newArmies += continentReward(temp);
 
@@ -111,20 +119,34 @@
         return temp;
     }
 
-    function fortifymove (board, params) {
+    function fortify (board, params) {
         var temp = _.cloneDeep(board);
 
         var amount = temp.Countries[params[0]].Armies - 1;
-
+        // console.log('fortify with params: ' + JSON.stringify(params))
         temp.Countries[params[0]].Armies -= amount;
         temp.Countries[params[1]].Armies += amount;
+        return endturn(temp, params);
+    }
+
+    function endturn (board, params) {
+        var temp = _.cloneDeep(board)
+        temp.Turn = ((temp.Turn + 1) % temp.Players);
+        if (!temp.PlayerArmies) {
+            temp.playerDetails[temp.Turn].freeArmies = countriesReward(board) + continentReward(board);            
+            temp.moveCount++;
+        } else {
+            temp.PlayerArmies[temp.Turn] = countriesReward(board) + continentReward(board);
+        }
+        
+        temp.Phase = 'placement';
 
         return temp;
     }
 
 
     function countriesReward (board) {
-      return Math.floor(_.filter(board.Countries, c => c.Player === this.Turn).length / 3)
+      return Math.floor(_.filter(board.Countries, c => c.Player === board.Turn).length / 3)
     }
 
     function continentReward (board) {
@@ -146,6 +168,7 @@
               0);
       
     }
+
 
 
 

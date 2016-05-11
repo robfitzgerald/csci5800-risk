@@ -11,26 +11,23 @@
 			res.status(400);
 			next('[game.middleware] Error: ' + variant + ' is not a valid game variant');
 		} else {
-			try {
-				var variant = boards[variantName]
-					, rootNodeData = variant.rootNodeData();
-				knowledgeBase.createNewRoot(rootNodeData.board, rootNodeData.moves)
-					.then(function(result) {
-						res.locals = 'success';
-					})
-					.catch(function(err) {
-						throw new Error(err)
-					})
-			} catch (e) {
-				next(e);
-			}
-			// game is where we run the action on the board using the game
-			// variant's 'play' member function.
-			// 
-			// @TODO: make it so!
-			var variant = boards[variantName];
-			// res.locals.result = game(board, action, variant);
-			next();
+			var variant = boards[variantName]
+				, rootNodeData = variant.rootNodeData();
+			knowledgeBase.configureDatabase()
+				.then(function(configured) {
+					res.locals.configured = configured;  // nothing for now
+					knowledgeBase.createNewRoot(rootNodeData.board, rootNodeData.moves)
+						.then(function(root) {
+							res.locals.root = root;
+							next();
+						})
+						.catch(function(err) {
+							next(err)
+						})
+				})
+				.catch(function(err) {
+					next(err);
+				})
 		}
 	}
 }

@@ -4,6 +4,7 @@
 {
 	module.exports = {
 		createNewRoot,
+		configureDatabase,
 		getNode,
 		mergeNode,
 		createChildren,
@@ -165,20 +166,46 @@
 						ON CREATE SET p.nonTerminal = true, p.rewards = 0, p.visits = 0, p.createdAt = timestamp(), p.board = '${serializedBoard}'
 						FOREACH(moveData in {possibleMoves} |
 			 		  	MERGE(p) - [: POSSIBLE {name: moveData.move.name, params: moveData.move.params}] - > (n : UNEXPLORED {index: moveData.unexploredIndex}))
-				 		RETURN p`,
-				payload = helper.constructQueryBody(statement, params);
+				 		RETURN p`
+				,	payload = helper.constructQueryBody(statement, params);
 			neo4j({json: payload}, function(err, res, body) {
 				var neo4jError = _.get(body, 'errors')
 					,	errors = err || ((neo4jError.length > 0) ? helper.parseNeo4jError('createNewRoot', body) : null);
 				if (errors) {
 					deferred.reject(errors);
 				} else {
-					var result = {};
-					result.root = _.get(body, 'results[0].data[0].row[0]');  // parses neo4j response structure
-					deferred.resolve(result);
+					// var result = {};
+					// result.root = _.get(body, 'results[0].data[0].row[0]');  // parses neo4j response structure
+					deferred.resolve(body);
 				}
 			});
 		}
+		return deferred.promise;
+	}
+
+	/**
+	 * database settings
+	 * @return {Promise}  - nothing useful beyond success/failure callbacks being called.
+	 */
+	function configureDatabase() {
+		var deferred = Q.defer() 
+		,	statements = [
+	 	 // `CREATE INDEX ON :BOARD(index)`
+	 	 `CREATE CONSTRAINT ON (b:BOARD) ASSERT b.index IS UNIQUE`
+		]
+		, params = [
+			{}
+		]
+		, payload = helper.constructQueryBody(statements,params);
+		neo4j({json: payload}, function(err, res, body) {
+			var neo4jError = _.get(body, 'errors')
+				,	errors = err || ((neo4jError.length > 0) ? helper.parseNeo4jError('createNewRoot', body) : null);
+			if (errors) {
+				deferred.reject(errors);
+			} else {
+				deferred.resolve(body);
+			}			
+		})
 		return deferred.promise;
 	}
 
@@ -232,34 +259,34 @@
 					}
 					, nonTerminal = (possibleMoves > 0) ,
 					query = `
-							MERGE(c : BOARD {index: {index}})
+							MERGE(c:BOARD {index: {index}})
 							ON CREATE SET c.nonTerminal = {nonTerminal}, c.rewards = 0, c.visits = 0, c.createdAt = timestamp(), c.board = '${serializedBoard}'
 							WITH c
-							WHERE NOT(c) - [: UNEXPLORED | CHILD] - ()
+							WHERE NOT(c)-[:UNEXPLORED|CHILD]-()
 							FOREACH(moveData in {possibleMoves} |
-								CREATE(n : UNEXPLORED {index: moveData.unexploredIndex})
-					 		  CREATE(c) - [: POSSIBLE {name: moveData.move.name, params: moveData.move.params}] - > (n))
+								CREATE(n:UNEXPLORED {index: moveData.unexploredIndex})
+					 		  CREATE(c)-[:POSSIBLE {name: moveData.move.name, params: moveData.move.params}]->(n))
 				 		  WITH c
-							MATCH(p : BOARD {index: ${hashParentBoard}})
+							MATCH(p:BOARD {index: ${hashParentBoard}})
 							WITH c, p
-							CREATE(p) - [cr: CHILD {move}] - > (c)
-							CREATE(c) - [pr: PARENT {move}] - > (p)
+							CREATE(p)-[cr:CHILD {move}]->(c)
+							CREATE(c)-[pr:PARENT {move}]->(p)
 							RETURN collect(c) AS result`
 				statements.push(query);
 				parameters.push(params);
 			});
 			// delete 'possible' relation associated with this 'create' call
-			statements.push(`
-				WITH {move} AS m
-				MATCH(p : BOARD {index: ${hashParentBoard}}) - [r {name: m.object.name}] - (u : UNEXPLORED {index: m.index})
-				DELETE r, u
-			`);
 			parameters.push({
 				move: {
 					object: move,
 					index: helper.serializeAction(move)
 				}
 			});
+			statements.push(`
+				WITH {move} AS m
+				MATCH(p:BOARD {index: ${hashParentBoard}}) - [r {name: m.object.name}] - (u:UNEXPLORED {index: m.index})
+				DELETE r, u
+			`);
 
 			var payload = helper.constructQueryBody(statements, parameters);
 			// debug
@@ -311,7 +338,7 @@
 						WITH DISTINCT node
 						SET node.visits = node.visits + 1, node.rewards = node.rewards + ${reward}`,
 				payload = helper.constructQueryBody(query);
-			console.log('[backup]: backing up from index ' + hashChildBoard + ' to root index ' + hashRootBoard + '.')
+			// console.log('[backup]: backing up from index ' + hashChildBoard + ' to root index ' + hashRootBoard + '.')
 			neo4j({json: payload}, function(err, response, body) {
 				var neo4jError = _.get(body, 'errors')
 					,	errors = err || ((neo4jError.length > 0) ? helper.parseNeo4jError('backup', body) : null);
@@ -338,7 +365,7 @@
 			throw new Error('[knowledgeBase.bestChild()]: no index on incoming parent object: \n' + JSON.stringify(parent));
 		}
 		var query = `
-					MATCH(p : BOARD {index: ${index}}) - [r: CHILD] - > (c : BOARD)
+					MATCH(p:BOARD {index: ${index}}) - [r:CHILD] - > (c:BOARD)
 					WITH collect(c) AS children, r AS moves, p AS parent
 					RETURN EXTRACT(child in children |
 							CASE
@@ -379,6 +406,12 @@
 				result.sort(function(a, b) {
 					return b.board.uct - a.board.uct;
 				});
+
+				// if (Cp != 0) {
+				// 	console.log('bestChild result with cp = ' + Cp + ':')
+				// 	console.log(result)
+				// }
+
 				var bestChild = _.head(result);
 				if (!bestChild) {
 					throw new Error('[knowledgeBase.bestChild()]: neo4j returned result but it did not contain the expected structure: \n' + JSON.stringify(body) + '\n');
@@ -408,7 +441,7 @@
 		async.doWhilst(function(callback) {
 			// console.log('[treePolicy]: top of doWhilst loop for index ' + v.index)
 			var query = `
-				MATCH(b : BOARD {index: ${v.index}}) - [r: POSSIBLE] - > ()
+				MATCH(b:BOARD {index: ${v.index}}) - [r:POSSIBLE] - > ()
 				WITH r, count(*) as possibleMoveCount
 				RETURN
 				CASE possibleMoveCount > 0
@@ -431,11 +464,20 @@
 					if (move) {
 						expandableMoveNotFound = false;  // end async.whilst() loop
 						var parentBoardToExpand = JSON.parse(v.board);
-						console.log('[treePolicy]: found a move.  calling expand above move on parentBoard:')
-						console.log(v.board)
+						// console.log('[treePolicy]: found a move.  calling expand above move on parentBoard, move:')
+						// console.log(parentBoardToExpand)
+						// console.log(move)
+						parentBoardToExpand.Steps = config.get('clips.Steps')  // required by clips.expand()
 						variant.expand(parentBoardToExpand, move)
 							.then(function(children) {
-								console.log('[treePolicy]: returned from expand(), calling createChildren()')
+								// TODO: remove Steps from the contract on generalizedBoards - steps should not be part of
+								// what is used to generate indices in the graph
+								_.forEach(children, function(child) {
+									_.unset(child, 'board.Steps');
+								})
+								// console.log('expand result')
+								// console.log(JSON.stringify(children))
+								// console.log('[treePolicy]: returned from expand(), calling createChildren()')
 								createChildren(v, move, children)
 									.then(function(result) {
 										// @TODO: confirm that we are always grabbing the result from createChildren.
@@ -477,6 +519,7 @@
 			});
 		},
 		function whileTest() {
+			// console.log('[treePolicy]: whiteTest of doWhilst loop for index ' + v.index)
 			// console.log('[treePolicy]: whileTest is ' + (expandableMoveNotFound && v.nonTerminal))
 			return (expandableMoveNotFound && v.nonTerminal);
 		},

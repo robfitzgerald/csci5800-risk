@@ -34,26 +34,24 @@ var _ = require('lodash');
             var split = result.split("\n\n");
 
             split.forEach(function (value) {
-                if (value === '') {
-                    return;
-                }
+                if (value !== '') {
+                    var lines = value.split("\n");
 
-                var lines = value.split("\n");
+                    var actionName = getActionName(lines[0]);
 
-                var actionName = getActionName(lines[0]);
-
-                if (actionName == "placearmy") {
-                    actions.actions.push(generatePlaceArmyAction(lines));
-                } else if (actionName == "startplace") {
-                    actions.actions.push(generateStartPlaceAction(lines));
-                } else if (actionName == "attackall") {
-                    actions.actions.push(generateAttackAction(state, lines, "attackall"));
-                } else if (actionName == "attackhalf") {
-                    actions.actions.push(generateAttackAction(state, lines, "attackhalf"));
-                } else if (actionName == "fortifymove") {
-                    actions.actions.push(generateFortifyAction(lines));
-                } else if (actionName == "nextturn") {
-                    actions.actions.push({"name":"endturn", "params":[]});
+                    if (actionName === "placearmy") {
+                        actions.actions.push(generatePlaceArmyAction(lines));
+                    } else if (actionName === "startplace") {
+                        actions.actions.push(generateStartPlaceAction(lines));
+                    } else if (actionName === "attackall") {
+                        actions.actions.push(generateAttackAction(state, lines, "attackall"));
+                    } else if (actionName === "attackhalf") {
+                        actions.actions.push(generateAttackAction(state, lines, "attackhalf"));
+                    } else if (actionName === "fortifymove") {
+                        actions.actions.push(generateFortifyAction(lines));
+                    } else if (actionName === "nextturn") {
+                        actions.actions.push({"name":"endturn", "params":[]});
+                    }
                 }
             });
 

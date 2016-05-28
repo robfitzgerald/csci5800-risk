@@ -97,8 +97,13 @@
                 result.push(value);
                 callback();
             });
-        }, function (err) {
-            deferred.resolve(result);
+        }, function (err, result) {
+            if (err || !result) {
+                console.log('Ya done broke some\'m: ' + err);
+                deferred.reject('Error applying attackhalf');
+            } else {
+                deferred.resolve(result);
+            }
         });
 
         return deferred.promise;

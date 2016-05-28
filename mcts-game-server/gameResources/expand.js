@@ -36,23 +36,37 @@
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
+        var rolls = Math.min(aRolls, dRolls);
+        // var results = [];
         var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
-        console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
+        // console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
 
-        async.each(arr, function(wins, callback) {
+        async.map(arr, function(wins, callback) {
             var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
+            // console.log('applied action with temp=')
+            // console.log(temp)
             clips.generateChildren(temp).then(function (value) {
-                result.push(value);
-                callback();
+                // console.log('clips.generateChildren complete with value:')
+                // console.log(value)
+                // results.push(value);
+                callback(null, value);
             });
-        }, function (err) {
-            deferred.resolve(result);
+        }, function (err, result) {
+            // console.log('in attackhalf, completed applyAction.attackhalf() with err, result:')
+            // console.log(err)
+            // console.log(result)
+            if (err || !result) {
+                // console.log('Ya done broke some\'m: ' + err);
+                deferred.reject('Error applying attackhalf');
+            } else {
+                // console.log('done with async, returning result:')
+                // console.log(result)
+                deferred.resolve(result);
+            }
         });
 
         return deferred.promise;
@@ -79,21 +93,37 @@
             dRolls = 1;
         }
 
-        var rolls = Math.max(aRolls, dRolls);
-        var results = [];
+        var rolls = Math.min(aRolls, dRolls);
+        // var results = [];
         var arr = [];
-        for (var i = 0; i < rolls; ++i) {
+        for (var i = 0; i <= rolls; ++i) {
             arr.push(i);
         }
 
-        async.each(arr, function(wins, callback) {
+        // console.log('in attackall, applying action with arr = ' + JSON.stringify(arr))
+
+        async.map(arr, function(wins, callback) {
             var temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
+            // console.log('applied action with temp=')
+            // console.log(temp) 
             clips.generateChildren(temp).then(function (value) {
-                result.push(value);
-                callback();
+                // console.log('clips.generateChildren complete with value:')
+                // console.log(value)
+                // results.push(value);
+                callback(null, value);
             });
-        }, function (err) {
-            deferred.resolve(result);
+        }, function (err, result) {
+            // console.log('in attackall, completed applyAction.attackall() with err, result:')
+            // console.log(err)
+            // console.log(result)
+            if (err || !result) {
+                // console.log('Ya done broke some\'m: ' + err);
+                deferred.reject('Error applying attackhalf');
+            } else {
+                // console.log('done with async, returning result:')
+                // console.log(result)
+                deferred.resolve(result);
+            }
         });
 
         return deferred.promise;

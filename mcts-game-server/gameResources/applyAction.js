@@ -146,7 +146,9 @@
 
 
     function countriesReward (board) {
-      return Math.floor(_.filter(board.Countries, c => c.Player === board.Turn).length / 3)
+      var output = Math.floor(_.filter(board.Countries, c => c.Player === board.Turn).length / 3)
+      console.log('[applyAction.countriesReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
+      return output;
     }
 
     function continentReward (board) {
@@ -159,14 +161,15 @@
               return country.Player === currentTurn;
               }
             )     
-      return _.reduce(
+      var output =  _.reduce(
               _.map(continents, function(continent) {
                 var diff = _.differenceBy(continent.countries, thisPlayersCountries, function(c) { return c.Name })
                 return ((diff.length === 0) ? continent.bonus : 0)
               }),
               function (sum, n) { return sum + n; },
               0);
-      
+      console.log('[applyAction.continentReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
+      return output;
     }
 
 

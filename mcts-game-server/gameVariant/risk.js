@@ -75,6 +75,9 @@
 	 * @param action
      */
 	function diceRoll(board, action) {
+		console.log('risk.diceRoll beginning with board, action:')
+		console.log(board)
+		console.log(action)
 		var result = {
 			attackerWin: 0,
 			defenderWin: 0
@@ -115,8 +118,10 @@
 		var iterations = Math.min(attackerDice.length, defenderDice.length);
 		for (var i = 0; i < iterations; ++i) {
 			if (attackerDice[i] > defenderDice[i]) {
+				console.log('*** risk.diceRoll -> attacker wins')
 				++result.attackerWin;
 			} else {
+				console.log('*** risk.diceRoll -> defender wins')
 				++result.defenderWin;
 			}
 		}

@@ -1,0 +1,36 @@
+{
+  "name": "sim-trainer",
+  "version": "1.0.0",
+  "description": "nodejs module to train a simple DNN for predicting the winner of a given risk state",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robfitzgerald/csci5800-risk.git"
+  },
+  "contributors": [
+    {
+      "name": "Max Lees",
+      "email": "max.lees@gmail.com"
+    },
+    {
+      "name": "Jason Minor",
+      "email": "minor.jason@gmail.com"
+    },
+    {
+      "name": "Rob Fitzgerald",
+      "email": "robfitzgerald@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/robfitzgerald/csci5800-risk/issues"
+  },
+  "homepage": "https://github.com/robfitzgerald/csci5800-risk#readme",
+  "dependencies": {
+    "lodash": "^4.6.1",
+    "vectorious": "^4.3.2"
+  }
+}

@@ -1,0 +1,13 @@
+Necessary Installations:
+    sudo apt-get install libblas-dev
+    build and compile the Clips++ library if you haven't already
+    sudo npm install -g node-gyp
+    node-gyp rebuild
+    npm install
+
+Run:
+    npm start
+
+    (Be prepared to CTRL-C to exit. The network isn't converging
+    so it won't stop for a while)
+

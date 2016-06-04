@@ -1,0 +1,25 @@
+{
+    "MAX_PLAYERS": 4,
+    "PHASES": [
+        "start",
+        "placement",
+        "attack"
+    ],
+    "MAX_PLAYER_ARMIES": 10,
+    "MAX_ARMIES_PER_COUNTRY": 50,
+    "MAX_STEPS": 1000,
+    "COUNTRY_NAMES": [
+        "Alaska",
+        "NorthwestTerritory",
+        "Greenland",
+        "Alberta",
+        "Ontario",
+        "WesternUnitedStates",
+        "EasternUnitedStates",
+        "CentralAmerica",
+        "Venezuela",
+        "Peru",
+        "Brazil",
+        "Argentina"
+    ]
+}

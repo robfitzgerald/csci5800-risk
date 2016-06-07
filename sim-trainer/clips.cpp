@@ -42,6 +42,12 @@ namespace clipslib {
         int i;
         sscanf(str.c_str(), "%d", &i);
         args.GetReturnValue().Set(i);
+
+        delete global;
+        global = nullptr;
+
+        DestroyEnvironment(env);
+        env = nullptr;
     }
 
     void Init(Local<Object> exports) {

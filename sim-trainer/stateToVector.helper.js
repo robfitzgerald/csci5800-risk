@@ -33,9 +33,10 @@
 
         // Bias
         builderArray.push(1);
+        return builderArray;
 
-        var result = new Matrix([builderArray]);
+        // var result = new Matrix([builderArray]);
 
-        return result;
+        // return result;
     }
 }

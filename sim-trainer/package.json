@@ -30,7 +30,12 @@
   },
   "homepage": "https://github.com/robfitzgerald/csci5800-risk#readme",
   "dependencies": {
+    "mlearningjs": "^0.0.1",
     "lodash": "^4.6.1",
     "vectorious": "^4.3.2"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
   }
 }

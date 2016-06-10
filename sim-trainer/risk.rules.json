@@ -12,6 +12,7 @@
         "Alaska",
         "NorthwestTerritory",
         "Greenland",
+        "Quebec",
         "Alberta",
         "Ontario",
         "WesternUnitedStates",
@@ -21,5 +22,35 @@
         "Peru",
         "Brazil",
         "Argentina"
-    ]
+    ],
+    "ADJACENCIES": {
+        "Alaska": ["NorthwestTerritory", "Alberta", "null", "null", "null", "null"],
+        "NorthwestTerritory": ["Alaska", "Alberta", "Ontario", "Greenland", "null", "null"],
+        "Greenland": ["NorthwestTerritory", "Ontario", "Quebec", "null", "null", "null"],
+        "Quebec": ["Greenland", "Ontario", "EasternUnitedStates", "null", "null", "null"],
+        "Alberta": ["Alaska", "NorthwestTerritory", "Ontario", "WesternUnitedStates", "null", "null"],
+        "Ontario": ["NorthwestTerritory", "Alberta", "WesternUnitedStates", "EasternUnitedStates", "Quebec", "Greenland"],
+        "WesternUnitedStates": ["Alberta", "Ontario", "EasternUnitedStates", "CentralAmerica", "null", "null"],
+        "EasternUnitedStates": ["Quebec", "Ontario", "WesternUnitedStates", "CentralAmerica", "null", "null"],
+        "CentralAmerica" : ["WesternUnitedStates", "EasternUnitedStates", "Venezuela", "null", "null", "null"],
+        "Venezuela": ["CentralAmerica", "Peru", "Brazil", "null", "null", "null"],
+        "Peru": ["Venezuela", "Brazil", "Argentina", "null", "null", "null"],
+        "Brazil": ["Venezuela", "Peru", "Argentina", "null", "null", "null"],
+        "Argentina": ["Peru", "Brazil", "null", "null", "null", "null"]
+    },
+    "LOCATIONS": {
+        "Alaska": [4, 2],
+        "NorthwestTerritory": [5, 2],
+        "Greenland": [6, 2],
+        "Quebec": [6, 3],
+        "Alberta": [4, 3],
+        "Ontario": [5, 3],
+        "WesternUnitedStates": [4, 4],
+        "EasternUnitedStates": [5, 4],
+        "CentralAmerica": [4, 5],
+        "Venezuela": [4, 6],
+        "Peru": [4, 7],
+        "Brazil": [5, 7],
+        "Argentina": [4, 8]
+    }
 }

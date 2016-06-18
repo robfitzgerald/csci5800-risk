@@ -26,7 +26,7 @@ so, that's in reference to the example where actions[1].params = ["NorthwestTerr
  */
 
 
-	describe('mcts integration testing', function() {
+	describe.skip('mcts integration testing', function() {
 		this.timeout(20000);   // 1 hour plus 10,000ms of wiggle room
 		// 20000 = 20sec, 60000 = 60sec, 0 = no timeout..
 		var rootData;

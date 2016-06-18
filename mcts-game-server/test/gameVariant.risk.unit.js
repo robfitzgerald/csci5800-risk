@@ -136,10 +136,10 @@
 					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-1) ||
 					(result.getCountryArmies("Alaska") == alaskaArmies && result.getCountryArmies("NorthwestTerritory") == northwestTerritoryArmies-2)).to.be.true;
 			})
-			it('should return a board for \'fortifymove\'', function () {
+			it('should return a board for \'fortify\'', function () {
 				var board = Risk.generate('Risk', [{type:'AI'}, {type:'HUMAN'}]);
 				var action = {
-					name: 'fortifymove',
+					name: 'fortify',
 					params: ["Alaska", "NorthwestTerritory"]
 				};
 

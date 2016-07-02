@@ -3,6 +3,7 @@
 	var _ = require('lodash')
 		, config = require('config')
 		, async = require('async')
+		, debug = require('debug')('mcts:routes:mcts')
 
 	var boards = require('../lib/boards')
 		, mcts = require('../lib/mcts')	
@@ -38,15 +39,16 @@
 
 	 		try {
 				variant = boards[variantName];
-				var players = [];
+				// var players = [];
 				var generalized = variant.generalize(board);
-
+				debug('game variant ' + variantName + ' loaded. running mcts.loop() to determine next move.')
 				mcts.loop(generalized,variant,computationalBudget)
 					.then(function(result) {
 						var output = {
 							board: board,
 							move: result.move
 						}
+						debug('passing current board state and chosen move to play express middleware function')
 						res.locals = output;
 						next();
 					})

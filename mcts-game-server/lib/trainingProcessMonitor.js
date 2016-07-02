@@ -1,5 +1,6 @@
 'use strict';
 {
+	let debug = require('debug')('mcts:lib:processMonitor')
 
 	module.exports = {
 		Process,
@@ -25,7 +26,9 @@
 
 	function getProcess(requestedId) {
 		if (requestedId) {
-			return {requestedId: processListMap[requestedId]}
+			let output = {};
+			output[requestedId] = processListMap[requestedId];
+			return output;
 		} else {
 			return processListMap;
 		}

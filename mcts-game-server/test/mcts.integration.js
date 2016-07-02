@@ -3,8 +3,8 @@
 	var expect = require('chai').expect
 		, mcts = require('../lib/mcts')
 		, variant = require('../gameVariant/risk')
-		, kbase = require('../lib/knowledgeBase')
-		, helper = require('../lib/knowledgeBase.helper.js')
+		, kbase = require('../database')
+		, helper = require('../database/database.helper.js')
 		, clipsModule = require('clips-module')
 		, request = require('request')
 		, config = require('config')

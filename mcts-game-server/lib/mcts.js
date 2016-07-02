@@ -6,16 +6,18 @@
 		innerMcts
 	}
 
-	var treePolicy = require('./knowledgeBase').treePolicy
-		, defaultPolicy = require('clips-module').simulate
-		, mergeNode = require('./knowledgeBase').mergeNode
-		, backup = require('./knowledgeBase').backup
-		, bestChild = require('./knowledgeBase').bestChild
-		, config = require('config')
-		, Q = require('q')
+	let Q = require('q')
 		, async = require('async')
 		, _ = require('lodash')
-
+		, debugOuter = require('debug')('mcts:lib:mcts:outer')
+		, debugInner = require('debug')('mcts:lib:mcts:inner')
+	var db = require('../database')
+		, treePolicy = db.treePolicy
+		, defaultPolicy = require('clips-module').simulate
+		, mergeNode = db.mergeNode
+		, backup = db.backup
+		, bestChild = db.bestChild
+		, config = require('config')
 	/**
 	 * asynchronous while loop of mcts. runs mcts function until computational budget is reached.
 	 * @param  {RiskBoard} board            - variant.generalized board object
@@ -24,9 +26,9 @@
 	 * @return {Promise}                    - resolves and rejects with info string
 	 */
 	function loop(board, variant, computationalBudget) {
-		console.log('[mcts.loop]: beginning with computationalBudget=' + computationalBudget)
+		debugOuter('beginning with computationalBudget=' + computationalBudget)
 
-		var deferred = Q.defer()
+		let deferred = Q.defer()
 			, stopTime = Number.parseInt(Date.now()) + computationalBudget
 			, mctsIterations = 0
 			, rootBoard = variant.rootNodeData().board;
@@ -43,7 +45,7 @@
 			debugInnerLoopStart = Date.now();
 			innerMcts(board, rootBoard, variant)
 				.then(function(result) {
-					console.log('[mcts.loop]: completed innerMcts loop. occurence # ' + mctsIterations + '.')
+					debugOuter('completed innerMcts loop. occurence # ' + mctsIterations + '.')
 					++mctsIterations;
 					callback(null, result);
 				})
@@ -52,19 +54,21 @@
 				})
 		},
 		function whileTest() {
-			let debugInnerLoopDur = Date.now() - debugInnerLoopStart;
-			console.log('[mcts.loop]: one loop completed in ' + debugInnerLoopDur + ' ms.')
-			return (Date.now() < stopTime);
+			let debugInnerLoopDur = Date.now() - debugInnerLoopStart
+				, continueLoop = (Date.now() < stopTime)
+			debugOuter('one loop completed in ' + debugInnerLoopDur + ' ms. repeat? ' + continueLoop)
+			return continueLoop;
 		},
 		function result(error, result) {
 			if (error) {
 				deferred.reject('[mcts.loop]: error at iteration ' + mctsIterations + ': ' + JSON.stringify(error))
 			} else {
+				debugOuter('final bestChild call to select move we will play.')
 				let debugBestChildStart = Date.now();
 				bestChild(result, 0)
 					.then(function(tuple) {
 						let debugBestChildDur = Date.now() - debugBestChildStart;
-						console.log('[mcts.loop]: final bestChild completed in ' + debugBestChildDur + ' ms.')
+						debugOuter('final bestChild completed in ' + debugBestChildDur + ' ms.')
 						deferred.resolve(tuple);
 					})
 					.catch(function(bestChildError) {
@@ -85,30 +89,30 @@
 	function innerMcts (start, rootBoard, variant) {
 		var deferred = Q.defer()
 
-		console.log('starting innerMcts loop with start, variant:')
-		console.log(start)
-		console.log(variant)
+		debugInner('starting innerMcts loop with start, variant:')
+		debugInner(start)
+		debugInner(variant)
 		let debugStartTime = Date.now();
 		mergeNode(start)
 			.then(function(v0) {
-				console.log('[mcts.innerMcts]: top index is ' + v0.index)
+				debugInner('top index is ' + v0.index)
 				let debugMergeDur = Date.now() - debugStartTime;
-				console.log('[innerMcts]: mergeNode done in ' + debugMergeDur + ' ms.')
+				debugInner('mergeNode done in ' + debugMergeDur + ' ms.')
 				treePolicy(v0, variant)
 					.then(function(generalizedBoard) {
 						generalizedBoard.Steps = config.get('clips.Steps') || 0;
 						let debugTreePolicyDur = (Date.now() - debugStartTime) - debugMergeDur;
-						console.log('[innerMcts]: treePolicy done in ' + debugTreePolicyDur + ' ms.')
+						debugInner('treePolicy done in ' + debugTreePolicyDur + ' ms.')
 						defaultPolicy(generalizedBoard)
 							.then(function(reward) {
 								_.unset(generalizedBoard, 'Steps');
 								// reward = Math.random() < 0.5 ? 0 : 1;  // debug random rewards
 								let debugDefaultPolicyDur = (Date.now() - debugStartTime) - debugMergeDur - debugTreePolicyDur;
-								console.log('[innerMcts]: defaultPolicy done in ' + debugDefaultPolicyDur + ' ms.')
+								debugInner('defaultPolicy done in ' + debugDefaultPolicyDur + ' ms.')
 								backup(generalizedBoard, rootBoard, reward)
 									.then(function(finished) {
 										let debugBackupDur = (Date.now() - debugStartTime) - debugMergeDur - debugTreePolicyDur - debugDefaultPolicyDur;
-										console.log('[innerMcts]: backup done in ' + debugBackupDur + ' ms.')
+										debugInner('backup done in ' + debugBackupDur + ' ms.')
 										deferred.resolve(v0);
 									})
 									.catch(function(backupErr) {

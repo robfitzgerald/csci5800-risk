@@ -2,7 +2,7 @@
 {
 	var _ = require('lodash')
 		, expect = require('chai').expect
-		, helper = require('../lib/knowledgeBase.helper')
+		, helper = require('../database/database.helper')
 		, variant = require('../gameVariant/risk')
 
 

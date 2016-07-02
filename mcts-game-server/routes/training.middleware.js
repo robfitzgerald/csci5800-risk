@@ -2,6 +2,7 @@
 {
 	var _ = require('lodash')
 		, async = require('async')
+		, debug = require('debug')('mcts:routes:training')
 		, config = require('config')
 
 	var mcts = require('../lib/mcts')
@@ -23,7 +24,7 @@
 			} else if (!numberOfPlayers || (Number.isNaN(numberOfPlayers)) || (numberOfPlayers < 0) || (numberOfPlayers > boards[variantName].maxPlayers)) {
 		 		next('[training.middleware] Error: ' + numberOfPlayers + ' is not a valid number of players');
 			} else {
-				console.log('[training.middleware] variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget)
+				debug('variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget)
 		 		var thisProcess, variant, board, players;
 		 		
 		 		try {
@@ -38,8 +39,8 @@
 					next(e);
 				}	
 
-				// console.log('[training.middleware]: board state:')
-				// console.log(generalized)
+				debug('[training.middleware]: board state:')
+				debug(generalized)
 
 				runTraining();
 				thisProcess = monitor.newProcess({
@@ -66,9 +67,9 @@
 								monitor.updateProcess(thisProcess, moveCount)
 								board = variant.play(board,bestChild.move);
 								generalized = variant.generalize(board);
-								console.log('[training.middleware]: move ' + moveCount + ' player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move) + '.')
-								// console.log('[training.middleware]: board state:')
-								// console.log(generalized)
+								debug('[training.middleware]: move ' + moveCount + ' player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move) + '.')
+								debug('[training.middleware]: board state:')
+								debug(generalized)
 								callback();
 							})
 							.catch(function(mctsLoopError) {
@@ -78,10 +79,7 @@
 					function() { return !board.gameOver(); },
 					function(error, result) {
 						monitor.deleteProcess(thisProcess)
-						if (error) {
-//							next(error);
-						} else {
-						}
+						// TODO: true process management
 					})	
 				}
 			}

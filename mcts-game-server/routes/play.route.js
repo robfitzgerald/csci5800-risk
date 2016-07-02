@@ -22,5 +22,6 @@
 		.post('/:variant/training/games/:numberOfGames/players/:numberOfPlayers', training(monitorUtility), helper.trainingResponse)
 		.get('/monitor/:process', monitor(monitorUtility))
 		.get('/monitor', monitor(monitorUtility))
+	
 	module.exports = route;
 }

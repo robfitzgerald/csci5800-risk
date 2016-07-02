@@ -4,6 +4,7 @@
   var BoardObject = require ('../lib/BoardObject')
     , _ = require('lodash')
     , config = require('config')
+    , debug = require('debug')('mcts:gameResources:RiskBoard')
 
   /**
    * @property {Object} Country     - object to represent a country

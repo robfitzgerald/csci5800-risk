@@ -15,7 +15,7 @@
 		, _ = require('lodash')
 		, Q = require('q')
 		, expandFunctions = require('../gameResources/expand')
-
+		, debug = require('debug')('mcts:gameVariant:risk')
 
 	/**
 	 * this array contains a list of the properties that should be found
@@ -75,9 +75,9 @@
 	 * @param action
      */
 	function diceRoll(board, action) {
-		console.log('risk.diceRoll beginning with board, action:')
-		console.log(board)
-		console.log(action)
+		debug('risk.diceRoll beginning with board, action:')
+		debug(board)
+		debug(action)
 		var result = {
 			attackerWin: 0,
 			defenderWin: 0
@@ -93,7 +93,7 @@
 		} else if (board.Countries[action.params[0]].Armies > 1) {
 			attackerDice = [0];
 		} else {
-			console.log('not enough armies for attack');
+			debug('not enough armies for attack');
 			return;
 		}
 		// Defender rolls 2 dice or 1, depending on the number of defending armies available
@@ -118,10 +118,10 @@
 		var iterations = Math.min(attackerDice.length, defenderDice.length);
 		for (var i = 0; i < iterations; ++i) {
 			if (attackerDice[i] > defenderDice[i]) {
-				console.log('*** risk.diceRoll -> attacker wins')
+				debug('*** risk.diceRoll -> attacker wins')
 				++result.attackerWin;
 			} else {
-				console.log('*** risk.diceRoll -> defender wins')
+				debug('*** risk.diceRoll -> defender wins')
 				++result.defenderWin;
 			}
 		}
@@ -135,7 +135,7 @@
 		var applyFunc = applyAction[action.name];
 
 		if(!applyFunc) {
-			console.log("That action does not exist, son: " + action.name);
+			debug("That action does not exist, son: " + action.name);
 			return;
 		}
 
@@ -164,8 +164,8 @@
 				deferred.resolve(value);
 			});
 		} else {
-			console.log("Ya done broke sum'em");
-			console.log("Expand() -- Action does not exist: " + action.name);
+			debug("Ya done broke sum'em");
+			debug("Expand() -- Action does not exist: " + action.name);
 			deferred.reject("Ya done broke sum'em");
 		}
 

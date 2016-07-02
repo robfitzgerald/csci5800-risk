@@ -4,7 +4,7 @@
 		, _ = require('lodash')
 		, config = require('config')
 		, auth = new Buffer(config.get('neo4j.username') + ':' + config.get('neo4j.password'))
-		, helper = require('../lib/knowledgeBase.helper')
+		, helper = require('../database/database.helper')
 		, neo4j = request.defaults({
 			method: 'POST',
 			url: config.get('neo4j.baseUrl'),

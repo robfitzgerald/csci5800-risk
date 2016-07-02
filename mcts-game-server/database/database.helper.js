@@ -12,6 +12,7 @@
 
 	var _ = require('lodash')
 		, stringHash = require('string-hash')
+		, debug = require('debug')('mcts:lib:knowledgeBase.helper')
 
 	function serialize(board) {
 		return JSON.stringify(board);
@@ -37,6 +38,7 @@
 		} else {
 			action.params = [];
 		}
+		debug('deserializeAction result: ' + action)
 		return action;
 	}
 

@@ -1,6 +1,6 @@
 'use strict'
 {
-	var helper = require('../lib/knowledgeBase.helper')
+	var helper = require('../database/database.helper')
 		, variant = require('../gameVariant/risk')
 
 	// var board = { Turn: 0,

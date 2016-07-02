@@ -6,10 +6,7 @@
 		, async = require('async')
 		, config = require('config')
 		, debug = require('debug')('mcts:database:mcts:treePolicy')
-	var db = require('../')
-		, createChildren = db.createChildren
-		, bestChild = db.bestChild
-		, explorationParameter = config.get('mcts.explorationParameter')
+	var explorationParameter = config.get('mcts.explorationParameter')
 		, helper = require('../database.helper')
 	/**
 	 * treePolicy method as described in Monte Carlo Tree Search. searches for a best child board state to pass to our defaultPolicy for simulation.
@@ -19,6 +16,10 @@
 	 * @return {Promise}                - resolves to a board state object, rejects with any error messages.
 	 */
 	module.exports = function(neo4j) {
+		// including these directly without going through the database controller because i
+		// don't know whether that might create some kind of circular reference with treePolicy
+		var createChildren = require('../core/createChildren')(neo4j)
+		, bestChild = require('./bestChild')(neo4j)
 		return function treePolicy(root, variant) {
 			if (!_.has(variant, 'expand')) {
 				throw new Error('[treePolicy]: variant (arg2) is missing an expand() function');
@@ -67,7 +68,7 @@
 									debug('expand result')
 									debug(JSON.stringify(children))
 									debug('returned from expand(), calling createChildren()')
-									createChildren(neo4j)(v, move, children)
+									createChildren(v, move, children)
 										.then(function(result) {
 											// @TODO: confirm that we are always grabbing the result from createChildren.
 											// the neo4j response structure is always an array due to collect(c);
@@ -91,7 +92,7 @@
 							debug('didn\'t find a move. calling bestChild() with v, Cp:')
 							debug(v)
 							debug(explorationParameter)
-							bestChild(neo4j)(v, explorationParameter)
+							bestChild(v, explorationParameter)
 								.then(function(vBestChild) {
 									debug('returned from bestChild(). setting new "v" to:')
 									v = vBestChild.board;

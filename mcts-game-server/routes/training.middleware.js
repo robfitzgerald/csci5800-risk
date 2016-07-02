@@ -46,7 +46,8 @@
 				thisProcess = monitor.newProcess({
 					gameVariant: variantName,
 					subVariant: '~',
-					moveCount: 0
+					moveCount: 0,
+					board: board
 				})
 				res.locals.result = {
 					description: 'began training',
@@ -64,9 +65,9 @@
 						mcts.loop(generalized,variant,computationalBudget)
 							.then(function(bestChild) {
 								moveCount++;
-								monitor.updateProcess(thisProcess, moveCount)
 								board = variant.play(board,bestChild.move);
 								generalized = variant.generalize(board);
+								monitor.updateProcess(thisProcess, moveCount, board)
 								debug('[training.middleware]: move ' + moveCount + ' player ' + board.Turn + ' chose action ' + JSON.stringify(bestChild.move) + '.')
 								debug('[training.middleware]: board state:')
 								debug(generalized)

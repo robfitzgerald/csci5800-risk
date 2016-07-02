@@ -5,6 +5,7 @@
 		, debug = require('debug')('mcts:database:mcts:bestChild')
 		, config = require('config')
 		, infinity = config.get('mcts.infinity')
+		, helper = require('../database.helper')
 	/**
 	 * bestChild operation in Monte Carlo Tree Search, using UCT method. finds the bestChild of a parent board and returns it along with the move that creates the child
 	 * @param  {Object} parent - TreeNode of parent
@@ -12,9 +13,9 @@
 	 * @return {Promise}       - Promise that resolves to a tuple of board state object, move object; or, an error
 	 */
 	module.exports = function (neo4j) {
-		return 	function bestChild(parent, Cp) {
+		return function bestChild(parent, Cp) {
 			debug('bestChild called with coefficient value ' + Cp)
-			var deferred = Q.defer() ,
+			var deferred = Q.defer(),
 				index = parent.index;
 			if (!index) {
 				throw new Error('[knowledgeBase.bestChild()]: no index on incoming parent object: \n' + JSON.stringify(parent));

@@ -89,9 +89,7 @@
 	function innerMcts (start, rootBoard, variant) {
 		var deferred = Q.defer()
 
-		debugInner('starting innerMcts loop with start, variant:')
-		debugInner(start)
-		debugInner(variant)
+		debugInner('starting innerMcts loop at 0 ms.')
 		let debugStartTime = Date.now();
 		mergeNode(start)
 			.then(function(v0) {

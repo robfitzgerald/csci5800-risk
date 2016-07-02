@@ -32,6 +32,7 @@
 				<li>Game Variant: ${v.gameVariant}</li>
 				<li>Sub Variant: ${v.subVariant}</li>
 				<li>Current Move Count: ${v.moveCount}</li>
+				<code>Board State: ${JSON.stringify(v.board, null, '<br/>')}</code>
 			</ul>
 			<p>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</p>
 		</div>

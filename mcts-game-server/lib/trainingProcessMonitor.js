@@ -1,5 +1,6 @@
 'use strict';
 {
+	let debug = require('debug')('mcts:lib:processMonitor')
 
 	module.exports = {
 		Process,
@@ -14,18 +15,22 @@
 	 * @param {string} gameVariant name of the game variant being used (i.e. risk)
 	 * @param {string} subVariant  name of the sub-variation, such as the types of players playing
 	 * @param {number} moveCount   number of moves that have occurred
+	 * @param {string} board       current board state
 	 */
-	function Process(gameVariant, subVariant, moveCount) {
+	function Process(gameVariant, subVariant, moveCount, board) {
 		this.gameVariant = gameVariant;
 		this.subVariant = subVariant;
 		this.moveCount = moveCount;
+		this.board = board;
 	}
 
 	var processListMap = {};
 
 	function getProcess(requestedId) {
 		if (requestedId) {
-			return {requestedId: processListMap[requestedId]}
+			let output = {};
+			output[requestedId] = processListMap[requestedId];
+			return output;
 		} else {
 			return processListMap;
 		}
@@ -46,7 +51,7 @@
 		return newId.toString();
 	}
 
-	function updateProcess(id, newMoveCount) {
+	function updateProcess(id, newMoveCount, board) {
 		if (!Number.isInteger(newMoveCount) || newMoveCount < 0) {
 			throw new TypeError('[trainingProcessMonitor] updated move count value is not an integer or is negative: ' + newMoveCount);
 		}
@@ -55,6 +60,9 @@
 		} else {
 			let p = processListMap[id];
 			p.moveCount = newMoveCount;
+			if (board) {
+				p.board = board;
+			}
 		}
 	}
 	function deleteProcess(id) {
@@ -77,6 +85,9 @@
 		}
 		if (!p.hasOwnProperty('moveCount') || !Number.isInteger(p.moveCount) || p.moveCount < 0) {
 			throw new TypeError('[trainingProcessMonitor] new process has invalid moveCount: ' + p.moveCount)						
+		}
+		if (!p.hasOwnProperty('board')) {
+			throw new TypeError('[trainingProcessMonitor] new process is missing board property.')
 		}
 	}
 }

@@ -1,6 +1,6 @@
 {
 	var expect = require('chai').expect
-		, helper = require('../lib/knowledgeBase.helper')
+		, helper = require('../database/database.helper')
 
 	describe('helper', function() {
 		describe('serializeAction', function() {

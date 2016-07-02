@@ -11,7 +11,7 @@
 
 
     var _ = require("lodash")
-
+        , debug = require('debug')('mcts:gameResources:applyAction')
     function attackall (board, params, wins, losses) {
         var temp = _.cloneDeep(board);
 
@@ -66,8 +66,8 @@
 
     function startplace (board, params) {
         var temp = _.cloneDeep(board);
-        // console.log('startplace with temp board:')
-        // console.log(temp)
+        debug('startplace with temp board:')
+        debug(temp)
         ++temp.Countries[params[0]].Armies;
 
         var accum;
@@ -123,7 +123,7 @@
         var temp = _.cloneDeep(board);
 
         var amount = temp.Countries[params[0]].Armies - 1;
-        // console.log('fortify with params: ' + JSON.stringify(params))
+        debug('fortify with params: ' + JSON.stringify(params))
         temp.Countries[params[0]].Armies -= amount;
         temp.Countries[params[1]].Armies += amount;
         return endturn(temp, params);
@@ -147,7 +147,7 @@
 
     function countriesReward (board) {
       var output = Math.floor(_.filter(board.Countries, c => c.Player === board.Turn).length / 3)
-      console.log('[applyAction.countriesReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
+      debug('[applyAction.countriesReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
       return output;
     }
 
@@ -168,7 +168,7 @@
               }),
               function (sum, n) { return sum + n; },
               0);
-      console.log('[applyAction.continentReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
+      debug('[applyAction.continentReward]: awarding player ' + board.Turn + ' with ' + output + ' armies.')
       return output;
     }
 

@@ -12,7 +12,8 @@
 {
 	var fs = require('fs')
 		, path = require('path')
-		, _ = require('lodash');
+		, _ = require('lodash')
+		, debug = require('debug')('mcts:lib:boards`')
 
 	var directory = path.dirname(__dirname) + '/gameVariant'
 		, boards = {};

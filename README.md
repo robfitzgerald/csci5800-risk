@@ -40,10 +40,10 @@ mcts-game-server $ npm install
     "password": "my shiny new password"
 ```
 
-* run the mcts-game-server:
+* run the mcts-game-server, showing all mcts-related debug messages:
 
 ```
-mcts-game-server $ npm start
+mcts-game-server $ DEBUG=mcts:* npm start
 
 > mcts-game-server@1.0.0 start /Users/me/path/to/project/csci5800-risk/mcts-game-server
 > node app.js
@@ -51,6 +51,8 @@ mcts-game-server $ npm start
 localhost:3000
 
 ```
+
+* use the following curl commands, or, load the Postman collection at mcts-game-server/Risk.postman_collection.json
 
 * let's get a root node in there before we begin training:
 
@@ -65,5 +67,14 @@ curl -X POST -H "Content-Type: application/json" "http://localhost:3000/play/ris
 ```
 
 did that work?  hope so!  ;-)
+
+* example debug namespaces. you can choose what debug messages you want to see when you start the server:
+
+```
+$ DEBUG=mcts:* npm start                    # show any debug messages within the mcts-game-server code
+$ DEBUG=mcts:database:* npm start           # show any debug messages related to the neo4j functions (now living in database/)
+$ DEBUG=mcts:lib:* npm start                # show any debug messages related to the javascript code in the lib/ directory
+$ DEBUG=mcts:gameResources:expand npm start # show only debug messages from the expand.js file
+```
 
 you may want to dive into the [Wiki](https://github.com/robfitzgerald/csci5800-risk/wiki) to learn more.

@@ -14,6 +14,7 @@
         , async = require('async')
         , clips = require('clips-module')
         , Q = require('q')
+        , debug = require('debug')('mcts:gameResources:expand')
 
     function attackhalf (generalizedBoard, action) {
         var deferred = Q.defer();
@@ -43,28 +44,28 @@
             arr.push(i);
         }
 
-        // console.log('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
+        debug('in attackhalf, applying action with arr = ' + JSON.stringify(arr))
 
         async.map(arr, function(wins, callback) {
             var temp = applyAction.attackhalf(generalizedBoard, action.params, wins, rolls-wins);
-            // console.log('applied action with temp=')
-            // console.log(temp)
+            debug('applied action with temp=')
+            debug(temp)
             clips.generateChildren(temp).then(function (value) {
-                // console.log('clips.generateChildren complete with value:')
-                // console.log(value)
+                debug('clips.generateChildren complete with value:')
+                debug(value)
                 // results.push(value);
                 callback(null, value);
             });
         }, function (err, result) {
-            // console.log('in attackhalf, completed applyAction.attackhalf() with err, result:')
-            // console.log(err)
-            // console.log(result)
+            debug('in attackhalf, completed applyAction.attackhalf() with err, result:')
+            debug(err)
+            debug(result)
             if (err || !result) {
-                // console.log('Ya done broke some\'m: ' + err);
+                debug('Ya done broke some\'m: ' + err);
                 deferred.reject('Error applying attackhalf');
             } else {
-                // console.log('done with async, returning result:')
-                // console.log(result)
+                debug('done with async, returning result:')
+                debug(result)
                 deferred.resolve(result);
             }
         });
@@ -100,28 +101,28 @@
             arr.push(i);
         }
 
-        // console.log('in attackall, applying action with arr = ' + JSON.stringify(arr))
+        debug('in attackall, applying action with arr = ' + JSON.stringify(arr))
 
         async.map(arr, function(wins, callback) {
             var temp = applyAction.attackall(generalizedBoard, action.params, wins, rolls-wins);
-            // console.log('applied action with temp=')
-            // console.log(temp) 
+            debug('applied action with temp=')
+            debug(temp) 
             clips.generateChildren(temp).then(function (value) {
-                // console.log('clips.generateChildren complete with value:')
-                // console.log(value)
+                debug('clips.generateChildren complete with value:')
+                debug(value)
                 // results.push(value);
                 callback(null, value);
             });
         }, function (err, result) {
-            // console.log('in attackall, completed applyAction.attackall() with err, result:')
-            // console.log(err)
-            // console.log(result)
+            debug('in attackall, completed applyAction.attackall() with err, result:')
+            debug(err)
+            debug(result)
             if (err || !result) {
-                // console.log('Ya done broke some\'m: ' + err);
+                debug('Ya done broke some\'m: ' + err);
                 deferred.reject('Error applying attackhalf');
             } else {
-                // console.log('done with async, returning result:')
-                // console.log(result)
+                debug('done with async, returning result:')
+                debug(result)
                 deferred.resolve(result);
             }
         });

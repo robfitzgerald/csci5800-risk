@@ -1,9 +1,8 @@
 'use strict';
 {
-	var _ = require('lodash');
-	
-	var boards = require('../lib/boards')
-		// , game = require('../lib/game');
+	var _ = require('lodash')
+		, debug = require('debug')('mcts:routes:play')
+		, boards = require('../lib/boards')
 
 	module.exports = function(req, res, next) {
 		var variantName = _.get(req.params, 'variant')
@@ -12,22 +11,19 @@
 			res.status(400);
 			next('[game.middleware] Error: ' + variant + ' is not a valid game variant');
 		} else {
-			var board, action;
-			try {
-				board = res.locals.board;
-				action = res.locals.action;
-			} catch (e) {
-				// those things should be there. 400? 500?
-				res.status(500);
-				next(e);
+			let variant = boards[variantName]
+				, board = _.get(res.locals, 'board')
+				,	action = _.get(res.locals, 'action')
+			if (!board || !action) {
+				debug('whoa. missing action or board. how can i play an action on the board? board, action:')
+				debug(board)
+				debug(action)
+				next('[game.middleware]: i cannot apply a move without a board and an action in the local variables.');
+			} else {
+				res.locals.result = variant.play(board, action);
+				debug('applied an action to the board. resulting board set to the local result variable. calling next() express middleware.')
+				next();
 			}
-			// game is where we run the action on the board using the game
-			// variant's 'play' member function.
-			// 
-			// @TODO: make it so!
-			var variant = boards[variantName];
-			// res.locals.result = game(board, action, variant);
-			next();
 		}
 	}
 }

@@ -25,7 +25,7 @@
 
 	function getProcess(requestedId) {
 		if (requestedId) {
-			return processListMap[requestedId]
+			return {requestedId: processListMap[requestedId]}
 		} else {
 			return processListMap;
 		}

@@ -1,18 +1,27 @@
 'use strict';
 {
+
 	module.exports = {
-		processList,
+		Process,
 		getProcess,
 		newProcess,
 		updateProcess,
-		deleteProcess
+		deleteProcess,
+	}
+
+	/**
+	 * Class for a new training process monitor entry
+	 * @param {string} gameVariant name of the game variant being used (i.e. risk)
+	 * @param {string} subVariant  name of the sub-variation, such as the types of players playing
+	 * @param {number} moveCount   number of moves that have occurred
+	 */
+	function Process(gameVariant, subVariant, moveCount) {
+		this.gameVariant = gameVariant;
+		this.subVariant = subVariant;
+		this.moveCount = moveCount;
 	}
 
 	var processListMap = {};
-
-	function processList () {
-		return processListMap;
-	};
 
 	function getProcess(requestedId) {
 		if (requestedId) {
@@ -24,7 +33,7 @@
 
 	function newProcess(p) {
 		processListSchemaTest(p);
-		var newId = 0
+		var newId = 1
 			, stillChoosingAnId = true;
 		do {
 			if (!processListMap.hasOwnProperty(newId)) {

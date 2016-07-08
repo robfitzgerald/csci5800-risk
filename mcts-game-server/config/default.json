@@ -2,7 +2,10 @@
 	"mcts": {
 		"computationalBudget": 1000,
 		"explorationParameter": 0.70710678118655,
-		"infinity": 999
+		"infinity": 999,
+		"training": {
+			"moveLimit": 500
+		}
 	},
 	"neo4j": {
 		"baseUrl": "http://localhost:7474/db/data/transaction/commit",

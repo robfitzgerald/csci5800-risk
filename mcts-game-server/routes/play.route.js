@@ -20,7 +20,9 @@
 		.post('/:variant/human', helper.skipMCTS, play, helper.gameResponse)
 		.post('/:variant/training/games/:numberOfGames/players/:numberOfPlayers/budget/:computationalBudget', training(monitorUtility), helper.trainingResponse)
 		.post('/:variant/training/games/:numberOfGames/players/:numberOfPlayers', training(monitorUtility), helper.trainingResponse)
+		.get('/monitor/:process/verbose', monitor(monitorUtility, true))
 		.get('/monitor/:process', monitor(monitorUtility))
+		.get('/monitor/verbose', monitor(monitorUtility, true))
 		.get('/monitor', monitor(monitorUtility))
 	
 	module.exports = route;

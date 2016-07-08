@@ -1,14 +1,26 @@
 'use strict';
 {
 	var _ = require('lodash')
-	module.exports = function(monitor) {
-		return function(req, res, next) {
+	var debug = require('debug')('mcts:routes:processMonitor')
+	module.exports = function(monitor, verbose) {
+		return function(req, res) {
 			let p = Number.parseInt(_.get(req.params, 'process'))
+				, monitorResponse, processedResponse;
 			if (typeof p === 'number' && !Number.isNaN(p)) {
-				res.send(processResponse(monitor.getProcess(p)))
+				monitorResponse = monitor.getProcess(p)
 			} else {
-				res.send(processResponse(monitor.getProcess()))
+				monitorResponse = monitor.getProcess()
 			}
+			if (!verbose) {
+				debug('removing board data')
+				_.forEach(monitorResponse, (proc) => {
+					debug('has a board property: ' + proc.hasOwnProperty('board'))
+					_.set(proc, 'board', '[not shown]')
+					debug('board property is now ' + _.get(proc, 'board'))
+				})
+			}
+			processedResponse = processResponse(monitorResponse)
+			res.send(processedResponse)
 		}
 	}
 

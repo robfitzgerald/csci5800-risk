@@ -4,6 +4,7 @@
 		, async = require('async')
 		, debug = require('debug')('mcts:routes:training')
 		, config = require('config')
+		, trainingMoveLimit = config.get('mcts.training.moveLimit')
 
 	var mcts = require('../lib/mcts')
 		, boards = require('../lib/boards')
@@ -24,7 +25,7 @@
 			} else if (!numberOfPlayers || (Number.isNaN(numberOfPlayers)) || (numberOfPlayers < 0) || (numberOfPlayers > boards[variantName].maxPlayers)) {
 		 		next('[training.middleware] Error: ' + numberOfPlayers + ' is not a valid number of players');
 			} else {
-				debug('variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget)
+				debug('variant: ' + variantName + ', numberOfGames: ' + numberOfGames + ', numberOfPlayers: ' + numberOfPlayers + ', computationalBudget: ' + computationalBudget + ', training move limit: ' + trainingMoveLimit)
 		 		var thisProcess, variant, board, players;
 		 		
 		 		try {
@@ -77,7 +78,10 @@
 								callback(mctsLoopError)
 							})
 					},
-					function() { return !board.gameOver(); },
+					function() { 
+						debug('moveCount: ' + moveCount + ', trainingMoveLimit: ' + trainingMoveLimit)
+						return moveCount < trainingMoveLimit && !board.gameOver(); 
+					},
 					function(error, result) {
 						monitor.deleteProcess(thisProcess)
 						// TODO: true process management

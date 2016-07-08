@@ -4,7 +4,7 @@
 		"explorationParameter": 0.70710678118655,
 		"infinity": 999,
 		"training": {
-			"moveLimit": 500
+			"moveLimit": 3600
 		}
 	},
 	"neo4j": {

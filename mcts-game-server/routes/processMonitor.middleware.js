@@ -2,7 +2,12 @@
 {
 	var _ = require('lodash')
 	var debug = require('debug')('mcts:routes:processMonitor')
-	module.exports = function(monitor, verbose) {
+	module.exports = {
+		getInfo,
+		endProcess
+	}
+
+	function getInfo (monitor, verbose) {
 		return function(req, res) {
 			let p = Number.parseInt(_.get(req.params, 'process'))
 				, monitorResponse, processedResponse;
@@ -19,12 +24,36 @@
 					debug('board property is now ' + _.get(proc, 'board'))
 				})
 			}
-			processedResponse = processResponse(monitorResponse)
+			processedResponse = formatProcessResponse(monitorResponse)
 			res.send(processedResponse)
 		}
 	}
 
-	function processResponse(processListMap) {
+	function endProcess (monitor) {
+		return function (req, res) {
+			let proc = _.get(req.params, 'process')
+				, procNumber = Number.parseInt(proc)
+				, procNumberIsGood = typeof procNumber === 'number' && !Number.isNaN(procNumber)
+				, success = false;
+			if (procNumberIsGood) {
+				success = monitor.triggerEndProcess(procNumber);
+			} else if (typeof proc === 'string' && proc.toLowerCase() === 'all'){
+				success = monitor.triggerEndProcess();
+			}
+			if (success) {
+				let whichProcesses = procNumberIsGood ? 'process # ' + procNumber : 'all processes' 
+				res.send(formatGenericResponse('Cancel has been triggered for ' + whichProcesses))
+			} else {
+				res.send(formatGenericResponse('Unable to end requested process(es).'))
+			}
+		}
+	}
+
+	function formatGenericResponse(data) {
+		return '<html><head><title></title></head><body>' + data.toString() + '</body></html>'
+	}
+
+	function formatProcessResponse(processListMap) {
 		let outputHeader = `
 		<html>
 			<head>

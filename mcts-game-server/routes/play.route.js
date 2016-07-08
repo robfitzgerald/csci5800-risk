@@ -14,16 +14,18 @@
 	let monitorUtility = require('../lib/trainingProcessMonitor');
 
 	route
-		.delete('/:imsure', deleteAll, helper.genericResponse)
+		.delete('/delete/everything/:imsure', deleteAll, helper.genericResponse)
 		.post('/:variant/createroot', createRoot, helper.genericResponse)
 		.post('/:variant/ai', mcts, play, helper.gameResponse)
 		.post('/:variant/human', helper.skipMCTS, play, helper.gameResponse)
 		.post('/:variant/training/games/:numberOfGames/players/:numberOfPlayers/budget/:computationalBudget', training(monitorUtility), helper.trainingResponse)
 		.post('/:variant/training/games/:numberOfGames/players/:numberOfPlayers', training(monitorUtility), helper.trainingResponse)
-		.get('/monitor/:process/verbose', monitor(monitorUtility, true))
-		.get('/monitor/:process', monitor(monitorUtility))
-		.get('/monitor/verbose', monitor(monitorUtility, true))
-		.get('/monitor', monitor(monitorUtility))
+		.get('/process/:process/verbose', monitor.getInfo(monitorUtility, true))
+		.get('/process/verbose', monitor.getInfo(monitorUtility, true))
+		.get('/process/:process', monitor.getInfo(monitorUtility))
+		.get('/process', monitor.getInfo(monitorUtility))
+		.delete('/process/:process', monitor.endProcess(monitorUtility))
+		.delete('/process', monitor.endProcess(monitorUtility))
 	
 	module.exports = route;
 }

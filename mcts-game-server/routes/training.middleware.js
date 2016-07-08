@@ -79,8 +79,9 @@
 							})
 					},
 					function() { 
-						debug('moveCount: ' + moveCount + ', trainingMoveLimit: ' + trainingMoveLimit)
-						return moveCount < trainingMoveLimit && !board.gameOver(); 
+						let endProcessIsRequested = monitor.endProcessIsRequested(thisProcess)
+						debug('moveCount: ' + moveCount + ', trainingMoveLimit: ' + trainingMoveLimit + ', request to end process from user: ' + endProcessIsRequested)
+						return !endProcessIsRequested && moveCount < trainingMoveLimit && !board.gameOver(); 
 					},
 					function(error, result) {
 						monitor.deleteProcess(thisProcess)

@@ -2,6 +2,7 @@
 {
 	var expect = require('chai').expect;	
 	var monitor = require('../lib/trainingProcessMonitor');
+	var _ = require('lodash')
 
 
 	describe('trainingProcessMonitor', function() {
@@ -90,6 +91,41 @@
 				var shouldBeUpdated = monitor.getProcess(id5)[id5]
 				expect(shouldBeUpdated.moveCount).to.equal(updatedValue)
 				expect(shouldBeUpdated.board).to.equal(updatedBoard)
+			})
+		})
+		describe('triggerEndProcess()', () => {
+			it('should flag a process to end when called', () => {
+				let id = monitor.newProcess({
+					gameVariant: 'someVariant',
+					subVariant: 'HUvAI',
+					moveCount: 0,
+					board: 'some board'
+				})
+					, myProcess = monitor.getProcess(id)[id]
+				expect(myProcess.endProcess).to.be.false;
+				monitor.triggerEndProcess(id)
+				let ended = monitor.getProcess(id)[id]
+				expect(ended.endProcess).to.be.true;
+			})
+			it('should set all processes to end when called with the string "all"', () => {
+				monitor.triggerEndProcess()
+				let procs = monitor.getProcess()
+				_.forEach(procs, (proc) => {
+					expect(proc.endProcess).to.be.true;
+				})
+			})
+		})
+		describe('endProcessIsRequested()', () => {
+			it('should be true if the user has requested to end the process using triggerEndProcess()', () => {
+				let id = monitor.newProcess({
+					gameVariant: 'someVariant',
+					subVariant: 'HUvAI',
+					moveCount: 0,
+					board: 'some board'
+				})
+				expect(monitor.endProcessIsRequested(id)).to.be.false;
+				monitor.triggerEndProcess(id)
+				expect(monitor.endProcessIsRequested(id)).to.be.true;			
 			})
 		})
 		describe('deleteProcess()', function() {
